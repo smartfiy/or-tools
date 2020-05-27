@@ -1,4 +1,4 @@
-module github.com/airspacetechnologies/ortools
+module github.com/airspacetechnologies/or-tools/go
 
 go 1.14
 
