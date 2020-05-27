@@ -24,7 +24,7 @@
 package constraintsolver
 
 import (
-	util "github.com/airspacetechnologies/ortools/util"
+	util "github.com/airspacetechnologies/or-tools/go/util"
 	proto "github.com/golang/protobuf/proto"
 	duration "github.com/golang/protobuf/ptypes/duration"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
