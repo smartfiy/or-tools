@@ -1,1 +1,0 @@
-ortools/gen/ortools/go
