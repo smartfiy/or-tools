@@ -161,8 +161,11 @@ type name##SliceWithPointer struct {
 %}
 
 %enddef
-#define VECTOR_AS_GO_SLICE(ns, name, goname) _VECTOR_AS_GO_SLICE(ns, name, goname, ,*)
-#define VECTOR_AS_GO_POINTER_SLICE(ns, name, goname) _VECTOR_AS_GO_SLICE(ns, name, goname, *, )
 
-VECTOR_AS_GO_SLICE(, int, int)
-VECTOR_AS_GO_SLICE(, int64, int64)
+#define nothing
+#define VECTOR_AS_GO_SLICE(name, goname) _VECTOR_AS_GO_SLICE(nothing, name, goname, nothing, *)
+#define VECTOR_AS_GO_SLICE_NAMESPACE(ns, name, goname) _VECTOR_AS_GO_SLICE(ns, name, goname, nothing, *)
+#define VECTOR_AS_GO_POINTER_SLICE_NAMESPACE(ns, name, goname) _VECTOR_AS_GO_SLICE(ns, name, goname, *, nothing)
+
+VECTOR_AS_GO_SLICE(int, int)
+VECTOR_AS_GO_SLICE(int64, int64)

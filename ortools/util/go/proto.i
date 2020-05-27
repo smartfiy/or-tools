@@ -88,12 +88,12 @@
   Swig_free(p.arr)
 }
 %typemap(out) CppProtoType {
-  uint8 *go_arr = (uint8*)malloc($1.ByteSize());
-  $1.SerializeToArray(go_arr, $1.ByteSize());
+  uint8 *go_arr = (uint8*)malloc($1.ByteSizeLong());
+  $1.SerializeToArray(go_arr, $1.ByteSizeLong());
 
   _goslice_ slice;
   slice.array = go_arr;
-  slice.len = slice.cap = $1.ByteSize();
+  slice.len = slice.cap = $1.ByteSizeLong();
   $result = slice;
 }
 %enddef // end PROTO2_RETURN

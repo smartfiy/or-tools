@@ -53,6 +53,7 @@ help:
 	@echo -e "\t\t${BOLD}python${RESET} (Python >= 3)"
 	@echo -e "\t\t${BOLD}java${RESET} (Java >= 8)"
 	@echo -e "\t\t${BOLD}dotnet${RESET} (.Net Core >= 2.1)"
+	@echo -e "\t\t${BOLD}go${RESET} (go >= 1.14)"
 	@echo -e "\te.g. 'make alpine_cpp_devel'"
 	@echo
 	@echo -e "\t${BOLD}<stage>${RESET}:"
@@ -99,7 +100,7 @@ DOCKER_RUN_CMD := docker run --rm --init --net=host
 
 # Currently supported distro
 DISTROS = alpine archlinux centos debian fedora opensuse ubuntu
-LANGUAGES = cpp python java dotnet
+LANGUAGES = cpp python java dotnet go
 
 # $* stem
 # $< first prerequist
@@ -149,7 +150,7 @@ $(foreach stage,$(PRESTAGES),$(eval $(call make-prestage-target,$(stage))))
 ############
 ## STAGES ##
 ############
-STAGES = env devel build test package
+STAGES = env devel build test package export
 define make-stage-target
 #$$(info STAGE: $1)
 #$$(info Create targets: $1 $(addsuffix _$1, $(DISTROS)).)
@@ -171,7 +172,9 @@ dotnet_targets_$1 = $(addsuffix _dotnet_$1, $(DISTROS))
 java_targets_$1 = $(addsuffix _java_$1, $(DISTROS))
 #$$(info Create targets: $(addsuffix _python_$1, $(DISTROS)))
 python_targets_$1 = $(addsuffix _python_$1, $(DISTROS))
-.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1)
+#$$(info Create targets: $(addsuffix _go_$1, $(DISTROS)))
+go_targets_$1 = $(addsuffix _go_$1, $(DISTROS))
+.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1) $$(go_targets_$1)
 
 $$(cpp_targets_$1): %_cpp_$1: docker/%/cpp.Dockerfile %_base
 	#@docker image rm -f ${IMAGE}:$$*_cpp_$1 2>/dev/null
@@ -185,6 +188,9 @@ $$(java_targets_$1): %_java_$1: docker/%/java.Dockerfile %_swig
 $$(python_targets_$1): %_python_$1: docker/%/python.Dockerfile %_swig
 	#@docker image rm -f ${IMAGE}:$$*_python_$1 2>/dev/null
 	${DOCKER_BUILD_CMD} --target=$1 --tag ${IMAGE}:$$*_python_$1 -f $$< ..
+$$(go_targets_$1): %_go_$1: docker/%/go.Dockerfile %_swig
+	#@docker image rm -f ${IMAGE}:$$*_go_$1 2>/dev/null
+	DOCKER_BUILDKIT=1 ${DOCKER_BUILD_CMD} --target=$1 --tag ${IMAGE}:$$*_go_$1 -f $$< -o .. ..
 
 # Save $1 docker images (debug).
 #$$(info Create targets: save_$1 $(addprefix save_, $(addsuffix _$1, $(DISTROS))).)
@@ -206,7 +212,9 @@ dotnet_targets_$1 = $(addprefix save_, $(addsuffix _dotnet_$1, $(DISTROS)))
 java_targets_$1 = $(addprefix save_, $(addsuffix _java_$1, $(DISTROS)))
 #$$(info Create targets: $(addprefix save_, $(addsuffix _python_$1, $(DISTROS))))
 python_targets_$1 = $(addprefix save_, $(addsuffix _python_$1, $(DISTROS)))
-.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1)
+#$$(info Create targets: $(addprefix save_, $(addsuffix _go_$1, $(DISTROS))))
+go_targets_$1 = $(addprefix save_, $(addsuffix _go_$1, $(DISTROS)))
+.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1) $$(go_targets_$1)
 
 $$(cpp_targets_$1): save_%_cpp_$1: cache/%/docker_cpp_$1.tar
 cache/%/docker_cpp_$1.tar: %_cpp_$1
@@ -228,6 +236,11 @@ cache/%/docker_python_$1.tar: %_python_$1
 	@rm -f $$@
 	mkdir -p cache/$$*
 	docker save ${IMAGE}:$$*_python_$1 -o $$@
+$$(go_targets_$1): save_%_go_$1: cache/%/docker_go_$1.tar
+cache/%/docker_go_$1.tar: %_go_$1
+	@rm -f $$@
+	mkdir -p cache/$$*
+	docker save ${IMAGE}:$$*_go_$1 -o $$@
 
 # Run a container using the <distro>_<lang>_$1 image (debug).
 #$$(info Create targets: $(addprefix sh_, $(addsuffix _cpp_$1, $(DISTROS))))
@@ -238,7 +251,9 @@ dotnet_targets_$1 = $(addprefix sh_, $(addsuffix _dotnet_$1, $(DISTROS)))
 java_targets_$1 = $(addprefix sh_, $(addsuffix _java_$1, $(DISTROS)))
 #$$(info Create targets: $(addprefix sh_, $(addsuffix _python_$1, $(DISTROS))))
 python_targets_$1 = $(addprefix sh_, $(addsuffix _python_$1, $(DISTROS)))
-.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1)
+#$$(info Create targets: $(addprefix sh_, $(addsuffix _go_$1, $(DISTROS))))
+go_targets_$1 = $(addprefix sh_, $(addsuffix _go_$1, $(DISTROS)))
+.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1) $$(go_targets_$1)
 
 $$(cpp_targets_$1): sh_%_cpp_$1: %_cpp_$1
 	${DOCKER_RUN_CMD} -it --name ${PROJECT}_${BUILD_SYSTEM}_$$*_cpp_$1 ${IMAGE}:$$*_cpp_$1
@@ -248,6 +263,8 @@ $$(java_targets_$1): sh_%_java_$1: %_java_$1
 	${DOCKER_RUN_CMD} -it --name ${PROJECT}_${BUILD_SYSTEM}_$$*_java_$1 ${IMAGE}:$$*_java_$1
 $$(python_targets_$1): sh_%_python_$1: %_python_$1
 	${DOCKER_RUN_CMD} -it --name ${PROJECT}_${BUILD_SYSTEM}_$$*_python_$1 ${IMAGE}:$$*_python_$1
+$$(go_targets_$1): sh_%_go_$1: %_go_$1
+	${DOCKER_RUN_CMD} -it --name ${PROJECT}_${BUILD_SYSTEM}_$$*_go_$1 ${IMAGE}:$$*_go_$1
 
 # Clean $1 docker images.
 #$$(info Create targets: clean_$1 $(addprefix clean_, $(addsuffix _$1, $(DISTROS))).)
@@ -269,7 +286,9 @@ dotnet_targets_$1 = $(addprefix clean_, $(addsuffix _dotnet_$1, $(DISTROS)))
 java_targets_$1 = $(addprefix clean_, $(addsuffix _java_$1, $(DISTROS)))
 #$$(info Create targets: $(addprefix clean_, $(addsuffix _python_$1, $(DISTROS))))
 python_targets_$1 = $(addprefix clean_, $(addsuffix _python_$1, $(DISTROS)))
-.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1)
+#$$(info Create targets: $(addprefix clean_, $(addsuffix _go_$1, $(DISTROS))))
+go_targets_$1 = $(addprefix clean_, $(addsuffix _go_$1, $(DISTROS)))
+.PHONY: $$(cpp_targets_$1) $$(dotnet_targets_$1) $$(java_targets_$1) $$(python_targets_$1) $$(go_targets_$1)
 
 $$(cpp_targets_$1): clean_%_cpp_$1:
 	docker image rm -f ${IMAGE}:$$*_cpp_$1 2>/dev/null
@@ -283,6 +302,9 @@ $$(java_targets_$1): clean_%_java_$1:
 $$(python_targets_$1): clean_%_python_$1:
 	docker image rm -f ${IMAGE}:$$*_python_$1 2>/dev/null
 	rm -f cache/$$*/docker_python_$1.tar
+$$(go_targets_$1): clean_%_go_$1:
+	docker image rm -f ${IMAGE}:$$*_go_$1 2>/dev/null
+	rm -f cache/$$*/docker_go_$1.tar
 endef
 
 $(foreach stage,$(STAGES),$(eval $(call make-stage-target,$(stage))))

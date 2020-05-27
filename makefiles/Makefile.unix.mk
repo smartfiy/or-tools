@@ -238,6 +238,7 @@ ifeq ($(PLATFORM),MACOSX)
  -Wl,-rpath,@loader_path/../lib \
  -Wl,-rpath,@loader_path/../dependencies/install/lib
   LDFLAGS = -install_name @rpath/$(LIB_PREFIX)ortools.$L #
+  GO_OR_TOOLS_LDFLAGS = -install_name @rpath/$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$L
   PYTHON_LDFLAGS = \
  -Wl,-rpath,@loader_path \
  -Wl,-rpath,@loader_path/../../ortools \
@@ -259,3 +260,5 @@ DEPENDENCIES_LNK = $(GLPK_LNK) $(SCIP_LNK) $(GUROBI_LNK) $(CPLEX_LNK)
 
 OR_TOOLS_LNK =
 OR_TOOLS_LDFLAGS = $(ZLIB_LNK) $(SYS_LNK) $(LINK_FLAGS)
+
+GO_OR_TOOLS_LDFLAGS += $(OR_TOOLS_LDFLAGS)

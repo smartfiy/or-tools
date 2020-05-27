@@ -22,7 +22,10 @@ or-tools*.zip
 build.log
 test.log
 publish.log
-ortools/gen/
+ortools/gen/*
+!ortools/gen/ortools
+ortools/gen/ortools/*
+!ortools/gen/ortools/go
 objs/
 classes/
 packages/
