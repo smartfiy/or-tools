@@ -15,7 +15,7 @@ GO_BIN = $(shell $(WHICH) go)
 GO_PATH = $(shell [ -z "${GOPATH}" ] || echo $(GOPATH))
 GO_OR_TOOLS_NATIVE_LIB := goortools
 PROTOC_GEN_GO = $(shell $(WHICH) protoc-gen-go)
-PKG_ROOT = github.com/airspacetechnologies/or-tools/go
+PKG_ROOT = github.com/airspacetechnologies/or-tools/ortools/gen/ortools/go
 
 HAS_GO = true
 ifndef GO_BIN
