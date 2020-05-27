@@ -29,6 +29,8 @@ command -v javac | xargs echo "javac: " | tee -a build.log
 command -v jar | xargs echo "jar: " | tee -a build.log
 # dotnet
 command -v dotnet | xargs echo "dotnet: " | tee -a build.log
+# dotnet
+command -v go | xargs echo "go: " | tee -a build.log
 
 #########################
 ##  Build Third Party  ##
@@ -37,9 +39,9 @@ echo -n "Build Third Party..." | tee -a build.log
 make third_party UNIX_PYTHON_VER=3
 echo "DONE" | tee -a build.log
 
-#####################
-##  C++/Java/.Net  ##
-#####################
+########################
+##  C++/Java/.Net/Go  ##
+########################
 echo -n "Build C++..." | tee -a build.log
 make cc -l 4 UNIX_PYTHON_VER=3
 echo "DONE" | tee -a build.log
@@ -61,6 +63,12 @@ make dotnet -l 4 UNIX_PYTHON_VER=3
 echo "DONE" | tee -a build.log
 #make test_dotnet -l 4 UNIX_PYTHON_VER=3
 #echo "make test_dotnet: DONE" | tee -a build.log
+
+echo -n "Build Go..." | tee -a build.log
+make go -l 4 UNIX_PYTHON_VER=3
+echo "DONE" | tee -a build.log
+#make test_go -l 4 UNIX_PYTHON_VER=3
+#echo "make test_go: DONE" | tee -a build.log
 
 # Create Archive
 rm -rf temp ./*.tar.gz

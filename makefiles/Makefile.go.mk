@@ -15,7 +15,6 @@ GO_BIN = $(shell $(WHICH) go)
 GO_PATH = $(shell [ -z "${GOPATH}" ] || echo $(GOPATH))
 GO_OR_TOOLS_NATIVE_LIB := goortools
 PROTOC_GEN_GO = $(shell $(WHICH) protoc-gen-go)
-CGO_LDFLAGS = "-L$(OR_ROOT_FULL)/lib -l$(GO_OR_TOOLS_NATIVE_LIB) -v"
 PKG_ROOT = github.com/airspacetechnologies/ortools
 
 HAS_GO = true
@@ -33,10 +32,12 @@ ifndef HAS_GO
 go: detect_go
 check_go: go
 test_go: go
+package_go: go
 else
 go: go_pimpl
 check_go: check_go_pimpl
 test_go: test_go_pimpl
+package_go: go_pimpl
 BUILT_LANGUAGES +=, Golang
 endif
 
@@ -164,6 +165,8 @@ $(GEN_DIR)/ortools/constraint_solver/constraint_solver_go_wrap.cc: \
  -o $(GEN_PATH)$Sortools$Sconstraint_solver$Sconstraint_solver_go_wrap.cc \
  -module gowrap_constraint_solver \
  -package constraintsolver \
+ -use-shlib \
+ -soname $(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$(SWIG_GO_LIB_SUFFIX) \
  -outdir $(GEN_PATH)$Sortools$Sgo$Sconstraintsolver \
  $(SRC_DIR)$Sortools$Sconstraint_solver$Sgo$Srouting.i
 
@@ -266,9 +269,7 @@ $(LIB_DIR)/$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$(SWIG_GO_LIB_SUFFIX): \
  $(LD_OUT)$(LIB_DIR)$S$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$(SWIG_GO_LIB_SUFFIX) \
  $(OBJ_DIR)$Sswig$Sconstraint_solver_go_wrap.$O \
  $(OR_TOOLS_LNK) \
- $(OR_TOOLS_LDFLAGS)
-	ln -sf $(OR_ROOT_FULL)$Slib$S$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$(SWIG_GO_LIB_SUFFIX) \
-	$Susr$Slocal$Slib$S$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$(SWIG_GO_LIB_SUFFIX)
+ $(GO_OR_TOOLS_LDFLAGS)
 
 ###################
 ##  Go SOURCE  ##
@@ -285,19 +286,16 @@ $(GEN_DIR)/ortools/go: \
  proto \
  $(GEN_DIR)/ortools/go/go.mod
 	cd $(GEN_DIR)/ortools/go && \
-	CGO_LDFLAGS=$(CGO_LDFLAGS) \
 	$(GO_BIN) build ./...
 
 ifeq ($(SOURCE_SUFFIX),.go) # Those rules will be used if SOURCE contain a .go file
 .PHONY: build # Build a Go program.
 build: $(SOURCE) $(LIB_DIR)/$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$(SWIG_GO_LIB_SUFFIX)
-	CGO_LDFLAGS=$(CGO_LDFLAGS) \
 	$(GO_BIN) build $(SOURCE_PATH)
 
 .PHONY: run # Run a Go program.
 run: build
 	cd $(GEN_DIR)/ortools/go && \
-	CGO_LDFLAGS=$(CGO_LDFLAGS) \
 	$(GO_BIN) run $(SOURCE_PATH) $(ARGS)
 endif
 
@@ -311,11 +309,11 @@ check_go_pimpl:
 copy_tests:
 	$(COPYREC) $(GO_EX_DIR)/* $(GEN_DIR)/ortools/go/
 
+# Relevant Dylib/MacOS/rpath issue: https://github.com/golang/go/issues/36572
 .PHONY: test_go_pimpl
 test_go_pimpl: go_pimpl copy_tests
 	cd $(GEN_DIR)/ortools/go && \
-	CGO_LDFLAGS=$(CGO_LDFLAGS) \
-	$(GO_BIN) test ./... -race -v
+	$(GO_BIN) test -exec "env LD_LIBRARY_PATH=$(OR_ROOT_FULL)/lib" ./... -race -v
 
 ################
 ##  Cleaning  ##
@@ -338,6 +336,13 @@ clean_go:
 	-$(DEL) $(OBJ_DIR)$Sswig$S*_go_wrap*
 	-$(DEL) $(LIB_DIR)$S$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB)*.$(SWIG_GO_LIB_SUFFIX)
 	$(GO_BIN) clean -cache
+
+###############
+##  INSTALL  ##
+###############
+.PHONY: install_go # Install Go OR-Tools to $(DESTDIR)$(prefix)
+install_go: install_cc go_pimpl
+	$(COPY) $(LIB_DIR)$S$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$L "$(DESTDIR)$(prefix)$Slib"
 
 #############
 ##  DEBUG  ##

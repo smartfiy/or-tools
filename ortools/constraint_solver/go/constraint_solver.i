@@ -13,7 +13,7 @@
 
 // TODO(user): Refactor this file to adhere to the SWIG style guide.
 
-// %include "enumsimple.swg"
+%include "ortools/util/go/cgo.i"
 
 %include "exception.i"
 %include "std_vector.i"

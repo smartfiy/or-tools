@@ -15,14 +15,17 @@ TEMP_FZ_DIR = temp_fz_archive
 TEMP_DATA_DIR = temp_data
 
 # Main target
-.PHONY: archive # Create OR-Tools archive for C++, Java and .Net with examples.
-archive: $(INSTALL_DIR)$(ARCHIVE_EXT)
+.PHONY: archive # Create OR-Tools archive for C++, Java .Net, and Go with examples.
+archive: archive_cc_java_dotnet_go $(INSTALL_DIR)$(ARCHIVE_EXT)
 
 .PHONY: fz_archive # Create OR-Tools flatzinc archive with examples.
 fz_archive: $(FZ_INSTALL_DIR)$(ARCHIVE_EXT)
 
 .PHONY: data_archive # Create OR-Tools archive for data examples.
 data_archive: $(DATA_INSTALL_DIR)$(ARCHIVE_EXT)
+
+.PHONY: golib_archive # Create OR-Tools archive for Go
+golib_archive: archive_go $(INSTALL_DIR)$(ARCHIVE_EXT)
 
 .PHONY: clean_archive # Clean Archive output from previous build.
 clean_archive:
@@ -38,7 +41,16 @@ clean_archive:
 $(TEMP_ARCHIVE_DIR):
 	-$(MKDIR_P) $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)
 
-$(INSTALL_DIR)$(ARCHIVE_EXT): archive_cc archive_java archive_dotnet \
+$(INSTALL_DIR)$(ARCHIVE_EXT): $(TEMP_ARCHIVE_DIR)
+ifeq ($(SYSTEM),win)
+	cd $(TEMP_ARCHIVE_DIR) && ..$S$(ZIP) -r ..$S$(INSTALL_DIR)$(ARCHIVE_EXT) $(INSTALL_DIR)
+else
+	$(TAR) -C $(TEMP_ARCHIVE_DIR) --no-same-owner -czvf $(INSTALL_DIR)$(ARCHIVE_EXT) $(INSTALL_DIR)
+endif
+#	-$(DELREC) $(TEMP_ARCHIVE_DIR)
+
+.PHONY: archive_cc_java_dotnet_go | $(TEMP_ARCHIVE_DIR)
+archive_cc_java_dotnet_go: archive_cc archive_java archive_dotnet archive_go \
  tools/README.cc.java.dotnet tools/Makefile.cc.java.dotnet
 	$(COPY) tools$SREADME.cc.java.dotnet $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$SREADME.md
 	$(COPY) tools$SMakefile.cc.java.dotnet $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$SMakefile
@@ -46,11 +58,7 @@ ifeq ($(SYSTEM),win)
 	-$(MKDIR_P) $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Stools$Swin
 	$(COPY) tools$Smake.exe $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Stools
 	$(COPY) $(WHICH) $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Stools$Swin
-	cd $(TEMP_ARCHIVE_DIR) && ..$S$(ZIP) -r ..$S$(INSTALL_DIR)$(ARCHIVE_EXT) $(INSTALL_DIR)
-else
-	$(TAR) -C $(TEMP_ARCHIVE_DIR) --no-same-owner -czvf $(INSTALL_DIR)$(ARCHIVE_EXT) $(INSTALL_DIR)
 endif
-#	-$(DELREC) $(TEMP_ARCHIVE_DIR)
 
 .PHONY: archive_cc # Add C++ OR-Tools to archive.
 archive_cc: cc | $(TEMP_ARCHIVE_DIR)
@@ -107,6 +115,12 @@ archive_dotnet: dotnet | $(TEMP_ARCHIVE_DIR)
 	-$(COPY) ortools$Ssat$Ssamples$S*.cs*  $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Sexamples$Sdotnet
 	-$(COPY) ortools$Ssat$Ssamples$S*.fs*  $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Sexamples$Sdotnet
 	-$(SED) -i -e 's/..\/..\/..\/packages/..\/..\/packages/' $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Sexamples$Sdotnet$S*.*proj
+
+.PHONY: archive_go # Add Go OR-Tools to archive.
+archive_go: go | $(TEMP_ARCHIVE_DIR)
+	$(MAKE) install_go prefix=$(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)
+	# -$(MKDIR_P) $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Sexamples$Sgo
+	# -$(COPY) -R $(GO_EX_PATH)$S* $(TEMP_ARCHIVE_DIR)$S$(INSTALL_DIR)$Sexamples$Sgo
 
 $(FZ_INSTALL_DIR)$(ARCHIVE_EXT): fz | $(TEMP_FZ_DIR)
 	-$(DELREC) $(TEMP_FZ_DIR)$S*
