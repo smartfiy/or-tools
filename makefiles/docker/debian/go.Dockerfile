@@ -31,4 +31,4 @@ FROM build AS package
 RUN make golib_archive
 
 FROM scratch AS export
-COPY --from=package or-tools_Debian* .
+COPY --from=package /home/project/or-tools_Debian* .
