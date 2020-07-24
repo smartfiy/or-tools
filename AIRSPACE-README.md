@@ -7,7 +7,7 @@ It has Go bindings and binaries for use with Go projects.
  1. Download binaries for Mac:
     `https://github.com/AirspaceTechnologies/or-tools/releases/download/v7.6-go1.14.1/or-tools_MacOsX-10.15.4_v7.6.7700.tar.gz`
  1. Install/extract to rpath (e.g. `/usr/local`)
- 1. Download and install Go package `go get github.com/airspace/technologies/or-tools/gen/ortools/go/constraintsolver`
+ 1. Download and install Go package `go get github.com/airspacetechnologies/or-tools/gen/ortools/go/constraintsolver`
  1. Use in Go code. E.g. `import github.com/airspacetechnologies/or-tools/gen/ortools/go/constraintsolver`
 
 ## Mac Setup for Local OR-tools Development (Extending/Wrapping OR-tools)
