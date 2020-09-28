@@ -6,7 +6,8 @@ It has Go bindings and binaries for use with Go projects.
 ## Mac Setup for Local Go Development
  1. Download binaries for Mac:
     `https://github.com/AirspaceTechnologies/or-tools/releases/download/v7.6-go1.14.1/or-tools_MacOsX-10.15.4_v7.6.7700.tar.gz`
- 1. Install/extract to rpath (e.g. `/usr/local`)
+ 1. Install/extract to rpath (e.g. `/usr/local`):
+    `tar -xf or-tools_MacOsX-10.15.4_v7.6.7700.tar.gz --strip 1 -C /usr/local`
 
 ## Mac Setup for Local OR-tools Development (Extending/Wrapping OR-tools)
  1. Install XCode:
