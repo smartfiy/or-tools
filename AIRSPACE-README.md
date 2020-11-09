@@ -8,6 +8,8 @@ It has Go bindings and binaries for use with Go projects.
     `https://github.com/AirspaceTechnologies/or-tools/releases/download/v7.6-go1.14.1/or-tools_MacOsX-10.15.4_v7.6.7700.tar.gz`
  1. Install/extract to rpath:
     `tar -xf or-tools_MacOsX-10.15.4_v7.6.7700.tar.gz --strip 1 -C /usr/local`
+ 1. Export `DYLD_LIBRARY_PATH` if necessary:
+    `export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/lib`
 
 ## Mac Setup for Local OR-tools Development (Extending/Wrapping OR-tools)
  1. Install XCode:
