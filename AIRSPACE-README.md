@@ -19,11 +19,11 @@ It has Go bindings and binaries for use with Go projects.
  1. Install SWIG 4.0.1:
     `brew install swig`
  1. Install protobuf for Go:
-    `go get github.com/golang/protobuf/protoc-gen-go@v1.3`
+    `go get -u github.com/golang/protobuf/protoc-gen-go@v1.5.2`
  1. Clone Airspace OR-tools:
     `git clone git@github.com:AirspaceTechnologies/or-tools.git`
  1. Make third party:
-    `make third_party`
+    `make clean_third_party third_party`
  1. Make go:
     `make clean_go go`
  1. Make go tests:
@@ -36,6 +36,25 @@ It has Go bindings and binaries for use with Go projects.
  1. Make local Mac binary archive:
     `make golib_archive`
  1. Log into Github and create a release with the resulting binaries
+
+## Update Fork from Upstream
+ 1. Configure git remote pointing to upstream or-tools repo:
+    `git remote add upstream git@github.com:google/or-tools.git`
+ 1. Fetch upstream:
+    `git fetch upstream`
+ 1. Checkout fork's `stable` branch and pull:
+    `git checkout stable && git pull`
+ 1. Merge changes from upstream `stable` branch:
+    `git merge upstream/stable`
+ 1. Push fork's `stable` branch:
+    `git push`
+ 1. Checkout fork's `airspace` branch and pull:
+    `git checkout airspace && git pull`
+ 1. Merge changes from `stable` to `airspace` branch:
+    `git merge stable`
+ 1. Push fork's `airspace` branch:
+    `git push`
+ 1. Optionally build and release using steps above
 
 ## TODO
  1. Make `IntVar`->`IntExpr` casting cleaner

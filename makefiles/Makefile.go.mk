@@ -279,7 +279,8 @@ go_pimpl: $(GEN_DIR)/ortools/go
 
 $(GEN_DIR)/ortools/go/go.mod:
 	cd $(GEN_DIR)/ortools/go && \
-	$(GO_BIN) mod init $(PKG_ROOT)
+	$(GO_BIN) mod init $(PKG_ROOT) && \
+	$(GO_BIN) mod tidy
 
 $(GEN_DIR)/ortools/go: \
  $(LIB_DIR)/$(LIB_PREFIX)$(GO_OR_TOOLS_NATIVE_LIB).$(SWIG_GO_LIB_SUFFIX) \
@@ -352,7 +353,7 @@ detect_go:
 	@echo Relevant info for the Go build:
 	@echo These must resolve to proceed
 	@echo "  Install go: https://golang.org/doc/install"
-	@echo "  Install protoc-gen-go: 'go get -u github.com/golang/protobuf/protoc-gen-go'"
+	@echo "  Install protoc-gen-go: 'go get -u github.com/golang/protobuf/protoc-gen-go@v1.5.2'"
 	@echo GO_BIN = $(GO_BIN)
 	@echo GO_PATH = $(GO_PATH)
 	@echo PROTOC_GEN_GO = $(PROTOC_GEN_GO)
