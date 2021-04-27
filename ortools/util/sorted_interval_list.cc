@@ -14,8 +14,15 @@
 #include "ortools/util/sorted_interval_list.h"
 
 #include <algorithm>
+#include <cmath>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/strings/str_format.h"
+#include "absl/types/span.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/util/saturated_arithmetic.h"
@@ -29,20 +36,16 @@ std::string ClosedInterval::DebugString() const {
 
 bool IntervalsAreSortedAndNonAdjacent(
     absl::Span<const ClosedInterval> intervals) {
-  if (intervals.empty()) return true;
-  int64 previous_end;
-  bool is_first_interval = true;
-  for (const ClosedInterval interval : intervals) {
-    if (interval.start > interval.end) return false;
-    if (!is_first_interval) {
-      // First test make sure that previous_end + 1 will not overflow.
-      if (interval.start <= previous_end) return false;
-      if (interval.start <= previous_end + 1) return false;
+  for (int i = 1; i < intervals.size(); ++i) {
+    if (intervals[i - 1].start > intervals[i - 1].end) return false;
+    // First test make sure that intervals[i - 1].end + 1 will not overflow.
+    if (intervals[i - 1].end >= intervals[i].start ||
+        intervals[i - 1].end + 1 >= intervals[i].start) {
+      return false;
     }
-    is_first_interval = false;
-    previous_end = interval.end;
   }
-  return true;
+  return intervals.empty() ? true
+                           : intervals.back().start <= intervals.back().end;
 }
 
 namespace {
@@ -53,6 +56,7 @@ std::string IntervalsAsString(const Intervals& intervals) {
   for (ClosedInterval interval : intervals) {
     result += interval.DebugString();
   }
+  if (result.empty()) result = "[]";
   return result;
 }
 
@@ -210,6 +214,11 @@ int64 Domain::Max() const {
   return intervals_.back().end;
 }
 
+int64 Domain::FixedValue() const {
+  DCHECK(IsFixed());
+  return intervals_.front().start;
+}
+
 bool Domain::Contains(int64 value) const {
   // Because we only compare by start and there is no duplicate starts, this
   // should be the next interval after the one that has a chance to contains
@@ -352,7 +361,8 @@ Domain Domain::RelaxIfTooComplex() const {
 
 Domain Domain::MultiplicationBy(int64 coeff, bool* exact) const {
   if (exact != nullptr) *exact = true;
-  if (intervals_.empty() || coeff == 0) return {};
+  if (intervals_.empty()) return {};
+  if (coeff == 0) return Domain(0);
 
   const int64 abs_coeff = std::abs(coeff);
   const int64 size_if_non_trivial = abs_coeff > 1 ? Size() : 0;
@@ -363,12 +373,20 @@ Domain Domain::MultiplicationBy(int64 coeff, bool* exact) const {
 
   Domain result;
   if (abs_coeff > 1) {
+    const int64 max_value = kint64max / abs_coeff;
+    const int64 min_value = kint64min / abs_coeff;
     result.intervals_.reserve(size_if_non_trivial);
     for (const ClosedInterval& i : intervals_) {
-      for (int v = i.start; v <= i.end; ++v) {
-        // Because abs_coeff > 1, all new values are disjoint.
-        const int64 new_value = CapProd(v, abs_coeff);
-        result.intervals_.push_back({new_value, new_value});
+      for (int64 v = i.start;; ++v) {
+        // We ignore anything that overflow.
+        if (v >= min_value && v <= max_value) {
+          // Because abs_coeff > 1, all new values are disjoint.
+          const int64 new_value = v * abs_coeff;
+          result.intervals_.push_back({new_value, new_value});
+        }
+
+        // This is to avoid doing ++v when v is kint64max!
+        if (v == i.end) break;
       }
     }
   } else {

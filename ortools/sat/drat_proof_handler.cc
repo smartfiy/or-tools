@@ -18,6 +18,7 @@
 #include "absl/memory/memory.h"
 #include "ortools/base/int_type.h"
 #include "ortools/base/logging.h"
+#include "ortools/base/strong_vector.h"
 
 namespace operations_research {
 namespace sat {
@@ -35,8 +36,8 @@ DratProofHandler::DratProofHandler(bool in_binary_format, File* output,
 }
 
 void DratProofHandler::ApplyMapping(
-    const gtl::ITIVector<BooleanVariable, BooleanVariable>& mapping) {
-  gtl::ITIVector<BooleanVariable, BooleanVariable> new_mapping;
+    const absl::StrongVector<BooleanVariable, BooleanVariable>& mapping) {
+  absl::StrongVector<BooleanVariable, BooleanVariable> new_mapping;
   for (BooleanVariable v(0); v < mapping.size(); ++v) {
     const BooleanVariable image = mapping[v];
     if (image != kNoBooleanVariable) {

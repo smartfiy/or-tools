@@ -24,10 +24,10 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "ortools/base/int_type.h"
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/map_util.h"
 #include "ortools/base/stl_util.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/all_different.h"
 #include "ortools/sat/circuit.h"
 #include "ortools/sat/cp_constraints.h"
@@ -45,7 +45,9 @@
 #include "ortools/sat/sat_base.h"
 #include "ortools/sat/sat_parameters.pb.h"
 #include "ortools/sat/sat_solver.h"
+#include "ortools/sat/symmetry.h"
 #include "ortools/sat/table.h"
+#include "ortools/sat/timetable.h"
 #include "ortools/util/saturated_arithmetic.h"
 #include "ortools/util/sorted_interval_list.h"
 
@@ -214,6 +216,7 @@ void CpModelMapping::CreateVariables(const CpModelProto& model_proto,
   }
 
   auto* encoder = m->GetOrCreate<IntegerEncoder>();
+  auto* intervals_repository = m->GetOrCreate<IntervalsRepository>();
 
   // Link any variable that has both views.
   for (int i = 0; i < num_proto_variables; ++i) {
@@ -238,15 +241,87 @@ void CpModelMapping::CreateVariables(const CpModelProto& model_proto,
       // TODO(user): Fix the constant variable situation. An optional interval
       // with constant start/end or size cannot share the same constant
       // variable if it is used in non-optional situation.
-      intervals_[c] = m->Add(NewOptionalInterval(
-          Integer(ct.interval().start()), Integer(ct.interval().end()),
-          Integer(ct.interval().size()), enforcement_literal));
+      if (ct.interval().has_start_view()) {
+        intervals_[c] = intervals_repository->CreateInterval(
+            LoadAffineView(ct.interval().start_view()),
+            LoadAffineView(ct.interval().end_view()),
+            LoadAffineView(ct.interval().size_view()),
+            enforcement_literal.Index(),
+            /*add_linear_relation=*/false);
+      } else {
+        intervals_[c] = m->Add(NewOptionalInterval(
+            Integer(ct.interval().start()), Integer(ct.interval().end()),
+            Integer(ct.interval().size()), enforcement_literal));
+      }
     } else {
-      intervals_[c] = m->Add(NewInterval(Integer(ct.interval().start()),
-                                         Integer(ct.interval().end()),
-                                         Integer(ct.interval().size())));
+      if (ct.interval().has_start_view()) {
+        intervals_[c] = intervals_repository->CreateInterval(
+            LoadAffineView(ct.interval().start_view()),
+            LoadAffineView(ct.interval().end_view()),
+            LoadAffineView(ct.interval().size_view()), kNoLiteralIndex,
+            /*add_linear_relation=*/false);
+      } else {
+        intervals_[c] = m->Add(NewInterval(Integer(ct.interval().start()),
+                                           Integer(ct.interval().end()),
+                                           Integer(ct.interval().size())));
+      }
     }
     already_loaded_ct_.insert(&ct);
+  }
+}
+
+void CpModelMapping::LoadBooleanSymmetries(const CpModelProto& model_proto,
+                                           Model* m) {
+  const SatParameters& params = *m->GetOrCreate<SatParameters>();
+  const SymmetryProto symmetry = model_proto.symmetry();
+  if (symmetry.permutations().empty()) return;
+
+  auto* sat_solver = m->GetOrCreate<SatSolver>();
+  auto* symmetry_handler = m->GetOrCreate<SymmetryPropagator>();
+  sat_solver->AddPropagator(symmetry_handler);
+  const int num_literals = 2 * sat_solver->NumVariables();
+
+  for (const SparsePermutationProto& perm : symmetry.permutations()) {
+    bool all_bool = true;
+    for (const int var : perm.support()) {
+      if (!IsBoolean(var)) {
+        all_bool = false;
+        break;
+      }
+    }
+    if (!all_bool) continue;
+
+    // Convert the variable symmetry to a "literal" one.
+    auto literal_permutation =
+        absl::make_unique<SparsePermutation>(num_literals);
+    int support_index = 0;
+    const int num_cycle = perm.cycle_sizes().size();
+    for (int i = 0; i < num_cycle; ++i) {
+      const int size = perm.cycle_sizes(i);
+      const int saved_support_index = support_index;
+      for (int j = 0; j < size; ++j) {
+        const int var = perm.support(support_index++);
+        literal_permutation->AddToCurrentCycle(Literal(var).Index().value());
+      }
+      literal_permutation->CloseCurrentCycle();
+
+      // Note that we also need to add the corresponding cycle for the negated
+      // literals.
+      support_index = saved_support_index;
+      for (int j = 0; j < size; ++j) {
+        const int var = perm.support(support_index++);
+        literal_permutation->AddToCurrentCycle(
+            Literal(var).NegatedIndex().value());
+      }
+      literal_permutation->CloseCurrentCycle();
+    }
+    symmetry_handler->AddSymmetry(std::move(literal_permutation));
+  }
+
+  const bool log_info = VLOG_IS_ON(1) || params.log_search_progress();
+  if (log_info) {
+    LOG(INFO) << "Added " << symmetry_handler->num_permutations()
+              << " symmetry to the SAT solver.";
   }
 }
 
@@ -745,8 +820,8 @@ class FullEncodingFixedPointComputer {
   std::vector<int> variables_to_propagate_;
   std::vector<std::vector<ConstraintIndex>> variable_watchers_;
 
-  gtl::ITIVector<ConstraintIndex, bool> constraint_is_finished_;
-  gtl::ITIVector<ConstraintIndex, bool> constraint_is_registered_;
+  absl::StrongVector<ConstraintIndex, bool> constraint_is_finished_;
+  absl::StrongVector<ConstraintIndex, bool> constraint_is_registered_;
 
   absl::flat_hash_map<int, absl::flat_hash_set<int>>
       variables_to_equal_or_diff_variables_;
@@ -972,6 +1047,12 @@ void LoadAtMostOneConstraint(const ConstraintProto& ct, Model* m) {
   m->Add(AtMostOneConstraint(mapping->Literals(ct.at_most_one().literals())));
 }
 
+void LoadExactlyOneConstraint(const ConstraintProto& ct, Model* m) {
+  auto* mapping = m->GetOrCreate<CpModelMapping>();
+  CHECK(!HasEnforcementLiteral(ct)) << "Not supported.";
+  m->Add(ExactlyOneConstraint(mapping->Literals(ct.exactly_one().literals())));
+}
+
 void LoadBoolXorConstraint(const ConstraintProto& ct, Model* m) {
   auto* mapping = m->GetOrCreate<CpModelMapping>();
   CHECK(!HasEnforcementLiteral(ct)) << "Not supported.";
@@ -1054,7 +1135,6 @@ void LoadEquivalenceNeqAC(const std::vector<Literal> enforcement_literal,
 
 void LoadLinearConstraint(const ConstraintProto& ct, Model* m) {
   auto* mapping = m->GetOrCreate<CpModelMapping>();
-
   if (ct.linear().vars().empty()) {
     const Domain rhs = ReadDomainFromProto(ct.linear());
     if (rhs.Contains(0)) return;
@@ -1171,6 +1251,11 @@ void LoadLinearConstraint(const ConstraintProto& ct, Model* m) {
       }
     }
   } else {
+    // In this case, we can create just one Boolean instead of two since one
+    // is the negation of the other.
+    const bool special_case =
+        ct.enforcement_literal().empty() && ct.linear().domain_size() == 4;
+
     std::vector<Literal> clause;
     for (int i = 0; i < ct.linear().domain_size(); i += 2) {
       int64 lb = ct.linear().domain(i);
@@ -1178,8 +1263,11 @@ void LoadLinearConstraint(const ConstraintProto& ct, Model* m) {
       if (min_sum >= lb) lb = kint64min;
       if (max_sum <= ub) ub = kint64max;
 
-      const Literal subdomain_literal(m->Add(NewBooleanVariable()), true);
+      const Literal subdomain_literal(
+          special_case && i > 0 ? clause.back().Negated()
+                                : Literal(m->Add(NewBooleanVariable()), true));
       clause.push_back(subdomain_literal);
+
       if (lb != kint64min) {
         m->Add(ConditionalWeightedSumGreaterOrEqual({subdomain_literal}, vars,
                                                     coeffs, lb));
@@ -1192,10 +1280,7 @@ void LoadLinearConstraint(const ConstraintProto& ct, Model* m) {
     for (const int ref : ct.enforcement_literal()) {
       clause.push_back(mapping->Literal(ref).Negated());
     }
-
-    // TODO(user): In the cases where this clause only contains two literals,
-    // then we could have only used one literal and its negation above.
-    m->Add(ClauseConstraint(clause));
+    if (!special_case) m->Add(ClauseConstraint(clause));
   }
 }
 
@@ -1321,6 +1406,26 @@ void LoadCumulativeConstraint(const ConstraintProto& ct, Model* m) {
     demands.push_back(AffineExpression(var));
   }
   m->Add(Cumulative(intervals, demands, capacity));
+}
+
+void LoadReservoirConstraint(const ConstraintProto& ct, Model* m) {
+  auto* mapping = m->GetOrCreate<CpModelMapping>();
+  auto* encoder = m->GetOrCreate<IntegerEncoder>();
+  std::vector<AffineExpression> times;
+  std::vector<IntegerValue> deltas;
+  std::vector<Literal> presences;
+  const int size = ct.reservoir().times().size();
+  for (int i = 0; i < size; ++i) {
+    times.push_back(mapping->Integer(ct.reservoir().times(i)));
+    deltas.push_back(IntegerValue(ct.reservoir().demands(i)));
+    if (!ct.reservoir().actives().empty()) {
+      presences.push_back(mapping->Literal(ct.reservoir().actives(i)));
+    } else {
+      presences.push_back(encoder->GetTrueLiteral());
+    }
+  }
+  AddReservoirConstraint(times, deltas, presences, ct.reservoir().min_level(),
+                         ct.reservoir().max_level(), m);
 }
 
 // If a variable is constant and its value appear in no other variable domains,
@@ -1716,7 +1821,7 @@ void LoadCircuitConstraint(const ConstraintProto& ct, Model* m) {
   std::vector<int> heads(circuit.heads().begin(), circuit.heads().end());
   std::vector<Literal> literals =
       m->GetOrCreate<CpModelMapping>()->Literals(circuit.literals());
-  const int num_nodes = ReindexArcs(&tails, &heads, &literals);
+  const int num_nodes = ReindexArcs(&tails, &heads);
   m->Add(SubcircuitConstraint(num_nodes, tails, heads, literals));
 }
 
@@ -1728,22 +1833,9 @@ void LoadRoutesConstraint(const ConstraintProto& ct, Model* m) {
   std::vector<int> heads(routes.heads().begin(), routes.heads().end());
   std::vector<Literal> literals =
       m->GetOrCreate<CpModelMapping>()->Literals(routes.literals());
-  const int num_nodes = ReindexArcs(&tails, &heads, &literals);
+  const int num_nodes = ReindexArcs(&tails, &heads);
   m->Add(SubcircuitConstraint(num_nodes, tails, heads, literals,
                               /*multiple_subcircuit_through_zero=*/true));
-}
-
-void LoadCircuitCoveringConstraint(const ConstraintProto& ct, Model* m) {
-  auto* mapping = m->GetOrCreate<CpModelMapping>();
-  const std::vector<IntegerVariable> nexts =
-      mapping->Integers(ct.circuit_covering().nexts());
-  const std::vector<std::vector<Literal>> graph =
-      GetSquareMatrixFromIntegerVariables(nexts, m);
-  const std::vector<int> distinguished(
-      ct.circuit_covering().distinguished_nodes().begin(),
-      ct.circuit_covering().distinguished_nodes().end());
-  m->Add(ExactlyOnePerRowAndPerColumn(graph));
-  m->Add(CircuitCovering(graph, distinguished));
 }
 
 bool LoadConstraint(const ConstraintProto& ct, Model* m) {
@@ -1758,6 +1850,9 @@ bool LoadConstraint(const ConstraintProto& ct, Model* m) {
       return true;
     case ConstraintProto::ConstraintCase::kAtMostOne:
       LoadAtMostOneConstraint(ct, m);
+      return true;
+    case ConstraintProto::ConstraintCase::kExactlyOne:
+      LoadExactlyOneConstraint(ct, m);
       return true;
     case ConstraintProto::ConstraintCase::kBoolXor:
       LoadBoolXorConstraint(ct, m);
@@ -1795,6 +1890,9 @@ bool LoadConstraint(const ConstraintProto& ct, Model* m) {
     case ConstraintProto::ConstraintProto::kCumulative:
       LoadCumulativeConstraint(ct, m);
       return true;
+    case ConstraintProto::ConstraintProto::kReservoir:
+      LoadReservoirConstraint(ct, m);
+      return true;
     case ConstraintProto::ConstraintProto::kElement:
       LoadElementConstraint(ct, m);
       return true;
@@ -1809,9 +1907,6 @@ bool LoadConstraint(const ConstraintProto& ct, Model* m) {
       return true;
     case ConstraintProto::ConstraintProto::kRoutes:
       LoadRoutesConstraint(ct, m);
-      return true;
-    case ConstraintProto::ConstraintProto::kCircuitCovering:
-      LoadCircuitCoveringConstraint(ct, m);
       return true;
     default:
       return false;

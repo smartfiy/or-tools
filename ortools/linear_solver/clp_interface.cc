@@ -85,8 +85,6 @@ class CLPInterface : public MPSolverInterface {
   int64 iterations() const override;
   // Number of branch-and-bound nodes. Only available for discrete problems.
   int64 nodes() const override;
-  // Best objective bound. Only available for discrete problems.
-  double best_objective_bound() const override;
 
   // Returns the basis status of a row.
   MPSolver::BasisStatus row_status(int constraint_index) const override;
@@ -504,7 +502,7 @@ MPSolver::ResultStatus CLPInterface::Solve(const MPSolverParameters& param) {
     ResetParameters();
     sync_status_ = SOLUTION_SYNCHRONIZED;
     return result_status_;
-  } catch (CoinError &e) {
+  } catch (CoinError& e) {
     LOG(WARNING) << "Caught exception in Coin LP: " << e.message();
     result_status_ = MPSolver::ABNORMAL;
     return result_status_;
@@ -542,11 +540,6 @@ int64 CLPInterface::iterations() const {
 int64 CLPInterface::nodes() const {
   LOG(DFATAL) << "Number of nodes only available for discrete problems";
   return kUnknownNumberOfNodes;
-}
-
-double CLPInterface::best_objective_bound() const {
-  LOG(DFATAL) << "Best objective bound only available for discrete problems";
-  return trivial_worst_objective_bound();
 }
 
 MPSolver::BasisStatus CLPInterface::row_status(int constraint_index) const {

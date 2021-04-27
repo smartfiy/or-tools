@@ -62,7 +62,6 @@
 
 #include <vector>
 
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/macros.h"
 #include "ortools/glop/parameters.pb.h"

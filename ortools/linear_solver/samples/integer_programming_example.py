@@ -12,7 +12,6 @@
 # limitations under the License.
 """Small example to illustrate solving a MIP problem."""
 # [START program]
-from __future__ import print_function
 # [START import]
 from ortools.linear_solver import pywraplp
 # [END import]
@@ -21,9 +20,9 @@ from ortools.linear_solver import pywraplp
 def IntegerProgrammingExample():
     """Integer programming sample."""
     # [START solver]
-    # Create the mip solver with the CBC backend.
-    solver = pywraplp.Solver('IntegerProgrammingExample',
-                             pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
+    # Create the mip solver with the SCIP backend.
+    solver = pywraplp.Solver.CreateSolver('SCIP')
+
     # [END solver]
 
     # [START variables]

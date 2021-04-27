@@ -24,23 +24,59 @@ public interface LinearExpr {
   /** Returns the ith coefficient. */
   long getCoefficient(int index);
 
+  /** Returns the constant part of the expression. */
+  long getOffset();
+
   /** Creates a sum expression. */
   static LinearExpr sum(IntVar[] variables) {
     return new SumOfVariables(variables);
   }
 
+  /** Creates a sum expression. */
+  static LinearExpr booleanSum(Literal[] literals) {
+    // We need the scalar product for the negative coefficient of negated Boolean variables.
+    return new ScalProd(literals);
+  }
+
   /** Creates a scalar product. */
   static LinearExpr scalProd(IntVar[] variables, long[] coefficients) {
+    if (variables.length != coefficients.length) {
+      throw new CpModel.MismatchedArrayLengths("LinearExpr.scalProd", "variables", "coefficients");
+    }
     return new ScalProd(variables, coefficients);
   }
 
   /** Creates a scalar product. */
   static LinearExpr scalProd(IntVar[] variables, int[] coefficients) {
+    if (variables.length != coefficients.length) {
+      throw new CpModel.MismatchedArrayLengths("LinearExpr.scalProd", "variables", "coefficients");
+    }
     long[] tmp = new long[coefficients.length];
     for (int i = 0; i < coefficients.length; ++i) {
       tmp[i] = coefficients[i];
     }
     return new ScalProd(variables, tmp);
+  }
+
+  /** Creates a scalar product. */
+  static LinearExpr booleanScalProd(Literal[] literals, long[] coefficients) {
+    if (literals.length != coefficients.length) {
+      throw new CpModel.MismatchedArrayLengths("LinearExpr.scalProd", "literals", "coefficients");
+    }
+    return new ScalProd(literals, coefficients);
+  }
+
+  /** Creates a scalar product. */
+  static LinearExpr booleanScalProd(Literal[] literals, int[] coefficients) {
+    if (literals.length != coefficients.length) {
+      throw new CpModel.MismatchedArrayLengths("LinearExpr.scalProd", "literals", "coefficients");
+    }
+
+    long[] tmp = new long[coefficients.length];
+    for (int i = 0; i < coefficients.length; ++i) {
+      tmp[i] = coefficients[i];
+    }
+    return new ScalProd(literals, tmp);
   }
 
   /** Creates a linear term (var * coefficient). */

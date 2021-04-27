@@ -54,6 +54,7 @@ namespace sat {
 
 class CpModelBuilder;
 class LinearExpr;
+class IntVar;
 
 /**
  *  A Boolean variable.
@@ -149,6 +150,10 @@ class IntVar {
   /// Implicit cast BoolVar -> IntVar.
   IntVar(const BoolVar& var);  // NOLINT(runtime/explicit)
 
+  /// Cast  IntVar -> BoolVar.
+  /// Checks that the domain of the var is within {0,1}.
+  BoolVar ToBoolVar() const;
+
   /// Sets the name of the variable.
   IntVar WithName(const std::string& name);
 
@@ -186,6 +191,7 @@ class IntVar {
   int index() const { return index_; }
 
  private:
+  friend class BoolVar;
   friend class CpModelBuilder;
   friend class CumulativeConstraint;
   friend class LinearExpr;
@@ -853,12 +859,36 @@ class CpModelBuilder {
   /// Adds hinting to a variable.
   void AddHint(IntVar var, int64 value);
 
+  /// Remove all hints.
+  void ClearHints();
+
+  /// Adds a literal to the model as assumptions.
+  void AddAssumption(BoolVar lit);
+
+  /// Adds multiple literals to the model as assumptions.
+  void AddAssumptions(absl::Span<const BoolVar> literals);
+
+  /// Remove all assumptions from the model.
+  void ClearAssumptions();
+
   // TODO(user) : add MapDomain?
 
   const CpModelProto& Build() const { return Proto(); }
 
   const CpModelProto& Proto() const { return cp_model_; }
   CpModelProto* MutableProto() { return &cp_model_; }
+
+  /// Replace the current model with the one from the given proto.
+  void CopyFrom(const CpModelProto& model_proto);
+
+  /// Returns the Boolean variable from its index in the proto.
+  BoolVar GetBoolVarFromProtoIndex(int index);
+
+  /// Returns the integer variable from its index in the proto.
+  IntVar GetIntVarFromProtoIndex(int index);
+
+  /// Returns the interval variable from its index in the proto.
+  IntervalVar GetIntervalVarFromProtoIndex(int index);
 
  private:
   friend class CumulativeConstraint;

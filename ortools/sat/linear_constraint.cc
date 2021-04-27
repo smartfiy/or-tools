@@ -14,6 +14,7 @@
 #include "ortools/sat/linear_constraint.h"
 
 #include "ortools/base/mathutil.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/integer.h"
 
 namespace operations_research {
@@ -42,6 +43,11 @@ void LinearConstraintBuilder::AddTerm(AffineExpression expr,
   }
   if (lb_ > kMinIntegerValue) lb_ -= coeff * expr.constant;
   if (ub_ < kMaxIntegerValue) ub_ -= coeff * expr.constant;
+}
+
+void LinearConstraintBuilder::AddConstant(IntegerValue value) {
+  if (lb_ > kMinIntegerValue) lb_ -= value;
+  if (ub_ < kMaxIntegerValue) ub_ -= value;
 }
 
 ABSL_MUST_USE_RESULT bool LinearConstraintBuilder::AddLiteralTerm(
@@ -113,8 +119,9 @@ LinearConstraint LinearConstraintBuilder::Build() {
   return result;
 }
 
-double ComputeActivity(const LinearConstraint& constraint,
-                       const gtl::ITIVector<IntegerVariable, double>& values) {
+double ComputeActivity(
+    const LinearConstraint& constraint,
+    const absl::StrongVector<IntegerVariable, double>& values) {
   double activity = 0;
   for (int i = 0; i < constraint.vars.size(); ++i) {
     const IntegerVariable var = constraint.vars[i];

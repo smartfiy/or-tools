@@ -39,6 +39,20 @@ class Model {
  public:
   Model() {}
 
+  ~Model() {
+    // The order of deletion seems to be platform dependent.
+    // We force a reverse order on the cleanup vector.
+    for (int i = cleanup_list_.size() - 1; i >= 0; --i) {
+      cleanup_list_[i].reset();
+    }
+  }
+
+  /**
+   * When there is more than one model in an application, it makes sense to
+   * name them for debugging or logging.
+   */
+  explicit Model(std::string name) : name_(name) {}
+
   /**
    * This makes it possible  to have a nicer API on the client side, and it
    * allows both of these forms:
@@ -158,6 +172,8 @@ class Model {
     singletons_[type_id] = non_owned_class;
   }
 
+  const std::string& Name() const { return name_; }
+
  private:
   // We want to call the constructor T(model*) if it exists or just T() if
   // it doesn't. For this we use some template "magic":
@@ -173,12 +189,10 @@ class Model {
     return new T();
   }
 
+  const std::string name_;
+
   // Map of FastTypeId<T> to a "singleton" of type T.
-#if defined(__APPLE__)
-  std::map</*typeid*/ size_t, void*> singletons_;
-#else
   absl::flat_hash_map</*typeid*/ size_t, void*> singletons_;
-#endif
 
   struct DeleteInterface {
     virtual ~DeleteInterface() = default;

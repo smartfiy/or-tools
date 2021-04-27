@@ -12,8 +12,6 @@
 # limitations under the License.
 """This model implements a sudoku solver."""
 
-from __future__ import print_function
-
 from ortools.sat.python import cp_model
 
 
@@ -28,10 +26,10 @@ def solve_sudoku():
     cell = list(range(0, cell_size))
 
     initial_grid = [[0, 6, 0, 0, 5, 0, 0, 2, 0], [0, 0, 0, 3, 0, 0, 0, 9, 0],
-                    [7, 0, 0, 6, 0, 0, 0, 1, 0], [0, 0, 6, 0, 3, 0, 4, 0, 0], [
-                        0, 0, 4, 0, 7, 0, 1, 0, 0
-                    ], [0, 0, 5, 0, 9, 0, 8, 0, 0], [0, 4, 0, 0, 0, 1, 0, 0, 6],
-                    [0, 3, 0, 0, 0, 8, 0, 0, 0], [0, 2, 0, 0, 4, 0, 0, 5, 0]]
+                    [7, 0, 0, 6, 0, 0, 0, 1, 0], [0, 0, 6, 0, 3, 0, 4, 0, 0],
+                    [0, 0, 4, 0, 7, 0, 1, 0, 0], [0, 0, 5, 0, 9, 0, 8, 0, 0],
+                    [0, 4, 0, 0, 0, 1, 0, 0, 6], [0, 3, 0, 0, 0, 8, 0, 0, 0],
+                    [0, 2, 0, 0, 4, 0, 0, 5, 0]]
 
     grid = {}
     for i in line:
@@ -66,7 +64,7 @@ def solve_sudoku():
     # Solve and print out the solution.
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
-    if status == cp_model.FEASIBLE:
+    if status == cp_model.OPTIMAL:
         for i in line:
             print([int(solver.Value(grid[(i, j)])) for j in line])
 

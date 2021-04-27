@@ -75,7 +75,6 @@ class BopInterface : public MPSolverInterface {
   // ------ Query statistics on the solution and the solve ------
   int64 iterations() const override;
   int64 nodes() const override;
-  double best_objective_bound() const override;
   MPSolver::BasisStatus row_status(int constraint_index) const override;
   MPSolver::BasisStatus column_status(int variable_index) const override;
 
@@ -110,7 +109,6 @@ class BopInterface : public MPSolverInterface {
   std::vector<MPSolver::BasisStatus> column_status_;
   std::vector<MPSolver::BasisStatus> row_status_;
   bop::BopParameters parameters_;
-  double best_objective_bound_;
   std::atomic<bool> interrupt_solver_;
 };
 
@@ -129,7 +127,10 @@ MPSolver::ResultStatus BopInterface::Solve(const MPSolverParameters& param) {
   // Check whenever the solve has already been stopped by the user.
   if (interrupt_solver_) {
     Reset();
-    return MPSolver::NOT_SOLVED;
+    // linear_solver.cc as DCHECK_EQ that interface_->result_status_ is the same
+    // as the status returned by interface_->Solve().
+    result_status_ = MPSolver::NOT_SOLVED;
+    return result_status_;
   }
 
   // Reset extraction as this interface is not incremental yet.
@@ -260,13 +261,6 @@ int64 BopInterface::iterations() const {
 int64 BopInterface::nodes() const {
   LOG(DFATAL) << "Number of nodes not available";
   return kUnknownNumberOfNodes;
-}
-
-double BopInterface::best_objective_bound() const {
-  if (!CheckSolutionIsSynchronized() || !CheckBestObjectiveBoundExists()) {
-    return trivial_worst_objective_bound();
-  }
-  return best_objective_bound_;
 }
 
 MPSolver::BasisStatus BopInterface::row_status(int constraint_index) const {

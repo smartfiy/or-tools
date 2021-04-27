@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
 #include "absl/strings/str_format.h"
 #include "ortools/base/commandlineflags.h"
 #include "ortools/base/integral_types.h"
@@ -31,15 +32,16 @@
 #include "ortools/base/hash.h"
 #include "ortools/base/int_type.h"
 #include "ortools/base/map_util.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/graph/util.h"
 #include "ortools/port/proto_utils.h"
 #include "ortools/sat/sat_parameters.pb.h"
 
-DEFINE_string(debug_dump_symmetry_graph_to_file, "",
-              "If this flag is non-empty, an undirected graph whose"
-              " automorphism group is in one-to-one correspondence with the"
-              " symmetries of the SAT problem will be dumped to a file every"
-              " time FindLinearBooleanProblemSymmetries() is called.");
+ABSL_FLAG(std::string, debug_dump_symmetry_graph_to_file, "",
+          "If this flag is non-empty, an undirected graph whose"
+          " automorphism group is in one-to-one correspondence with the"
+          " symmetries of the SAT problem will be dumped to a file every"
+          " time FindLinearBooleanProblemSymmetries() is called.");
 
 namespace operations_research {
 namespace sat {
@@ -127,24 +129,24 @@ std::vector<LiteralWithCoeff> ConvertLinearExpression(
 
 }  // namespace
 
-util::Status ValidateBooleanProblem(const LinearBooleanProblem& problem) {
+absl::Status ValidateBooleanProblem(const LinearBooleanProblem& problem) {
   std::vector<bool> variable_seen(problem.num_variables(), false);
   for (int i = 0; i < problem.constraints_size(); ++i) {
     const LinearBooleanConstraint& constraint = problem.constraints(i);
     const std::string error = ValidateLinearTerms(constraint, &variable_seen);
     if (!error.empty()) {
-      return util::Status(
-          util::error::INVALID_ARGUMENT,
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
           absl::StrFormat("Invalid constraint %i: ", i) + error);
     }
   }
   const std::string error =
       ValidateLinearTerms(problem.objective(), &variable_seen);
   if (!error.empty()) {
-    return util::Status(util::error::INVALID_ARGUMENT,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrFormat("Invalid objective: ") + error);
   }
-  return util::Status::OK;
+  return ::absl::OkStatus();
 }
 
 CpModelProto BooleanProblemToCpModelproto(const LinearBooleanProblem& problem) {
@@ -221,7 +223,7 @@ bool LoadBooleanProblem(const LinearBooleanProblem& problem,
   // constraints with duplicate variables, so we just output a warning if the
   // problem is not "valid". Make this a strong check once we have some
   // preprocessing step to remove duplicates variable in the constraints.
-  const util::Status status = ValidateBooleanProblem(problem);
+  const absl::Status status = ValidateBooleanProblem(problem);
   if (!status.ok()) {
     LOG(WARNING) << "The given problem is invalid!";
   }
@@ -257,13 +259,13 @@ bool LoadBooleanProblem(const LinearBooleanProblem& problem,
 
 bool LoadAndConsumeBooleanProblem(LinearBooleanProblem* problem,
                                   SatSolver* solver) {
-  const util::Status status = ValidateBooleanProblem(*problem);
+  const absl::Status status = ValidateBooleanProblem(*problem);
   if (!status.ok()) {
     LOG(WARNING) << "The given problem is invalid! " << status.message();
   }
   if (solver->parameters().log_search_progress()) {
 #if !defined(__PORTABLE_PLATFORM__)
-    LOG(INFO) << "LinearBooleanProblem memory: " << problem->SpaceUsed();
+    LOG(INFO) << "LinearBooleanProblem memory: " << problem->SpaceUsedLong();
 #endif
     LOG(INFO) << "Loading problem '" << problem->name() << "', "
               << problem->num_variables() << " variables, "
@@ -676,7 +678,7 @@ void FindLinearBooleanProblemSymmetries(
   LOG(INFO) << "Graph has " << graph->num_nodes() << " nodes and "
             << graph->num_arcs() / 2 << " edges.";
 #if !defined(__PORTABLE_PLATFORM__)
-  if (!FLAGS_debug_dump_symmetry_graph_to_file.empty()) {
+  if (!absl::GetFlag(FLAGS_debug_dump_symmetry_graph_to_file).empty()) {
     // Remap the graph nodes to sort them by equivalence classes.
     std::vector<int> new_node_index(graph->num_nodes(), -1);
     const int num_classes = 1 + *std::max_element(equivalence_classes.begin(),
@@ -690,8 +692,8 @@ void FindLinearBooleanProblemSymmetries(
       new_node_index[node] = next_index_by_class[equivalence_classes[node]]++;
     }
     std::unique_ptr<Graph> remapped_graph = RemapGraph(*graph, new_node_index);
-    const util::Status status = util::WriteGraphToFile(
-        *remapped_graph, FLAGS_debug_dump_symmetry_graph_to_file,
+    const absl::Status status = util::WriteGraphToFile(
+        *remapped_graph, absl::GetFlag(FLAGS_debug_dump_symmetry_graph_to_file),
         /*directed=*/false, class_size);
     if (!status.ok()) {
       LOG(DFATAL) << "Error when writing the symmetry graph to file: "
@@ -703,9 +705,8 @@ void FindLinearBooleanProblemSymmetries(
                                       /*is_undirected=*/true);
   std::vector<int> factorized_automorphism_group_size;
   // TODO(user): inject the appropriate time limit here.
-  CHECK_OK(symmetry_finder.FindSymmetries(
-      /*time_limit_seconds=*/std::numeric_limits<double>::infinity(),
-      &equivalence_classes, generators, &factorized_automorphism_group_size));
+  CHECK_OK(symmetry_finder.FindSymmetries(&equivalence_classes, generators,
+                                          &factorized_automorphism_group_size));
 
   // Remove from the permutations the part not concerning the literals.
   // Note that some permutation may becomes empty, which means that we had
@@ -740,7 +741,7 @@ void FindLinearBooleanProblemSymmetries(
 }
 
 void ApplyLiteralMappingToBooleanProblem(
-    const gtl::ITIVector<LiteralIndex, LiteralIndex>& mapping,
+    const absl::StrongVector<LiteralIndex, LiteralIndex>& mapping,
     LinearBooleanProblem* problem) {
   Coefficient bound_shift;
   Coefficient max_value;
@@ -830,7 +831,7 @@ void ProbeAndSimplifyProblem(SatPostsolver* postsolver,
       LOG(INFO) << "UNSAT when loading the problem.";
     }
 
-    gtl::ITIVector<LiteralIndex, LiteralIndex> equiv_map;
+    absl::StrongVector<LiteralIndex, LiteralIndex> equiv_map;
     ProbeAndFindEquivalentLiteral(&solver, postsolver, /*drat_writer=*/nullptr,
                                   &equiv_map);
 
@@ -856,7 +857,7 @@ void ProbeAndSimplifyProblem(SatPostsolver* postsolver,
     // Remap the variables into a dense set. All the variables for which the
     // equiv_map is not the identity are no longer needed.
     BooleanVariable new_var(0);
-    gtl::ITIVector<BooleanVariable, BooleanVariable> var_map;
+    absl::StrongVector<BooleanVariable, BooleanVariable> var_map;
     for (BooleanVariable var(0); var < solver.NumVariables(); ++var) {
       if (equiv_map[Literal(var, true).Index()] == Literal(var, true).Index()) {
         var_map.push_back(new_var);

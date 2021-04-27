@@ -12,6 +12,9 @@
 // limitations under the License.
 
 // TODO(user): Refactor this file to adhere to the SWIG style guide.
+%include "std_pair.i"
+%template(IntBoolPair) std::pair<int, bool>;
+
 %include "ortools/constraint_solver/csharp/constraint_solver.i"
 %include "ortools/constraint_solver/csharp/routing_types.i"
 %include "ortools/constraint_solver/csharp/routing_index_manager.i"
@@ -81,16 +84,14 @@ namespace operations_research {
 %}
 // Ignored:
 %ignore RoutingModel::AddDimensionDependentDimensionWithVehicleCapacity;
-%ignore RoutingModel::AddHardTypeIncompatibility;
-%ignore RoutingModel::AddMatrixDimension(
-    std::vector<std::vector<int64> > values,
-    int64 capacity,
-    bool fix_start_cumul_to_zero,
-    const std::string& name);
+
+%unignore RoutingModel::RegisterUnaryTransitVector;
+%unignore RoutingModel::RegisterTransitMatrix;
+
+%unignore RoutingModel::AddVectorDimension;
+%unignore RoutingModel::AddMatrixDimension;
+
 %ignore RoutingModel::AddSameVehicleRequiredTypeAlternatives;
-%ignore RoutingModel::AddTemporalRequiredTypeAlternatives;
-%ignore RoutingModel::AddTemporalTypeIncompatibility;
-%ignore RoutingModel::CloseVisitTypes;
 %ignore RoutingModel::GetAllDimensionNames;
 %ignore RoutingModel::GetAutomaticFirstSolutionStrategy;
 %ignore RoutingModel::GetDeliveryIndexPairs;
@@ -106,13 +107,6 @@ namespace operations_research {
 %ignore RoutingModel::GetMutableLocalCumulMPOptimizer;
 %ignore RoutingModel::GetPerfectBinaryDisjunctions;
 %ignore RoutingModel::GetPickupIndexPairs;
-%ignore RoutingModel::GetSameVehicleRequiredTypeAlternativesOfType;
-%ignore RoutingModel::GetTemporalRequiredTypeAlternativesOfType;
-%ignore RoutingModel::GetTemporalTypeIncompatibilitiesOfType;
-%ignore RoutingModel::HasHardTypeIncompatibilities;
-%ignore RoutingModel::HasSameVehicleTypeRequirements;
-%ignore RoutingModel::HasTemporalTypeIncompatibilities;
-%ignore RoutingModel::HasTemporalTypeRequirements;
 %ignore RoutingModel::HasTypeRegulations;
 %ignore RoutingModel::MakeStateDependentTransit;
 %ignore RoutingModel::PackCumulsOfOptimizerDimensionsFromAssignment;

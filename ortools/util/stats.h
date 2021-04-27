@@ -175,6 +175,7 @@ class StatsGroup {
 class DistributionStat : public Stat {
  public:
   explicit DistributionStat(const std::string& name);
+  DistributionStat() : DistributionStat("") {}
   DistributionStat(const std::string& name, StatsGroup* group);
   ~DistributionStat() override {}
   void Reset() override;
@@ -221,6 +222,7 @@ class TimeDistribution : public DistributionStat {
  public:
   explicit TimeDistribution(const std::string& name)
       : DistributionStat(name), timer_() {}
+  TimeDistribution() : TimeDistribution("") {}
   TimeDistribution(const std::string& name, StatsGroup* group)
       : DistributionStat(name, group), timer_() {}
   std::string ValueAsString() const override;
@@ -262,6 +264,7 @@ class RatioDistribution : public DistributionStat {
  public:
   explicit RatioDistribution(const std::string& name)
       : DistributionStat(name) {}
+  RatioDistribution() : RatioDistribution("") {}
   RatioDistribution(const std::string& name, StatsGroup* group)
       : DistributionStat(name, group) {}
   std::string ValueAsString() const override;
@@ -273,6 +276,7 @@ class DoubleDistribution : public DistributionStat {
  public:
   explicit DoubleDistribution(const std::string& name)
       : DistributionStat(name) {}
+  DoubleDistribution() : DoubleDistribution("") {}
   DoubleDistribution(const std::string& name, StatsGroup* group)
       : DistributionStat(name, group) {}
   std::string ValueAsString() const override;
@@ -284,6 +288,7 @@ class IntegerDistribution : public DistributionStat {
  public:
   explicit IntegerDistribution(const std::string& name)
       : DistributionStat(name) {}
+  IntegerDistribution() : IntegerDistribution("") {}
   IntegerDistribution(const std::string& name, StatsGroup* group)
       : DistributionStat(name, group) {}
   std::string ValueAsString() const override;
@@ -418,9 +423,11 @@ inline std::string RemoveOperationsResearchAndGlop(
   operations_research::ScopedInstructionCounter scoped_instruction_count( \
       RemoveOperationsResearchAndGlop(__PRETTY_FUNCTION__), time_limit)
 
+#else  // !HAS_PERF_SUBSYSTEM
+#define SCOPED_INSTRUCTION_COUNT(time_limit)
 #endif  // HAS_PERF_SUBSYSTEM
 
-#else  // OR_STATS
+#else  // !OR_STATS
 // If OR_STATS is not defined, we remove some instructions that may be time
 // consuming.
 

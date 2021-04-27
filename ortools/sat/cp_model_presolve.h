@@ -62,7 +62,7 @@ void ApplyVariableMapping(const std::vector<int>& mapping,
 // inside the model. We can add a IntegerVariableProto::initial_index;
 class CpModelPresolver {
  public:
-  CpModelPresolver(const PresolveOptions& options, PresolveContext* context,
+  CpModelPresolver(PresolveContext* context,
                    std::vector<int>* postsolve_mapping);
 
   // Returns false if a non-recoverable error was encountered.
@@ -99,6 +99,7 @@ class CpModelPresolver {
   bool PresolveRoutes(ConstraintProto* ct);
   bool PresolveCumulative(ConstraintProto* ct);
   bool PresolveNoOverlap(ConstraintProto* ct);
+  bool PresolveReservoir(ConstraintProto* ct);
   bool PresolveAllDiff(ConstraintProto* ct);
   bool PresolveTable(ConstraintProto* ct);
   bool PresolveElement(ConstraintProto* ct);
@@ -111,10 +112,23 @@ class CpModelPresolver {
   bool PresolveLinMax(ConstraintProto* ct);
   bool PresolveIntAbs(ConstraintProto* ct);
   bool PresolveBoolXor(ConstraintProto* ct);
+
+  bool PresolveAtMostOrExactlyOne(ConstraintProto* ct);
   bool PresolveAtMostOne(ConstraintProto* ct);
+  bool PresolveExactlyOne(ConstraintProto* ct);
+
   bool PresolveBoolAnd(ConstraintProto* ct);
   bool PresolveBoolOr(ConstraintProto* ct);
   bool PresolveEnforcementLiteral(ConstraintProto* ct);
+
+  // Regroups terms and substitute affine relations.
+  // Returns true if the set of variables in the expression changed.
+  template <typename ProtoWithVarsAndCoeffs>
+  bool CanonicalizeLinearExpressionInternal(const ConstraintProto& ct,
+                                            ProtoWithVarsAndCoeffs* proto,
+                                            int64* offset);
+  bool CanonicalizeLinearExpression(const ConstraintProto& ct,
+                                    LinearExpressionProto* exp);
 
   // For the linear constraints, we have more than one function.
   bool CanonicalizeLinear(ConstraintProto* ct);
@@ -122,6 +136,13 @@ class CpModelPresolver {
   bool RemoveSingletonInLinear(ConstraintProto* ct);
   bool PresolveSmallLinear(ConstraintProto* ct);
   bool PresolveLinearOnBooleans(ConstraintProto* ct);
+  void PresolveLinearEqualityModuloTwo(ConstraintProto* ct);
+
+  // To simplify dealing with the two kind of intervals.
+  int64 StartMin(const IntervalConstraintProto& interval) const;
+  int64 EndMax(const IntervalConstraintProto& interval) const;
+  int64 SizeMin(const IntervalConstraintProto& interval) const;
+  int64 SizeMax(const IntervalConstraintProto& interval) const;
 
   // SetPPC is short for set packing, partitioning and covering constraints.
   // These are sum of booleans <=, = and >= 1 respectively.
@@ -140,7 +161,9 @@ class CpModelPresolver {
   void ExtractAtMostOneFromLinear(ConstraintProto* ct);
 
   void DivideLinearByGcd(ConstraintProto* ct);
-  void ExtractEnforcementLiteralFromLinearConstraint(ConstraintProto* ct);
+
+  void ExtractEnforcementLiteralFromLinearConstraint(int ct_index,
+                                                     ConstraintProto* ct);
 
   // Extracts cliques from bool_and and small at_most_one constraints and
   // transforms them into maximal cliques.
@@ -155,26 +178,25 @@ class CpModelPresolver {
 
   void MergeNoOverlapConstraints();
 
-  void RemoveUnusedEquivalentVariables();
-
-  bool IntervalsCanIntersect(const IntervalConstraintProto& interval1,
-                             const IntervalConstraintProto& interval2);
+  // Boths function are responsible for dealing with affine relations.
+  // The second one returns false on UNSAT.
+  void EncodeAllAffineRelations();
+  bool PresolveAffineRelationIfAny(int var);
 
   bool ExploitEquivalenceRelations(int c, ConstraintProto* ct);
 
   ABSL_MUST_USE_RESULT bool RemoveConstraint(ConstraintProto* ct);
   ABSL_MUST_USE_RESULT bool MarkConstraintAsFalse(ConstraintProto* ct);
 
-  const PresolveOptions& options_;
   std::vector<int>* postsolve_mapping_;
   PresolveContext* context_;
 
-  // Used by CanonicalizeLinear().
+  // Used by CanonicalizeLinearExpressionInternal().
   std::vector<std::pair<int, int64>> tmp_terms_;
 };
 
 // Convenient wrapper to call the full presolve.
-bool PresolveCpModel(const PresolveOptions& options, PresolveContext* context,
+bool PresolveCpModel(PresolveContext* context,
                      std::vector<int>* postsolve_mapping);
 
 // Returns the index of exact duplicate constraints in the given proto. That

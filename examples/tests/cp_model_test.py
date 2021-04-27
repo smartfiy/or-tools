@@ -1,10 +1,5 @@
 """Tests for ortools.sat.python.cp_model."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-
 import unittest
 from ortools.sat import cp_model_pb2
 from ortools.sat.python import cp_model
@@ -612,6 +607,30 @@ class CpModelTest(unittest.TestCase):
         ct = model.Add(a+b >= 5)
         self.assertEqual(ct.Proto().linear.domain[1], cp_model.INT_MAX)
 
+    def testExporToFile(self):
+        print('testExporToFile')
+        model = cp_model.CpModel()
+
+        a = model.NewIntVar(0, 10, 'a')
+        b = model.NewIntVar(0, 10, 'b')
+
+        ct = model.Add(a+b >= 5)
+        self.assertTrue(model.ExportToFile('test_model_python.pbtxt'))
+
+    def testProductIsNull(self):
+        print('testProductIsNull')
+        model = cp_model.CpModel()
+
+        a = model.NewIntVar(0, 10, 'a')
+        b = model.NewIntVar(0, 8, 'b')
+        p = model.NewIntVar(0, 80, 'p')
+
+        model.AddMultiplicationEquality(p, [a, b])
+        model.Add(p == 0)
+        solver = cp_model.CpSolver()
+        status = solver.Solve(model)
+        self.assertEqual(status, cp_model.OPTIMAL)
+
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

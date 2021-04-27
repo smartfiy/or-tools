@@ -1,8 +1,6 @@
 FROM ortools/cmake:fedora_swig AS env
-# see: https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-fedora31
-RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc \
-&& wget -q -O /etc/yum.repos.d/microsoft-prod.repo https://packages.microsoft.com/config/fedora/31/prod.repo \
-&& dnf -y update \
+# see: https://docs.microsoft.com/en-us/dotnet/core/install/linux-fedora
+RUN dnf -y update \
 && dnf -y install dotnet-sdk-3.1 \
 && dnf clean all
 # Trigger first run experience by running arbitrary cmd
@@ -13,12 +11,12 @@ WORKDIR /home/project
 COPY . .
 
 FROM devel AS build
-RUN cmake -S. -Bbuild -DBUILD_DEPS=ON -DBUILD_DOTNET=ON
+RUN cmake -S. -Bbuild -DBUILD_DOTNET=ON -DBUILD_CXX_SAMPLES=OFF -DBUILD_CXX_EXAMPLES=OFF
 RUN cmake --build build --target all -v
 RUN cmake --build build --target install
 
 FROM build AS test
-RUN cmake --build build --target test
+RUN CTEST_OUTPUT_ON_FAILURE=1 cmake --build build --target test
 
 FROM env AS install_env
 WORKDIR /home/sample

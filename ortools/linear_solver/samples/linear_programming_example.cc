@@ -14,13 +14,15 @@
 // [START program]
 // [START import]
 #include <iostream>
+
 #include "ortools/linear_solver/linear_solver.h"
 // [END import]
 
 namespace operations_research {
 void LinearProgrammingExample() {
   // [START solver]
-  MPSolver solver("LinearExample", MPSolver::GLOP_LINEAR_PROGRAMMING);
+  MPSolver solver("linear_programming_examples",
+                  MPSolver::GLOP_LINEAR_PROGRAMMING);
   // [END solver]
 
   // [START variables]

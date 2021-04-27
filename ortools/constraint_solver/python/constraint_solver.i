@@ -41,7 +41,6 @@
 
 // std::function utilities.
 %include "ortools/util/python/functions.i"
-
 %include "ortools/util/python/vector.i"
 
 // We *do* need to use SWIGTYPE_... type names directly, because the
@@ -114,6 +113,7 @@ PY_CONVERT_HELPER_PTR(IntervalVar);
 PY_CONVERT_HELPER_PTR(SequenceVar);
 PY_CONVERT_HELPER_PTR(LocalSearchOperator);
 PY_CONVERT_HELPER_PTR(LocalSearchFilter);
+PY_CONVERT_HELPER_PTR(LocalSearchFilterManager);
 PY_CONVERT_HELPER_INTEXPR_OR_INTVAR(IntVar);
 PY_CONVERT_HELPER_INTEXPR_OR_INTVAR(IntExpr);
 
@@ -128,6 +128,7 @@ PY_CONVERT(IntervalVar);
 PY_CONVERT(SequenceVar);
 PY_CONVERT(LocalSearchOperator);
 PY_CONVERT(LocalSearchFilter);
+PY_CONVERT(LocalSearchFilterManager);
 
 // Support passing std::function<void(Solver*)> as argument.
 // See ../utils/python/functions.i, from which this was copied and adapted.
@@ -2053,6 +2054,12 @@ namespace operations_research {
 %unignore LocalSearchFilter::Synchronize;
 %unignore LocalSearchFilter::IsIncremental;
 
+// LocalSearchFilterManager
+%unignore LocalSearchFilterManager;
+%unignore LocalSearchFilterManager::LocalSearchFilterManager;
+%unignore LocalSearchFilterManager::~LocalSearchFilterManager;
+%unignore LocalSearchFilterManager::Accept;
+%unignore LocalSearchFilterManager::Synchronize;
 
 // IntVarLocalSearchFilter
 // Ignored:

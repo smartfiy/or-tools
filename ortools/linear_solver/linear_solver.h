@@ -143,19 +143,22 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "absl/types/optional.h"
-#include "ortools/base/commandlineflags.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/macros.h"
-#include "ortools/base/status.h"
 #include "ortools/base/timer.h"
 #include "ortools/linear_solver/linear_expr.h"
 #include "ortools/linear_solver/linear_solver.pb.h"
 #include "ortools/linear_solver/linear_solver_callback.h"
 #include "ortools/port/proto_utils.h"
+
+ABSL_DECLARE_FLAG(bool, linear_solver_enable_verbose_output);
 
 namespace operations_research {
 
@@ -166,6 +169,9 @@ class MPObjective;
 class MPSolverInterface;
 class MPSolverParameters;
 class MPVariable;
+
+// There is a homonymous version taking a MPSolver::OptimizationProblemType.
+bool SolverTypeIsMip(MPModelRequest::SolverType solver_type);
 
 /**
  * This mathematical programming (MP) solver class is the main class
@@ -180,61 +186,72 @@ class MPSolver {
    *  (take particular care of the open-source version).
    */
   enum OptimizationProblemType {
-#ifdef USE_CLP
-    /// Linear Programming solver using Coin CBC.
+    // Linear programming problems.
+    // ----------------------------
     CLP_LINEAR_PROGRAMMING = 0,
-#endif
-#ifdef USE_GLPK
-    /// Linear Programming solver using GLPK.
     GLPK_LINEAR_PROGRAMMING = 1,
-#endif
-    /// Linear Programming solver using GLOP (Recommended solver).
-    GLOP_LINEAR_PROGRAMMING = 2,
-#ifdef USE_GUROBI
-    /// Linear Programming solver using GUROBI.
-    GUROBI_LINEAR_PROGRAMMING = 6,
-#endif
-#ifdef USE_CPLEX
-    /// Linear Programming solver using CPLEX.
-    CPLEX_LINEAR_PROGRAMMING = 10,
-#endif
+    GLOP_LINEAR_PROGRAMMING = 2,  // Recommended default value. Made in Google.
 
-// Integer programming problems.
-#ifdef USE_SCIP
-    /// Mixed integer Programming Solver using SCIP.
+    // Integer programming problems.
+    // -----------------------------
     SCIP_MIXED_INTEGER_PROGRAMMING = 3,  // Recommended default value.
-#endif
-#ifdef USE_GLPK
-    /// Mixed integer Programming Solver using SCIP.
     GLPK_MIXED_INTEGER_PROGRAMMING = 4,
-#endif
-#ifdef USE_CBC
-    /// Mixed integer Programming Solver using Coin CBC.
     CBC_MIXED_INTEGER_PROGRAMMING = 5,
-#endif
-#if defined(USE_GUROBI)
-    /// Mixed integer Programming Solver using GUROBI.
+
+    // Commercial software (need license).
+    GUROBI_LINEAR_PROGRAMMING = 6,
     GUROBI_MIXED_INTEGER_PROGRAMMING = 7,
-#endif
-#if defined(USE_CPLEX)
-    /// Mixed integer Programming Solver using CPLEX.
+    CPLEX_LINEAR_PROGRAMMING = 10,
     CPLEX_MIXED_INTEGER_PROGRAMMING = 11,
-#endif
-    /// Linear Boolean Programming Solver.
-    BOP_INTEGER_PROGRAMMING = 12,
-    /// SAT based solver (requires only integer and Boolean variables).
-    /// If you pass it mixed integer problems, it will scale coefficients to
-    /// integer values, and solve continuous variables as integral variables.
-    SAT_INTEGER_PROGRAMMING = 14,
-#if defined(USE_XPRESS)
     XPRESS_LINEAR_PROGRAMMING = 101,
     XPRESS_MIXED_INTEGER_PROGRAMMING = 102,
-#endif
+
+    // Boolean optimization problem (requires only integer variables and works
+    // best with only Boolean variables).
+    BOP_INTEGER_PROGRAMMING = 12,
+
+    // SAT based solver (requires only integer and Boolean variables).
+    // If you pass it mixed integer problems, it will scale coefficients to
+    // integer values, and solver continuous variables as integral variables.
+    SAT_INTEGER_PROGRAMMING = 14,
+
+    // Dedicated knapsack solvers.
+    KNAPSACK_MIXED_INTEGER_PROGRAMMING = 13,
   };
 
   /// Create a solver with the given name and underlying solver backend.
   MPSolver(const std::string& name, OptimizationProblemType problem_type);
   virtual ~MPSolver();
+
+  /**
+   * Recommended factory method to create a MPSolver instance, especially in
+   * non C++ languages.
+   *
+   * It returns a newly created solver instance if successful, or a nullptr
+   * otherwise. This can occur if the relevant interface is not linked in, or if
+   * a needed license is not accessible for commercial solvers.
+   *
+   * Ownership of the solver is passed on to the caller of this method.
+   * It will accept both string names of the OptimizationProblemType enum, as
+   * well as a short version (i.e. "SCIP_MIXED_INTEGER_PROGRAMMING" or "SCIP").
+   *
+   * solver_id is case insensitive, and the following names are supported:
+   *   - CLP_LINEAR_PROGRAMMING or CLP
+   *   - CBC_MIXED_INTEGER_PROGRAMMING or CBC
+   *   - GLOP_LINEAR_PROGRAMMING or GLOP
+   *   - BOP_INTEGER_PROGRAMMING or BOP
+   *   - SAT_INTEGER_PROGRAMMING or SAT or CP_SAT
+   *   - SCIP_MIXED_INTEGER_PROGRAMMING or SCIP
+   *   - GUROBI_LINEAR_PROGRAMMING or GUROBI_LP
+   *   - GUROBI_MIXED_INTEGER_PROGRAMMING or GUROBI or GUROBI_MIP
+   *   - CPLEX_LINEAR_PROGRAMMING or CPLEX_LP
+   *   - CPLEX_MIXED_INTEGER_PROGRAMMING or CPLEX or CPLEX_MIP
+   *   - XPRESS_LINEAR_PROGRAMMING or XPRESS_LP
+   *   - XPRESS_MIXED_INTEGER_PROGRAMMING or XPRESS or XPRESS_MIP
+   *   - GLPK_LINEAR_PROGRAMMING or GLPK_LP
+   *   - GLPK_MIXED_INTEGER_PROGRAMMING or GLPK or GLPK_MIP
+   */
+  static MPSolver* CreateSolver(const std::string& solver_id);
 
   /**
    * Whether the given problem type is supported (this will depend on the
@@ -245,9 +262,17 @@ class MPSolver {
   /**
    * Parses the name of the solver. Returns true if the solver type is
    * successfully parsed as one of the OptimizationProblemType.
+   * See the documentation of CreateSolver() for the list of supported names.
    */
-  static bool ParseSolverType(absl::string_view solver,
+  static bool ParseSolverType(absl::string_view solver_id,
                               OptimizationProblemType* type);
+
+  /**
+   * Parses the name of the solver and returns the correct optimization type or
+   * dies. Invariant: ParseSolverTypeOrDie(ToString(type)) = type.
+   */
+  static OptimizationProblemType ParseSolverTypeOrDie(
+      const std::string& solver_id);
 
   bool IsMIP() const;
 
@@ -506,6 +531,12 @@ class MPSolver {
    * If you want to keep the MPSolver alive (for debugging, or for incremental
    * solving), you should write another version of this function that creates
    * the MPSolver object on the heap and returns it.
+   *
+   * Note(pawell): This attempts to first use `DirectlySolveProto()` (if
+   * implemented). Consequently, this most likely does *not* override any of
+   * the default parameters of the underlying solver. This behavior *differs*
+   * from `MPSolver::Solve()` which by default sets the feasibility tolerance
+   * and the gap limit (as of 2020/02/11, to 1e-7 and 0.0001, respectively).
    */
   static void SolveWithProto(const MPModelRequest& model_request,
                              MPSolutionResponse* response);
@@ -544,7 +575,7 @@ class MPSolver {
    * Note: the objective value isn't checked. You can use VerifySolution() for
    *       that.
    */
-  util::Status LoadSolutionFromProto(
+  absl::Status LoadSolutionFromProto(
       const MPSolutionResponse& response,
       double tolerance = kDefaultPrimalTolerance);
 
@@ -552,7 +583,7 @@ class MPSolver {
    * Resets values of out of bound variables to the corresponding bound and
    * returns an error if any of the variables have NaN value.
    */
-  util::Status ClampSolutionWithinBounds();
+  absl::Status ClampSolutionWithinBounds();
 
   /**
    * Shortcuts to the homonymous MPModelProtoExporter methods, via exporting to
@@ -574,7 +605,7 @@ class MPSolver {
    * details). Also, some solvers may not (yet) support this function, but still
    * enable multi-threading via SetSolverSpecificParametersAsString().
    */
-  util::Status SetNumThreads(int num_threads);
+  absl::Status SetNumThreads(int num_threads);
 
   /// Returns the number of threads to be used during solve.
   int GetNumThreads() const { return num_threads_; }
@@ -765,6 +796,10 @@ class MPSolver {
     return absl::ToInt64Milliseconds(DurationSinceConstruction());
   }
 
+  // Supports search and loading Gurobi shared library.
+  static bool LoadGurobiSharedLibrary();
+  static void SetGurobiLibraryPath(const std::string& full_library_path);
+
   friend class GLPKInterface;
   friend class CLPInterface;
   friend class CBCInterface;
@@ -800,6 +835,10 @@ class MPSolver {
 
   // Generates the map from constraint names to their indices.
   void GenerateConstraintNameIndex() const;
+
+  // Checks licenses for commercial solver, and checks shared library loading
+  // for or-tools.
+  static bool GurobiIsCorrectlyInstalled();
 
   // The name of the linear programming problem.
   const std::string name_;
@@ -854,6 +893,10 @@ class MPSolver {
 
   DISALLOW_COPY_AND_ASSIGN(MPSolver);
 };
+
+inline bool SolverTypeIsMip(MPSolver::OptimizationProblemType solver_type) {
+  return SolverTypeIsMip(static_cast<MPModelRequest::SolverType>(solver_type));
+}
 
 const absl::string_view ToString(
     MPSolver::OptimizationProblemType optimization_problem_type);
@@ -1488,10 +1531,10 @@ class MPSolverInterface {
 
   // When the underlying solver does not provide the number of simplex
   // iterations.
-  static const int64 kUnknownNumberOfIterations = -1;
+  static constexpr int64 kUnknownNumberOfIterations = -1;
   // When the underlying solver does not provide the number of
   // branch-and-bound nodes.
-  static const int64 kUnknownNumberOfNodes = -1;
+  static constexpr int64 kUnknownNumberOfNodes = -1;
 
   // Constructor. The user will access the MPSolverInterface through the
   // MPSolver passed as argument.
@@ -1571,11 +1614,8 @@ class MPSolverInterface {
   // otherwise it crashes, or returns kUnknownNumberOfNodes in NDEBUG mode.
   virtual int64 nodes() const = 0;
   // Returns the best objective bound. The problem must be discrete, otherwise
-  // it crashes, or returns trivial_worst_objective_bound() in NDEBUG mode.
-  virtual double best_objective_bound() const = 0;
-  // A trivial objective bound: the worst possible value of the objective,
-  // which will be +infinity if minimizing and -infinity if maximing.
-  double trivial_worst_objective_bound() const;
+  // it crashes, or returns trivial bound (+/- inf) in NDEBUG mode.
+  double best_objective_bound() const;
   // Returns the objective value of the best solution found so far.
   double objective_value() const;
 
@@ -1595,9 +1635,6 @@ class MPSolverInterface {
   bool CheckSolutionIsSynchronizedAndExists() const {
     return CheckSolutionIsSynchronized() && CheckSolutionExists();
   }
-  // Checks whether information on the best objective bound exists. The behavior
-  // is similar to CheckSolutionIsSynchronized() above.
-  virtual bool CheckBestObjectiveBoundExists() const;
 
   // ----- Misc -----
   // Queries problem type. For simplicity, the distinction between
@@ -1692,6 +1729,9 @@ class MPSolverInterface {
   // The value of the objective function.
   double objective_value_;
 
+  // The value of the best objective bound. Used only for MIP solvers.
+  double best_objective_bound_;
+
   // Boolean indicator for the verbosity of the solver output.
   bool quiet_;
 
@@ -1737,27 +1777,16 @@ class MPSolverInterface {
   virtual void SetPresolveMode(int value) = 0;
 
   // Sets the number of threads to be used by the solver.
-  virtual util::Status SetNumThreads(int num_threads);
+  virtual absl::Status SetNumThreads(int num_threads);
 
   // Pass solver specific parameters in text format. The format is
   // solver-specific and is the same as the corresponding solver configuration
   // file format. Returns true if the operation was successful.
   //
-  // The default implementation of this method stores the parameters in a
-  // temporary file and calls ReadParameterFile to import the parameter file
-  // into the solver. Solvers that support passing the parameters directly can
-  // override this method to skip the temporary file logic.
+  // Default implementation returns true if the input is empty. It returns false
+  // and logs a WARNING if the input is not empty.
   virtual bool SetSolverSpecificParametersAsString(
       const std::string& parameters);
-
-  // Reads a solver-specific file of parameters and set them.
-  // Returns true if there was no errors.
-  virtual bool ReadParameterFile(const std::string& filename);
-
-  // Returns a file extension like ".tmp", this is needed because some solvers
-  // require a given extension for the ReadParameterFile() filename and we need
-  // to know it to generate a temporary parameter file.
-  virtual std::string ValidFileExtensionForParameterFile() const;
 
   // Sets the scaling mode.
   virtual void SetScalingMode(int value) = 0;

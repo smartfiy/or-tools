@@ -158,6 +158,7 @@
 #define OR_TOOLS_CONSTRAINT_SOLVER_ROUTING_H_
 
 #include <cstddef>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <queue>
@@ -167,15 +168,16 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/functional/bind_front.h"
 #include "absl/hash/hash.h"
 #include "absl/time/time.h"
 #include "ortools/base/adjustable_priority_queue-inl.h"
 #include "ortools/base/adjustable_priority_queue.h"
 #include "ortools/base/commandlineflags.h"
 #include "ortools/base/hash.h"
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/macros.h"
+#include "ortools/base/mathutil.h"
 #include "ortools/constraint_solver/constraint_solver.h"
 #include "ortools/constraint_solver/constraint_solveri.h"
 #include "ortools/constraint_solver/routing_enums.pb.h"
@@ -334,14 +336,14 @@ class RoutingModel {
     int end_equivalence_class;
     /// Bounds of cumul variables at start and end vehicle nodes.
     /// dimension_{start,end}_cumuls_{min,max}[d] is the bound for dimension d.
-    gtl::ITIVector<DimensionIndex, int64> dimension_start_cumuls_min;
-    gtl::ITIVector<DimensionIndex, int64> dimension_start_cumuls_max;
-    gtl::ITIVector<DimensionIndex, int64> dimension_end_cumuls_min;
-    gtl::ITIVector<DimensionIndex, int64> dimension_end_cumuls_max;
-    gtl::ITIVector<DimensionIndex, int64> dimension_capacities;
+    absl::StrongVector<DimensionIndex, int64> dimension_start_cumuls_min;
+    absl::StrongVector<DimensionIndex, int64> dimension_start_cumuls_max;
+    absl::StrongVector<DimensionIndex, int64> dimension_end_cumuls_min;
+    absl::StrongVector<DimensionIndex, int64> dimension_end_cumuls_max;
+    absl::StrongVector<DimensionIndex, int64> dimension_capacities;
     /// dimension_evaluators[d]->Run(from, to) is the transit value of arc
     /// from->to for a dimension d.
-    gtl::ITIVector<DimensionIndex, int64> dimension_evaluator_classes;
+    absl::StrongVector<DimensionIndex, int64> dimension_evaluator_classes;
     /// Fingerprint of unvisitable non-start/end nodes.
     uint64 unvisitable_nodes_fprint;
 
@@ -349,6 +351,34 @@ class RoutingModel {
     static bool LessThan(const VehicleClass& a, const VehicleClass& b);
   };
 #endif  // defined(SWIG)
+
+  /// Struct used to sort and store vehicles by their type. Two vehicles have
+  /// the same "vehicle type" iff they have the same cost class and start/end
+  /// nodes.
+  struct VehicleTypeContainer {
+    struct VehicleClassEntry {
+      int vehicle_class;
+      int64 fixed_cost;
+
+      bool operator<(const VehicleClassEntry& other) const {
+        return std::tie(fixed_cost, vehicle_class) <
+               std::tie(other.fixed_cost, other.vehicle_class);
+      }
+    };
+
+    int NumTypes() const { return sorted_vehicle_classes_per_type.size(); }
+
+    int Type(int vehicle) const {
+      DCHECK_LT(vehicle, type_index_of_vehicle.size());
+      return type_index_of_vehicle[vehicle];
+    }
+
+    std::vector<int> type_index_of_vehicle;
+    // clang-format off
+    std::vector<std::set<VehicleClassEntry> > sorted_vehicle_classes_per_type;
+    std::vector<std::deque<int> > vehicles_per_vehicle_class;
+    // clang-format on
+  };
 
   /// Constant used to express a hard constraint instead of a soft penalty.
   static const int64 kNoPenalty;
@@ -370,10 +400,15 @@ class RoutingModel {
   ~RoutingModel();
 
   /// Registers 'callback' and returns its index.
+  int RegisterUnaryTransitVector(std::vector<int64> values);
   int RegisterUnaryTransitCallback(TransitCallback1 callback);
   int RegisterPositiveUnaryTransitCallback(TransitCallback1 callback);
+
+  int RegisterTransitMatrix(
+      std::vector<std::vector<int64> /*needed_for_swig*/> values);
   int RegisterTransitCallback(TransitCallback2 callback);
   int RegisterPositiveTransitCallback(TransitCallback2 callback);
+
   int RegisterStateDependentTransitCallback(VariableIndexEvaluator2 callback);
   const TransitCallback2& TransitCallback(int callback_index) const {
     CHECK_LT(callback_index, transit_evaluators_.size());
@@ -428,15 +463,16 @@ class RoutingModel {
   /// equal to 'value'; 'capacity' is the upper bound of the cumul variables.
   /// 'name' is the name used to reference the dimension; this name is used to
   /// get cumul and transit variables from the routing model.
-  /// Returns false if a dimension with the same name has already been created
-  /// (and doesn't create the new dimension).
-  bool AddConstantDimensionWithSlack(int64 value, int64 capacity,
-                                     int64 slack_max,
-                                     bool fix_start_cumul_to_zero,
-                                     const std::string& name);
-  bool AddConstantDimension(int64 value, int64 capacity,
-                            bool fix_start_cumul_to_zero,
-                            const std::string& name) {
+  /// Returns a pair consisting of an index to the registered unary transit
+  /// callback and a bool denoting whether the dimension has been created.
+  /// It is false if a dimension with the same name has already been created
+  /// (and doesn't create the new dimension but still register a new callback).
+  std::pair<int, bool> AddConstantDimensionWithSlack(
+      int64 value, int64 capacity, int64 slack_max,
+      bool fix_start_cumul_to_zero, const std::string& name);
+  std::pair<int, bool> AddConstantDimension(int64 value, int64 capacity,
+                                            bool fix_start_cumul_to_zero,
+                                            const std::string& name) {
     return AddConstantDimensionWithSlack(value, capacity, 0,
                                          fix_start_cumul_to_zero, name);
   }
@@ -445,19 +481,24 @@ class RoutingModel {
   /// the cumul variables. 'name' is the name used to reference the dimension;
   /// this name is used to get cumul and transit variables from the routing
   /// model.
-  /// Returns false if a dimension with the same name has already been created
-  /// (and doesn't create the new dimension).
-  bool AddVectorDimension(std::vector<int64> values, int64 capacity,
-                          bool fix_start_cumul_to_zero,
-                          const std::string& name);
+  /// Returns a pair consisting of an index to the registered unary transit
+  /// callback and a bool denoting whether the dimension has been created.
+  /// It is false if a dimension with the same name has already been created
+  /// (and doesn't create the new dimension but still register a new callback).
+  std::pair<int, bool> AddVectorDimension(std::vector<int64> values,
+                                          int64 capacity,
+                                          bool fix_start_cumul_to_zero,
+                                          const std::string& name);
   /// Creates a dimension where the transit variable is constrained to be
   /// equal to 'values[i][next(i)]' for node i; 'capacity' is the upper bound of
   /// the cumul variables. 'name' is the name used to reference the dimension;
   /// this name is used to get cumul and transit variables from the routing
   /// model.
-  /// Returns false if a dimension with the same name has already been created
-  /// (and doesn't create the new dimension).
-  bool AddMatrixDimension(
+  /// Returns a pair consisting of an index to the registered transit callback
+  /// and a bool denoting whether the dimension has been created.
+  /// It is false if a dimension with the same name has already been created
+  /// (and doesn't create the new dimension but still register a new callback).
+  std::pair<int, bool> AddMatrixDimension(
       std::vector<std::vector<int64> /*needed_for_swig*/> values,
       int64 capacity, bool fix_start_cumul_to_zero, const std::string& name);
   /// Creates a dimension with transits depending on the cumuls of another
@@ -636,9 +677,9 @@ class RoutingModel {
   /// operators, in the context of arc-based routing.
   void IgnoreDisjunctionsAlreadyForcedToZero();
 
-  /// Adds a soft contraint to force a set of variable indices to be on the same
-  /// vehicle. If all nodes are not on the same vehicle, each extra vehicle used
-  /// adds 'cost' to the cost function.
+  /// Adds a soft constraint to force a set of variable indices to be on the
+  /// same vehicle. If all nodes are not on the same vehicle, each extra vehicle
+  /// used adds 'cost' to the cost function.
   void AddSoftSameVehicleConstraint(const std::vector<int64>& indices,
                                     int64 cost);
 
@@ -709,6 +750,14 @@ class RoutingModel {
   GetPickupAndDeliveryDisjunctions() const {
     return pickup_delivery_disjunctions_;
   }
+  /// Returns implicit pickup and delivery pairs currently in the model.
+  /// Pairs are implicit if they are not linked by a pickup and delivery
+  /// constraint but that for a given unary dimension, the first element of the
+  /// pair has a positive demand d, and the second element has a demand of -d.
+  const IndexPairs& GetImplicitUniquePickupAndDeliveryPairs() const {
+    DCHECK(closed_);
+    return implicit_pickup_delivery_pairs_without_alternatives_;
+  }
 #endif  // SWIG
   /// Set the node visit types and incompatibilities/requirements between the
   /// types (see below).
@@ -741,6 +790,8 @@ class RoutingModel {
   // TODO(user): Support multiple visit types per node?
   void SetVisitType(int64 index, int type, VisitTypePolicy type_policy);
   int GetVisitType(int64 index) const;
+  const std::vector<int>& GetSingleNodesOfType(int type) const;
+  const std::vector<int>& GetPairIndicesOfType(int type) const;
   VisitTypePolicy GetVisitTypePolicy(int64 index) const;
   /// This function should be called once all node visit types have been set and
   /// prior to adding any incompatibilities/requirements.
@@ -748,6 +799,13 @@ class RoutingModel {
   /// "close" types.
   void CloseVisitTypes();
   int GetNumberOfVisitTypes() const { return num_visit_types_; }
+#ifndef SWIG
+  const std::vector<std::vector<int>>& GetTopologicallySortedVisitTypes()
+      const {
+    DCHECK(closed_);
+    return topologically_sorted_visit_types_;
+  }
+#endif  // SWIG
   /// Incompatibilities:
   /// Two nodes with "hard" incompatible types cannot share the same route at
   /// all, while with a "temporal" incompatibility they can't be on the same
@@ -835,6 +893,15 @@ class RoutingModel {
   /// is the node returned.
   int64 GetDepot() const;
 
+  /// Constrains the maximum number of active vehicles, aka the number of
+  /// vehicles which do not have an empty route. For instance, this can be used
+  /// to limit the number of routes in the case where there are fewer drivers
+  /// than vehicles and that the fleet of vehicle is heterogeneous.
+  void SetMaximumNumberOfActiveVehicles(int max_active_vehicles) {
+    max_active_vehicles_ = max_active_vehicles;
+  }
+  /// Returns the maximum number of active vehicles.
+  int GetMaximumNumberOfActiveVehicles() const { return max_active_vehicles_; }
   /// Sets the cost function of the model such that the cost of a segment of a
   /// route between node 'from' and 'to' is evaluator(from, to), whatever the
   /// route or vehicle performing the route.
@@ -1041,6 +1108,14 @@ class RoutingModel {
   /// vehicles end with an end index for that vehicle).
   void AssignmentToRoutes(const Assignment& assignment,
                           std::vector<std::vector<int64>>* const routes) const;
+  /// Converts the solution in the given assignment to routes for all vehicles.
+  /// If the returned vector is route_indices, route_indices[i][j] is the index
+  /// for jth location visited on route i. Note that contrary to
+  /// AssignmentToRoutes, the vectors do include start and end locations.
+#ifndef SWIG
+  std::vector<std::vector<int64>> GetRoutesFromAssignment(
+      const Assignment& assignment);
+#endif
   /// Returns a compacted version of the given assignment, in which all vehicles
   /// with id lower or equal to some N have non-empty routes, and all vehicles
   /// with id greater than N have empty routes. Does not take ownership of the
@@ -1096,7 +1171,8 @@ class RoutingModel {
     if (closed_) {
       LOG(WARNING) << "Model is closed, filter addition will be ignored.";
     }
-    extra_filters_.push_back(filter);
+    extra_filters_.push_back({filter, LocalSearchFilterManager::kRelax});
+    extra_filters_.push_back({filter, LocalSearchFilterManager::kAccept});
   }
 
   /// Model inspection.
@@ -1110,7 +1186,7 @@ class RoutingModel {
   bool IsEnd(int64 index) const { return index >= Size(); }
   /// Returns the vehicle of the given start/end index, and -1 if the given
   /// index is not a vehicle start/end.
-  int VehicleIndex(int index) const { return index_to_vehicle_[index]; }
+  int VehicleIndex(int64 index) const { return index_to_vehicle_[index]; }
   /// Assignment inspection
   /// Returns the variable index of the node directly after the node
   /// corresponding to 'index' in 'assignment'.
@@ -1131,6 +1207,11 @@ class RoutingModel {
   IntVar* NextVar(int64 index) const { return nexts_[index]; }
   /// Returns the active variable of the node corresponding to index.
   IntVar* ActiveVar(int64 index) const { return active_[index]; }
+  /// Returns the active variable of the vehicle. It will be equal to 1 iff the
+  /// route of the vehicle is not empty, 0 otherwise.
+  IntVar* ActiveVehicleVar(int vehicle) const {
+    return vehicle_active_[vehicle];
+  }
   /// Returns the variable specifying whether or not costs are considered for
   /// vehicle.
   IntVar* VehicleCostsConsideredVar(int vehicle) const {
@@ -1169,6 +1250,9 @@ class RoutingModel {
   /// Get the cost class index of the given vehicle.
   CostClassIndex GetCostClassIndexOfVehicle(int64 vehicle) const {
     DCHECK(closed_);
+    DCHECK_GE(vehicle, 0);
+    DCHECK_LT(vehicle, cost_class_index_of_vehicle_.size());
+    DCHECK_GE(cost_class_index_of_vehicle_[vehicle], 0);
     return cost_class_index_of_vehicle_[vehicle];
   }
   /// Returns true iff the model contains a vehicle with the given
@@ -1197,6 +1281,12 @@ class RoutingModel {
     DCHECK(closed_);
     return same_vehicle_groups_[same_vehicle_group_[node]];
   }
+
+  const VehicleTypeContainer& GetVehicleTypeContainer() const {
+    DCHECK(closed_);
+    return vehicle_type_container_;
+  }
+
   /// Returns whether the arc from->to1 is more constrained than from->to2,
   /// taking into account, in order:
   /// - whether the destination node isn't an end node
@@ -1223,7 +1313,15 @@ class RoutingModel {
   std::string DebugOutputAssignment(
       const Assignment& solution_assignment,
       const std::string& dimension_to_print) const;
-
+  /// Returns a vector cumul_bounds, for which cumul_bounds[i][j] is a pair
+  /// containing the minimum and maximum of the CumulVar of the jth node on
+  /// route i.
+  /// - cumul_bounds[i][j].first is the minimum.
+  /// - cumul_bounds[i][j].second is the maximum.
+#ifndef SWIG
+  std::vector<std::vector<std::pair<int64, int64>>> GetCumulBounds(
+      const Assignment& solution_assignment, const RoutingDimension& dimension);
+#endif
   /// Returns the underlying constraint solver. Can be used to add extra
   /// constraints and/or modify search algoithms.
   Solver* solver() const { return solver_.get(); }
@@ -1326,8 +1424,11 @@ class RoutingModel {
     CROSS_EXCHANGE,
     TWO_OPT,
     OR_OPT,
+    GLOBAL_CHEAPEST_INSERTION_CLOSE_NODES_LNS,
+    LOCAL_CHEAPEST_INSERTION_CLOSE_NODES_LNS,
     GLOBAL_CHEAPEST_INSERTION_PATH_LNS,
     LOCAL_CHEAPEST_INSERTION_PATH_LNS,
+    RELOCATE_PATH_GLOBAL_CHEAPEST_INSERTION_INSERT_UNPERFORMED,
     GLOBAL_CHEAPEST_INSERTION_EXPENSIVE_CHAIN_LNS,
     LOCAL_CHEAPEST_INSERTION_EXPENSIVE_CHAIN_LNS,
     RELOCATE_EXPENSIVE_CHAIN,
@@ -1428,6 +1529,26 @@ class RoutingModel {
 
   void ComputeCostClasses(const RoutingSearchParameters& parameters);
   void ComputeVehicleClasses();
+  /// The following method initializes the vehicle_type_container_:
+  /// - Computes the vehicle types of vehicles and stores it in
+  ///   type_index_of_vehicle.
+  /// - The vehicle classes corresponding to each vehicle type index are stored
+  ///   and sorted by fixed cost in sorted_vehicle_classes_per_type.
+  /// - The vehicles for each vehicle class are stored in
+  ///   vehicles_per_vehicle_class.
+  void ComputeVehicleTypes();
+  /// This method scans the visit types and sets up the following members:
+  /// - single_nodes_of_type_[type] contains indices of nodes of visit type
+  ///   "type" which are not part of any pickup/delivery pair.
+  /// - pair_indices_of_type_[type] is the set of "pair_index" such that
+  ///   pickup_delivery_pairs_[pair_index] has at least one pickup or delivery
+  ///   with visit type "type".
+  /// - topologically_sorted_visit_types_ contains the visit types in
+  ///   topological order based on required-->dependent arcs from the
+  ///   visit type requirements.
+  void FinalizeVisitTypes();
+  // Called by FinalizeVisitTypes() to setup topologically_sorted_visit_types_.
+  void TopologicallySortVisitTypes();
   int64 GetArcCostForClassInternal(int64 from_index, int64 to_index,
                                    CostClassIndex cost_class_index) const;
   void AppendHomogeneousArcCosts(const RoutingSearchParameters& parameters,
@@ -1514,12 +1635,46 @@ class RoutingModel {
   RegularLimit* GetOrCreateFirstSolutionLargeNeighborhoodSearchLimit();
   LocalSearchOperator* CreateInsertionOperator();
   LocalSearchOperator* CreateMakeInactiveOperator();
+  template <class T>
+  LocalSearchOperator* CreateCPOperator(const T& operator_factory) {
+    return operator_factory(solver_.get(), nexts_,
+                            CostsAreHomogeneousAcrossVehicles()
+                                ? std::vector<IntVar*>()
+                                : vehicle_vars_,
+                            vehicle_start_class_callback_);
+  }
+  template <class T>
+  LocalSearchOperator* CreateCPOperator() {
+    return CreateCPOperator(absl::bind_front(MakeLocalSearchOperator<T>));
+  }
+  template <class T, class Arg>
+  LocalSearchOperator* CreateOperator(const Arg& arg) {
+    return solver_->RevAlloc(new T(nexts_,
+                                   CostsAreHomogeneousAcrossVehicles()
+                                       ? std::vector<IntVar*>()
+                                       : vehicle_vars_,
+                                   vehicle_start_class_callback_, arg));
+  }
+  template <class T>
+  LocalSearchOperator* CreatePairOperator() {
+    return CreateOperator<T>(pickup_delivery_pairs_);
+  }
   void CreateNeighborhoodOperators(const RoutingSearchParameters& parameters);
+  LocalSearchOperator* ConcatenateOperators(
+      const RoutingSearchParameters& search_parameters,
+      const std::vector<LocalSearchOperator*>& operators) const;
   LocalSearchOperator* GetNeighborhoodOperators(
       const RoutingSearchParameters& search_parameters) const;
-  const std::vector<LocalSearchFilter*>& GetOrCreateLocalSearchFilters(
+  std::vector<LocalSearchFilterManager::FilterEvent>
+  GetOrCreateLocalSearchFilters(const RoutingSearchParameters& parameters,
+                                bool filter_cost = true);
+  LocalSearchFilterManager* GetOrCreateLocalSearchFilterManager(
       const RoutingSearchParameters& parameters);
-  const std::vector<LocalSearchFilter*>& GetOrCreateFeasibilityFilters(
+  std::vector<LocalSearchFilterManager::FilterEvent>
+  GetOrCreateFeasibilityFilters(const RoutingSearchParameters& parameters);
+  LocalSearchFilterManager* GetOrCreateFeasibilityFilterManager(
+      const RoutingSearchParameters& parameters);
+  LocalSearchFilterManager* GetOrCreateStrongFeasibilityFilterManager(
       const RoutingSearchParameters& parameters);
   DecisionBuilder* CreateSolutionFinalizer(SearchLimit* lns_limit);
   DecisionBuilder* CreateFinalizerForMinimizedAndMaximizedVariables();
@@ -1538,10 +1693,17 @@ class RoutingModel {
   void SetupAssignmentCollector(
       const RoutingSearchParameters& search_parameters);
   void SetupTrace(const RoutingSearchParameters& search_parameters);
+  void SetupImprovementLimit(const RoutingSearchParameters& search_parameters);
   void SetupSearchMonitors(const RoutingSearchParameters& search_parameters);
   bool UsesLightPropagation(
       const RoutingSearchParameters& search_parameters) const;
   GetTabuVarsCallback tabu_var_callback_;
+
+  // Detects implicit pickup delivery pairs. These pairs are
+  // non-pickup/delivery pairs for which there exists a unary dimension such
+  // that the demand d of the implicit pickup is positive and the demand of the
+  // implicit delivery is equal to -d.
+  void DetectImplicitPickupAndDeliveries();
 
   int GetVehicleStartClass(int64 start) const;
 
@@ -1558,11 +1720,14 @@ class RoutingModel {
   std::unique_ptr<Solver> solver_;
   int nodes_;
   int vehicles_;
+  int max_active_vehicles_;
   Constraint* no_cycle_constraint_ = nullptr;
   /// Decision variables: indexed by int64 var index.
   std::vector<IntVar*> nexts_;
   std::vector<IntVar*> vehicle_vars_;
   std::vector<IntVar*> active_;
+  // The following vectors are indexed by vehicle index.
+  std::vector<IntVar*> vehicle_active_;
   std::vector<IntVar*> vehicle_costs_considered_;
   /// is_bound_to_end_[i] will be true iff the path starting at var #i is fully
   /// bound and reaches the end of a route, i.e. either:
@@ -1572,20 +1737,20 @@ class RoutingModel {
   mutable RevSwitch is_bound_to_end_ct_added_;
   /// Dimensions
   absl::flat_hash_map<std::string, DimensionIndex> dimension_name_to_index_;
-  gtl::ITIVector<DimensionIndex, RoutingDimension*> dimensions_;
+  absl::StrongVector<DimensionIndex, RoutingDimension*> dimensions_;
   // clang-format off
   /// TODO(user): Define a new Dimension[Global|Local]OptimizerIndex type
   /// and use it to define ITIVectors and for the dimension to optimizer index
   /// mappings below.
   std::vector<std::unique_ptr<GlobalDimensionCumulOptimizer> >
       global_dimension_optimizers_;
-  gtl::ITIVector<DimensionIndex, int> global_optimizer_index_;
+  absl::StrongVector<DimensionIndex, int> global_optimizer_index_;
   std::vector<std::unique_ptr<LocalDimensionCumulOptimizer> >
       local_dimension_optimizers_;
   std::vector<std::unique_ptr<LocalDimensionCumulOptimizer> >
       local_dimension_mp_optimizers_;
   // clang-format off
-  gtl::ITIVector<DimensionIndex, int> local_optimizer_index_;
+  absl::StrongVector<DimensionIndex, int> local_optimizer_index_;
   std::string primary_constrained_dimension_;
   /// Costs
   IntVar* cost_ = nullptr;
@@ -1608,18 +1773,19 @@ class RoutingModel {
   /// i.e. by default empty routes will not contribute to the cost.
   std::vector<bool> consider_empty_route_costs_;
 #ifndef SWIG
-  gtl::ITIVector<CostClassIndex, CostClass> cost_classes_;
+  absl::StrongVector<CostClassIndex, CostClass> cost_classes_;
 #endif  // SWIG
   bool costs_are_homogeneous_across_vehicles_;
   bool cache_callbacks_;
   mutable std::vector<CostCacheElement> cost_cache_;  /// Index by source index.
   std::vector<VehicleClassIndex> vehicle_class_index_of_vehicle_;
 #ifndef SWIG
-  gtl::ITIVector<VehicleClassIndex, VehicleClass> vehicle_classes_;
+  absl::StrongVector<VehicleClassIndex, VehicleClass> vehicle_classes_;
 #endif  // SWIG
+  VehicleTypeContainer vehicle_type_container_;
   std::function<int(int64)> vehicle_start_class_callback_;
   /// Disjunctions
-  gtl::ITIVector<DisjunctionIndex, Disjunction> disjunctions_;
+  absl::StrongVector<DisjunctionIndex, Disjunction> disjunctions_;
   std::vector<std::vector<DisjunctionIndex> > index_to_disjunctions_;
   /// Same vehicle costs
   std::vector<ValuedNodes<int64> > same_vehicle_costs_;
@@ -1629,6 +1795,7 @@ class RoutingModel {
 #endif  // SWIG
   /// Pickup and delivery
   IndexPairs pickup_delivery_pairs_;
+  IndexPairs implicit_pickup_delivery_pairs_without_alternatives_;
   std::vector<std::pair<DisjunctionIndex, DisjunctionIndex> >
       pickup_delivery_disjunctions_;
   // clang-format off
@@ -1651,6 +1818,9 @@ class RoutingModel {
   // Variable index to VisitTypePolicy.
   std::vector<VisitTypePolicy> index_to_type_policy_;
   // clang-format off
+  std::vector<std::vector<int> > single_nodes_of_type_;
+  std::vector<std::vector<int> > pair_indices_of_type_;
+
   std::vector<absl::flat_hash_set<int> >
       hard_incompatible_types_per_type_index_;
   bool has_hard_type_incompatibilities_;
@@ -1668,6 +1838,23 @@ class RoutingModel {
   bool has_temporal_type_requirements_;
   absl::flat_hash_map</*type*/int, absl::flat_hash_set<VisitTypePolicy> >
       trivially_infeasible_visit_types_to_policies_;
+
+  // Visit types sorted topologically based on required-->dependent requirement
+  // arcs between the types (if the requirement/dependency graph is acyclic).
+  // Visit types of the same topological level are sorted in each sub-vector
+  // by decreasing requirement "tightness", computed as the pair of the two
+  // following criteria:
+  //
+  // 1) How highly *dependent* this type is, determined by
+  //    (total number of required alternative sets for that type)
+  //        / (average number of types in the required alternative sets)
+  // 2) How highly *required* this type t is, computed as
+  //    SUM_{S required set containing t} ( 1 / |S| ),
+  //    i.e. the sum of reverse number of elements of all required sets
+  //    containing the type t.
+  //
+  // The higher these two numbers, the tighter the type is wrt requirements.
+  std::vector<std::vector<int> > topologically_sorted_visit_types_;
   // clang-format on
   int num_visit_types_;
   // Two indices are equivalent if they correspond to the same node (as given
@@ -1707,9 +1894,10 @@ class RoutingModel {
   std::vector<IntVar*> extra_vars_;
   std::vector<IntervalVar*> extra_intervals_;
   std::vector<LocalSearchOperator*> extra_operators_;
-  std::vector<LocalSearchFilter*> filters_;
-  std::vector<LocalSearchFilter*> feasibility_filters_;
-  std::vector<LocalSearchFilter*> extra_filters_;
+  LocalSearchFilterManager* local_search_filter_manager_ = nullptr;
+  LocalSearchFilterManager* feasibility_filter_manager_ = nullptr;
+  LocalSearchFilterManager* strong_feasibility_filter_manager_ = nullptr;
+  std::vector<LocalSearchFilterManager::FilterEvent> extra_filters_;
 #ifndef SWIG
   std::vector<std::pair<IntVar*, int64>> finalizer_variable_cost_pairs_;
   std::vector<std::pair<IntVar*, int64>> finalizer_variable_target_pairs_;
@@ -1781,6 +1969,8 @@ class DisjunctivePropagator {
     std::vector<bool> is_preemptible;
     std::vector<const SortedDisjointIntervalList*> forbidden_intervals;
     std::vector<std::pair<int64, int64>> distance_duration;
+    int64 span_min = 0;
+    int64 span_max = kint64max;
 
     void Clear() {
       start_min.clear();
@@ -1792,6 +1982,9 @@ class DisjunctivePropagator {
       is_preemptible.clear();
       forbidden_intervals.clear();
       distance_duration.clear();
+      span_min = 0;
+      span_max = kint64max;
+      num_chain_tasks = 0;
     }
   };
 
@@ -1811,7 +2004,16 @@ class DisjunctivePropagator {
   bool DetectablePrecedencesWithChain(Tasks* tasks);
   /// Tasks might have holes in their domain, this enforces such holes.
   bool ForbiddenIntervals(Tasks* tasks);
+  /// Propagates distance_duration constraints, if any.
   bool DistanceDuration(Tasks* tasks);
+  /// Propagates a lower bound of the chain span,
+  /// end[num_chain_tasks] - start[0], to span_min.
+  bool ChainSpanMin(Tasks* tasks);
+  /// Computes a lower bound of the span of the chain, taking into account only
+  /// the first nonchain task.
+  /// For more accurate results, this should be called after Precedences(),
+  /// otherwise the lower bound might be lower than feasible.
+  bool ChainSpanMinDynamic(Tasks* tasks);
 
  private:
   /// The main algorithm uses Vilim's theta tree data structure.
@@ -1822,13 +2024,19 @@ class DisjunctivePropagator {
   std::vector<int> tasks_by_end_max_;
   std::vector<int> event_of_task_;
   std::vector<int> nonchain_tasks_by_start_max_;
+  /// Maps chain elements to the sum of chain task durations before them.
+  std::vector<int64> total_duration_before_;
+};
+
+struct TravelBounds {
+  std::vector<int64> min_travels;
+  std::vector<int64> max_travels;
+  std::vector<int64> pre_travels;
+  std::vector<int64> post_travels;
 };
 
 void AppendTasksFromPath(const std::vector<int64>& path,
-                         const std::vector<int64>& min_travels,
-                         const std::vector<int64>& max_travels,
-                         const std::vector<int64>& pre_travels,
-                         const std::vector<int64>& post_travels,
+                         const TravelBounds& travel_bounds,
                          const RoutingDimension& dimension,
                          DisjunctivePropagator::Tasks* tasks);
 void AppendTasksFromIntervals(const std::vector<IntervalVar*>& intervals,
@@ -1836,6 +2044,9 @@ void AppendTasksFromIntervals(const std::vector<IntervalVar*>& intervals,
 void FillPathEvaluation(const std::vector<int64>& path,
                         const RoutingModel::TransitCallback2& evaluator,
                         std::vector<int64>* values);
+void FillTravelBoundsOfVehicle(int vehicle, const std::vector<int64>& path,
+                               const RoutingDimension& dimension,
+                               TravelBounds* travel_bounds);
 #endif  // !defined(SWIG)
 
 /// GlobalVehicleBreaksConstraint ensures breaks constraints are enforced on
@@ -1942,11 +2153,8 @@ class GlobalVehicleBreaksConstraint : public Constraint {
   DisjunctivePropagator disjunctive_propagator_;
   DisjunctivePropagator::Tasks tasks_;
 
-  /// Fields used to help build tasks_ at each propagation.
-  std::vector<int64> min_travel_;
-  std::vector<int64> max_travel_;
-  std::vector<int64> pre_travel_;
-  std::vector<int64> post_travel_;
+  /// Used to help filling tasks_ at each propagation.
+  TravelBounds travel_bounds_;
 };
 
 class TypeRegulationsChecker {
@@ -2326,9 +2534,6 @@ class RoutingDimension {
   ///               cumulVar).
   /// This is also handy to model earliness costs when the dimension represents
   /// time.
-  /// Note: Using soft lower and upper bounds or span costs together is, as of
-  /// 6/2014, not well supported in the sense that an optimal schedule is not
-  /// guaranteed.
   void SetCumulVarSoftLowerBound(int64 index, int64 lower_bound,
                                  int64 coefficient);
   /// Returns true if a soft lower bound has been set for a given variable
@@ -2369,7 +2574,7 @@ class RoutingDimension {
                                   std::vector<int64> node_visit_transits);
 
   /// With breaks supposed to be consecutive, this forces the distance between
-  /// breaks of size at least minimum_break_duration to be at least distance.
+  /// breaks of size at least minimum_break_duration to be at most distance.
   /// This supposes that the time until route start and after route end are
   /// infinite breaks.
   void SetBreakDistanceDurationOfVehicle(int64 distance, int64 duration,
@@ -2381,11 +2586,10 @@ class RoutingDimension {
   bool HasBreakConstraints() const;
 #if !defined(SWIGPYTHON)
   /// Deprecated, sets pre_travel(i, j) = node_visit_transit[i]
-  /// and post_travel(i, j) = group_delays(i, j).
-  void SetBreakIntervalsOfVehicle(
-      std::vector<IntervalVar*> breaks, int vehicle,
-      std::vector<int64> node_visit_transits,
-      std::function<int64(int64, int64)> group_delays);
+  /// and post_travel(i, j) = delays(i, j).
+  void SetBreakIntervalsOfVehicle(std::vector<IntervalVar*> breaks, int vehicle,
+                                  std::vector<int64> node_visit_transits,
+                                  std::function<int64(int64, int64)> delays);
 
   /// Returns the break intervals set by SetBreakIntervalsOfVehicle().
   const std::vector<IntervalVar*>& GetBreakIntervalsOfVehicle(
@@ -2508,6 +2712,26 @@ class RoutingDimension {
     DCHECK(HasSoftSpanUpperBounds());
     return vehicle_soft_span_upper_bound_->bound_cost(vehicle);
   }
+  /// If the span of vehicle on this dimension is larger than bound,
+  /// the cost will be increased by cost * (span - bound)^2.
+  void SetQuadraticCostSoftSpanUpperBoundForVehicle(
+      SimpleBoundCosts::BoundCost bound_cost, int vehicle) {
+    if (!HasQuadraticCostSoftSpanUpperBounds()) {
+      vehicle_quadratic_cost_soft_span_upper_bound_ =
+          absl::make_unique<SimpleBoundCosts>(
+              model_->vehicles(), SimpleBoundCosts::BoundCost{kint64max, 0});
+    }
+    vehicle_quadratic_cost_soft_span_upper_bound_->bound_cost(vehicle) =
+        bound_cost;
+  }
+  bool HasQuadraticCostSoftSpanUpperBounds() const {
+    return vehicle_quadratic_cost_soft_span_upper_bound_ != nullptr;
+  }
+  SimpleBoundCosts::BoundCost GetQuadraticCostSoftSpanUpperBoundForVehicle(
+      int vehicle) const {
+    DCHECK(HasQuadraticCostSoftSpanUpperBounds());
+    return vehicle_quadratic_cost_soft_span_upper_bound_->bound_cost(vehicle);
+  }
 #endif  /// !defined SWIG
 
  private:
@@ -2627,8 +2851,14 @@ class RoutingDimension {
   std::vector<int64> local_optimizer_offset_for_vehicle_;
   /// nullptr if not defined.
   std::unique_ptr<SimpleBoundCosts> vehicle_soft_span_upper_bound_;
+  std::unique_ptr<SimpleBoundCosts>
+      vehicle_quadratic_cost_soft_span_upper_bound_;
   friend class RoutingModel;
   friend class RoutingModelInspector;
+  friend void AppendDimensionCumulFilters(
+      const std::vector<RoutingDimension*>& dimensions,
+      const RoutingSearchParameters& parameters, bool filter_objective_cost,
+      std::vector<LocalSearchFilterManager::FilterEvent>* filters);
 
   DISALLOW_COPY_AND_ASSIGN(RoutingDimension);
 };
@@ -2658,6 +2888,76 @@ DecisionBuilder* MakeSetValuesFromTargets(Solver* solver,
                                           std::vector<int64> targets);
 
 #ifndef SWIG
+/// Helper class that manages vehicles. This class is based on the
+/// RoutingModel::VehicleTypeContainer that sorts and stores vehicles based on
+/// their "type".
+class VehicleTypeCurator {
+ public:
+  explicit VehicleTypeCurator(
+      const RoutingModel::VehicleTypeContainer& vehicle_type_container)
+      : vehicle_type_container_(&vehicle_type_container) {}
+
+  int NumTypes() const { return vehicle_type_container_->NumTypes(); }
+
+  int Type(int vehicle) const { return vehicle_type_container_->Type(vehicle); }
+
+  /// Resets the vehicles stored, storing only vehicles from the
+  /// vehicle_type_container_ for which store_vehicle() returns true.
+  void Reset(const std::function<bool(int)>& store_vehicle);
+
+  /// Goes through all the currently stored vehicles and removes vehicles for
+  /// which remove_vehicle() returns true.
+  void Update(const std::function<bool(int)>& remove_vehicle);
+
+  int GetLowestFixedCostVehicleOfType(int type) const {
+    DCHECK_LT(type, NumTypes());
+    const std::set<VehicleClassEntry>& vehicle_classes =
+        sorted_vehicle_classes_per_type_[type];
+    if (vehicle_classes.empty()) {
+      return -1;
+    }
+    const int vehicle_class = (vehicle_classes.begin())->vehicle_class;
+    DCHECK(!vehicles_per_vehicle_class_[vehicle_class].empty());
+    return vehicles_per_vehicle_class_[vehicle_class][0];
+  }
+
+  void ReinjectVehicleOfClass(int vehicle, int vehicle_class,
+                              int64 fixed_cost) {
+    std::vector<int>& vehicles = vehicles_per_vehicle_class_[vehicle_class];
+    if (vehicles.empty()) {
+      /// Add the vehicle class entry to the set (it was removed when
+      /// vehicles_per_vehicle_class_[vehicle_class] got empty).
+      std::set<VehicleClassEntry>& vehicle_classes =
+          sorted_vehicle_classes_per_type_[Type(vehicle)];
+      const auto& insertion =
+          vehicle_classes.insert({vehicle_class, fixed_cost});
+      DCHECK(insertion.second);
+    }
+    vehicles.push_back(vehicle);
+  }
+
+  /// Searches for the best compatible vehicle of the given type, i.e. the first
+  /// vehicle v of type 'type' for which vehicle_is_compatible(v) returns true.
+  /// If a compatible *vehicle* is found, its index is removed from
+  /// vehicles_per_vehicle_class_ and the function returns {vehicle, -1}.
+  /// If for some *vehicle* 'stop_and_return_vehicle' returns true before a
+  /// compatible vehicle is found, the function simply returns {-1, vehicle}.
+  /// Returns {-1, -1} if no compatible vehicle is found and the stopping
+  /// condition is never met.
+  std::pair<int, int> GetCompatibleVehicleOfType(
+      int type, std::function<bool(int)> vehicle_is_compatible,
+      std::function<bool(int)> stop_and_return_vehicle);
+
+ private:
+  using VehicleClassEntry =
+      RoutingModel::VehicleTypeContainer::VehicleClassEntry;
+  const RoutingModel::VehicleTypeContainer* const vehicle_type_container_;
+  // clang-format off
+  std::vector<std::set<VehicleClassEntry> > sorted_vehicle_classes_per_type_;
+  std::vector<std::vector<int> > vehicles_per_vehicle_class_;
+  // clang-format on
+};
+
 /// Decision builder building a solution using heuristics with local search
 /// filters to evaluate its feasibility. This is very fast but can eventually
 /// fail when the solution is restored if filters did not detect all
@@ -2697,7 +2997,7 @@ class IntVarFilteredDecisionBuilder : public DecisionBuilder {
 class IntVarFilteredHeuristic {
  public:
   IntVarFilteredHeuristic(Solver* solver, const std::vector<IntVar*>& vars,
-                          const std::vector<LocalSearchFilter*>& filters);
+                          LocalSearchFilterManager* filter_manager);
 
   virtual ~IntVarFilteredHeuristic() {}
 
@@ -2760,12 +3060,13 @@ class IntVarFilteredHeuristic {
   /// (represented by delta).
   bool FilterAccept();
 
+  Solver* solver_;
   const std::vector<IntVar*> vars_;
   Assignment* const delta_;
   std::vector<int> delta_indices_;
   std::vector<bool> is_in_delta_;
   Assignment* const empty_;
-  LocalSearchFilterManager filter_manager_;
+  LocalSearchFilterManager* filter_manager_;
   /// Stats on search
   int64 number_of_decisions_;
   int64 number_of_rejects_;
@@ -2775,7 +3076,7 @@ class IntVarFilteredHeuristic {
 class RoutingFilteredHeuristic : public IntVarFilteredHeuristic {
  public:
   RoutingFilteredHeuristic(RoutingModel* model,
-                           const std::vector<LocalSearchFilter*>& filters);
+                           LocalSearchFilterManager* filter_manager);
   ~RoutingFilteredHeuristic() override {}
   /// Builds a solution starting from the routes formed by the next accessor.
   const Assignment* BuildSolutionFromRoutes(
@@ -2790,11 +3091,19 @@ class RoutingFilteredHeuristic : public IntVarFilteredHeuristic {
   void MakeDisjunctionNodesUnperformed(int64 node);
   /// Make all unassigned nodes unperformed.
   void MakeUnassignedNodesUnperformed();
+  /// Make all partially performed pickup and delivery pairs unperformed. A
+  /// pair is partially unperformed if one element of the pair has one of its
+  /// alternatives performed in the solution and the other has no alternatives
+  /// in the solution or none performed.
+  void MakePartiallyPerformedPairsUnperformed();
 
  protected:
   bool StopSearch() override { return model_->CheckLimit(); }
   virtual void SetVehicleIndex(int64 node, int vehicle) {}
   virtual void ResetVehicleIndices() {}
+  bool VehicleIsEmpty(int vehicle) const {
+    return Value(model()->Start(vehicle)) == model()->End(vehicle);
+  }
 
  private:
   /// Initializes the current solution with empty or partial vehicle routes.
@@ -2811,7 +3120,7 @@ class CheapestInsertionFilteredHeuristic : public RoutingFilteredHeuristic {
   CheapestInsertionFilteredHeuristic(
       RoutingModel* model, std::function<int64(int64, int64, int64)> evaluator,
       std::function<int64(int64)> penalty_evaluator,
-      const std::vector<LocalSearchFilter*>& filters);
+      LocalSearchFilterManager* filter_manager);
   ~CheapestInsertionFilteredHeuristic() override {}
 
  protected:
@@ -2862,6 +3171,8 @@ class CheapestInsertionFilteredHeuristic : public RoutingFilteredHeuristic {
   /// 'insert_before' on the 'vehicle', i.e.
   /// Cost(insert_after-->node) + Cost(node-->insert_before)
   /// - Cost (insert_after-->insert_before).
+  // TODO(user): Replace 'insert_before' and 'insert_after' by 'predecessor'
+  // and 'successor' in the code.
   int64 GetInsertionCostForNodeAtPosition(int64 node_to_insert,
                                           int64 insert_after,
                                           int64 insert_before,
@@ -2891,19 +3202,28 @@ class GlobalCheapestInsertionFilteredHeuristic
     /// starting the cheapest insertion.
     double farthest_seeds_ratio;
     /// If neighbors_ratio < 1 then for each node only this ratio of its
-    /// neighbors leading to the smallest arc costs are considered.
+    /// neighbors leading to the smallest arc costs are considered for
+    /// insertions, with a minimum of 'min_neighbors':
+    /// num_closest_neighbors = max(min_neighbors, neighbors_ratio*N),
+    /// where N is the number of non-start/end nodes in the model.
     double neighbors_ratio;
-    /// If true, only closest neighbors (see neighbors_ratio) are considered
-    /// as insertion positions during initialization. Otherwise, all possible
-    /// insertion positions are considered.
+    int64 min_neighbors;
+    /// If true, only closest neighbors (see neighbors_ratio and min_neighbors)
+    /// are considered as insertion positions during initialization. Otherwise,
+    /// all possible insertion positions are considered.
     bool use_neighbors_ratio_for_initialization;
+    /// If true, entries are created for making the nodes/pairs unperformed, and
+    /// when the cost of making a node unperformed is lower than all insertions,
+    /// the node/pair will be made unperformed. If false, only entries making
+    /// a node/pair performed are considered.
+    bool add_unperformed_entries;
   };
 
   /// Takes ownership of evaluators.
   GlobalCheapestInsertionFilteredHeuristic(
       RoutingModel* model, std::function<int64(int64, int64, int64)> evaluator,
       std::function<int64(int64)> penalty_evaluator,
-      const std::vector<LocalSearchFilter*>& filters,
+      LocalSearchFilterManager* filter_manager,
       GlobalCheapestInsertionParameters parameters);
   ~GlobalCheapestInsertionFilteredHeuristic() override {}
   bool BuildSolutionInternal() override;
@@ -2917,13 +3237,33 @@ class GlobalCheapestInsertionFilteredHeuristic
   typedef absl::flat_hash_set<PairEntry*> PairEntries;
   typedef absl::flat_hash_set<NodeEntry*> NodeEntries;
 
-  /// Inserts all non-inserted pickup and delivery pairs. Maintains a priority
+  /// Inserts non-inserted single nodes or pickup/delivery pairs which have a
+  /// visit type in the type requirement graph, i.e. required for or requiring
+  /// another type for insertions.
+  /// These nodes are inserted iff the requirement graph is acyclic, in which
+  /// case nodes are inserted based on the topological order of their type,
+  /// given by the routing model's GetTopologicallySortedVisitTypes() method.
+  void InsertPairsAndNodesByRequirementTopologicalOrder();
+
+  /// Inserts non-inserted pickup and delivery pairs. Maintains a priority
   /// queue of possible pair insertions, which is incrementally updated when a
   /// pair insertion is committed. Incrementality is obtained by updating pair
   /// insertion positions on the four newly modified route arcs: after the
   /// pickup insertion position, after the pickup position, after the delivery
   /// insertion position and after the delivery position.
-  void InsertPairs();
+  void InsertPairs(const std::vector<int>& pair_indices);
+
+  /// If the vehicle of the given 'pair_entry' is empty, tries to insert the
+  /// pickup/delivery pair on a vehicle of the same type and same fixed cost as
+  /// the pair_entry.vehicle() using the empty_vehicle_type_curator_, or update
+  /// the pair_entry accordingly if the insertion was not possible.
+  /// Returns true iff the empty_vehicle_type_curator_ is used for the
+  /// insertion, i.e. iff the pair_entry.vehicle() was empty.
+  bool InsertPairEntryUsingEmptyVehicleTypeCurator(
+      const std::vector<int>& pair_indices, PairEntry* const pair_entry,
+      AdjustablePriorityQueue<PairEntry>* priority_queue,
+      std::vector<PairEntries>* pickup_to_entries,
+      std::vector<PairEntries>* delivery_to_entries);
 
   /// Inserts non-inserted individual nodes on the given routes (or all routes
   /// if "vehicles" is an empty vector), by constructing routes in parallel.
@@ -2934,6 +3274,19 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// node position.
   void InsertNodesOnRoutes(const std::vector<int>& nodes,
                            const absl::flat_hash_set<int>& vehicles);
+
+  /// If the vehicle of the given 'node_entry' is empty, tries to insert the
+  /// node on a vehicle of the same type and same fixed cost as the
+  /// node_entry.vehicle() using the empty_vehicle_type_curator_, or update the
+  /// node_entry accordingly if the insertion was not possible.
+  /// Returns true iff the empty_vehicle_type_curator_ is used for the
+  /// insertion, i.e. iff 'all_vehicles' is true and the node_entry.vehicle()
+  /// was empty.
+  bool InsertNodeEntryUsingEmptyVehicleTypeCurator(
+      const std::vector<int>& nodes, bool all_vehicles,
+      NodeEntry* const node_entry,
+      AdjustablePriorityQueue<NodeEntry>* priority_queue,
+      std::vector<NodeEntries>* position_to_node_entries);
 
   /// Inserts non-inserted individual nodes on routes by constructing routes
   /// sequentially.
@@ -2968,9 +3321,10 @@ class GlobalCheapestInsertionFilteredHeuristic
       Queue* priority_queue, std::vector<bool>* is_vehicle_used);
   // clang-format on
 
-  /// Initializes the priority queue and the pair entries with the current state
-  /// of the solution.
+  /// Initializes the priority queue and the pair entries for the given pair
+  /// indices with the current state of the solution.
   void InitializePairPositions(
+      const std::vector<int>& pair_indices,
       AdjustablePriorityQueue<PairEntry>* priority_queue,
       std::vector<PairEntries>* pickup_to_entries,
       std::vector<PairEntries>* delivery_to_entries);
@@ -2980,31 +3334,43 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// contained nodes are considered as insertion positions, or only the
   /// closest neighbors of 'pickup' and/or 'delivery'.
   void InitializeInsertionEntriesPerformingPair(
-      int64 pickup, int64 delivery, int64 penalty,
+      int64 pickup, int64 delivery,
+      AdjustablePriorityQueue<PairEntry>* priority_queue,
+      std::vector<PairEntries>* pickup_to_entries,
+      std::vector<PairEntries>* delivery_to_entries);
+  /// Performs all the necessary updates after a pickup/delivery pair was
+  /// successfully inserted on the 'vehicle', respectively after
+  /// 'pickup_position' and 'delivery_position'.
+  void UpdateAfterPairInsertion(
+      const std::vector<int>& pair_indices, int vehicle, int64 pickup,
+      int64 pickup_position, int64 delivery, int64 delivery_position,
       AdjustablePriorityQueue<PairEntry>* priority_queue,
       std::vector<PairEntries>* pickup_to_entries,
       std::vector<PairEntries>* delivery_to_entries);
   /// Updates all pair entries inserting a node after node "insert_after" and
   /// updates the priority queue accordingly.
-  void UpdatePairPositions(int vehicle, int64 insert_after,
+  void UpdatePairPositions(const std::vector<int>& pair_indices, int vehicle,
+                           int64 insert_after,
                            AdjustablePriorityQueue<PairEntry>* priority_queue,
                            std::vector<PairEntries>* pickup_to_entries,
                            std::vector<PairEntries>* delivery_to_entries) {
-    UpdatePickupPositions(vehicle, insert_after, priority_queue,
+    UpdatePickupPositions(pair_indices, vehicle, insert_after, priority_queue,
                           pickup_to_entries, delivery_to_entries);
-    UpdateDeliveryPositions(vehicle, insert_after, priority_queue,
+    UpdateDeliveryPositions(pair_indices, vehicle, insert_after, priority_queue,
                             pickup_to_entries, delivery_to_entries);
   }
   /// Updates all pair entries inserting their pickup node after node
   /// "insert_after" and updates the priority queue accordingly.
-  void UpdatePickupPositions(int vehicle, int64 pickup_insert_after,
+  void UpdatePickupPositions(const std::vector<int>& pair_indices, int vehicle,
+                             int64 pickup_insert_after,
                              AdjustablePriorityQueue<PairEntry>* priority_queue,
                              std::vector<PairEntries>* pickup_to_entries,
                              std::vector<PairEntries>* delivery_to_entries);
   /// Updates all pair entries inserting their delivery node after node
   /// "insert_after" and updates the priority queue accordingly.
   void UpdateDeliveryPositions(
-      int vehicle, int64 delivery_insert_after,
+      const std::vector<int>& pair_indices, int vehicle,
+      int64 delivery_insert_after,
       AdjustablePriorityQueue<PairEntry>* priority_queue,
       std::vector<PairEntries>* pickup_to_entries,
       std::vector<PairEntries>* delivery_to_entries);
@@ -3014,25 +3380,48 @@ class GlobalCheapestInsertionFilteredHeuristic
                        AdjustablePriorityQueue<PairEntry>* priority_queue,
                        std::vector<PairEntries>* pickup_to_entries,
                        std::vector<PairEntries>* delivery_to_entries);
+  /// Creates a PairEntry corresponding to the insertion of 'pickup' and
+  /// 'delivery' respectively after 'pickup_insert_after' and
+  /// 'delivery_insert_after', and adds it to the 'priority_queue',
+  /// 'pickup_entries' and 'delivery_entries'.
+  void AddPairEntry(int64 pickup, int64 pickup_insert_after, int64 delivery,
+                    int64 delivery_insert_after, int vehicle,
+                    AdjustablePriorityQueue<PairEntry>* priority_queue,
+                    std::vector<PairEntries>* pickup_entries,
+                    std::vector<PairEntries>* delivery_entries) const;
+  /// Updates the pair entry's value and rearranges the priority queue
+  /// accordingly.
+  void UpdatePairEntry(
+      PairEntry* const pair_entry,
+      AdjustablePriorityQueue<PairEntry>* priority_queue) const;
+  /// Computes and returns the insertion value of inserting 'pickup' and
+  /// 'delivery' respectively after 'pickup_insert_after' and
+  /// 'delivery_insert_after' on 'vehicle'.
+  int64 GetInsertionValueForPairAtPositions(int64 pickup,
+                                            int64 pickup_insert_after,
+                                            int64 delivery,
+                                            int64 delivery_insert_after,
+                                            int vehicle) const;
+
   /// Initializes the priority queue and the node entries with the current state
   /// of the solution on the given vehicle routes.
   void InitializePositions(const std::vector<int>& nodes,
+                           const absl::flat_hash_set<int>& vehicles,
                            AdjustablePriorityQueue<NodeEntry>* priority_queue,
-                           std::vector<NodeEntries>* position_to_node_entries,
-                           const absl::flat_hash_set<int>& vehicles);
+                           std::vector<NodeEntries>* position_to_node_entries);
   /// Adds insertion entries performing 'node', and updates 'priority_queue' and
   /// position_to_node_entries accordingly.
   /// Based on gci_params_.use_neighbors_ratio_for_initialization, either all
   /// contained nodes are considered as insertion positions, or only the
   /// closest neighbors of 'node'.
   void InitializeInsertionEntriesPerformingNode(
-      int64 node, int64 penalty, const absl::flat_hash_set<int>& vehicles,
+      int64 node, const absl::flat_hash_set<int>& vehicles,
       AdjustablePriorityQueue<NodeEntry>* priority_queue,
       std::vector<NodeEntries>* position_to_node_entries);
   /// Updates all node entries inserting a node after node "insert_after" and
   /// updates the priority queue accordingly.
   void UpdatePositions(const std::vector<int>& nodes, int vehicle,
-                       int64 insert_after,
+                       int64 insert_after, bool all_vehicles,
                        AdjustablePriorityQueue<NodeEntry>* priority_queue,
                        std::vector<NodeEntries>* node_entries);
   /// Deletes an entry, removing it from the priority queue and the appropriate
@@ -3041,60 +3430,45 @@ class GlobalCheapestInsertionFilteredHeuristic
                        AdjustablePriorityQueue<NodeEntry>* priority_queue,
                        std::vector<NodeEntries>* node_entries);
 
+  /// Creates a NodeEntry corresponding to the insertion of 'node' after
+  /// 'insert_after' on 'vehicle' and adds it to the 'priority_queue' and
+  /// 'node_entries'.
+  void AddNodeEntry(int64 node, int64 insert_after, int vehicle,
+                    bool all_vehicles,
+                    AdjustablePriorityQueue<NodeEntry>* priority_queue,
+                    std::vector<NodeEntries>* node_entries) const;
+  /// Updates the given node_entry's value and rearranges the priority queue
+  /// accordingly.
+  void UpdateNodeEntry(
+      NodeEntry* const node_entry,
+      AdjustablePriorityQueue<NodeEntry>* priority_queue) const;
+
   /// Computes the neighborhood of all nodes for every cost class, if needed and
   /// not done already.
   void ComputeNeighborhoods();
-
-  /// Marks neighbor_index as visited in
-  /// node_index_to_[pickup|delivery|single]_neighbors_by_cost_class_
-  /// [node_index][cost_class] according to whether the neighbor is a pickup,
-  /// a delivery, or neither.
-  void AddNeighborForCostClass(int cost_class, int64 node_index,
-                               int64 neighbor_index, bool neighbor_is_pickup,
-                               bool neighbor_is_delivery);
 
   /// Returns true iff neighbor_index is in node_index's neighbors list
   /// corresponding to neighbor_is_pickup and neighbor_is_delivery.
   bool IsNeighborForCostClass(int cost_class, int64 node_index,
                               int64 neighbor_index) const;
 
-  /// Returns a reference to the set of pickup neighbors of node_index.
-  const std::vector<int64>& GetPickupNeighborsOfNodeForCostClass(
+  /// Returns the neighbors of the given node for the given cost_class.
+  const std::vector<int64>& GetNeighborsOfNodeForCostClass(
       int cost_class, int64 node_index) const {
-    if (gci_params_.neighbors_ratio == 1) {
-      return pickup_nodes_;
-    }
-    return node_index_to_pickup_neighbors_by_cost_class_[node_index][cost_class]
-        ->PositionsSetAtLeastOnce();
+    return gci_params_.neighbors_ratio == 1
+               ? all_nodes_
+               : node_index_to_neighbors_by_cost_class_[node_index][cost_class]
+                     ->PositionsSetAtLeastOnce();
   }
 
-  /// Same as above for delivery neighbors.
-  const std::vector<int64>& GetDeliveryNeighborsOfNodeForCostClass(
-      int cost_class, int64 node_index) const {
-    if (gci_params_.neighbors_ratio == 1) {
-      return delivery_nodes_;
-    }
-    return node_index_to_delivery_neighbors_by_cost_class_
-        [node_index][cost_class]
-            ->PositionsSetAtLeastOnce();
+  int64 NumNonStartEndNodes() const {
+    return model()->Size() - model()->vehicles();
   }
 
-  /// Same as above for non pickup/delivery neighbors.
-  const std::vector<int64>& GetSingleNeighborsOfNodeForCostClass(
-      int cost_class, int64 node_index) const {
-    if (gci_params_.neighbors_ratio == 1) {
-      return single_nodes_;
-    }
-    return node_index_to_single_neighbors_by_cost_class_[node_index][cost_class]
-        ->PositionsSetAtLeastOnce();
-  }
-
-  /// Returns an iterator to the concatenation of all neighbors.
-  std::vector<const std::vector<int64>*> GetNeighborsOfNodeForCostClass(
-      int cost_class, int64 node_index) const {
-    return {&GetSingleNeighborsOfNodeForCostClass(cost_class, node_index),
-            &GetPickupNeighborsOfNodeForCostClass(cost_class, node_index),
-            &GetDeliveryNeighborsOfNodeForCostClass(cost_class, node_index)};
+  int64 NumNeighbors() const {
+    return std::max(gci_params_.min_neighbors,
+                    MathUtil::FastInt64Round(gci_params_.neighbors_ratio *
+                                             NumNonStartEndNodes()));
   }
 
   void ResetVehicleIndices() override {
@@ -3116,19 +3490,15 @@ class GlobalCheapestInsertionFilteredHeuristic
 
   // clang-format off
   std::vector<std::vector<std::unique_ptr<SparseBitset<int64> > > >
-      node_index_to_single_neighbors_by_cost_class_;
-  std::vector<std::vector<std::unique_ptr<SparseBitset<int64> > > >
-      node_index_to_pickup_neighbors_by_cost_class_;
-  std::vector<std::vector<std::unique_ptr<SparseBitset<int64> > > >
-      node_index_to_delivery_neighbors_by_cost_class_;
+      node_index_to_neighbors_by_cost_class_;
   // clang-format on
 
-  /// When neighbors_ratio is 1, we don't compute the neighborhood members
-  /// above, and use the following vectors in the code to avoid unnecessary
+  std::unique_ptr<VehicleTypeCurator> empty_vehicle_type_curator_;
+
+  /// When neighbors_ratio is 1, we don't compute the neighborhood matrix
+  /// above, and use the following vector in the code to avoid unnecessary
   /// computations and decrease the time and space complexities.
-  std::vector<int64> single_nodes_;
-  std::vector<int64> pickup_nodes_;
-  std::vector<int64> delivery_nodes_;
+  std::vector<int64> all_nodes_;
 };
 
 /// Filter-base decision builder which builds a solution by inserting
@@ -3142,7 +3512,7 @@ class LocalCheapestInsertionFilteredHeuristic
   /// Takes ownership of evaluator.
   LocalCheapestInsertionFilteredHeuristic(
       RoutingModel* model, std::function<int64(int64, int64, int64)> evaluator,
-      const std::vector<LocalSearchFilter*>& filters);
+      LocalSearchFilterManager* filter_manager);
   ~LocalCheapestInsertionFilteredHeuristic() override {}
   bool BuildSolutionInternal() override;
   std::string DebugString() const override {
@@ -3172,8 +3542,8 @@ class LocalCheapestInsertionFilteredHeuristic
 /// a path from its start node with the cheapest arc.
 class CheapestAdditionFilteredHeuristic : public RoutingFilteredHeuristic {
  public:
-  CheapestAdditionFilteredHeuristic(
-      RoutingModel* model, const std::vector<LocalSearchFilter*>& filters);
+  CheapestAdditionFilteredHeuristic(RoutingModel* model,
+                                    LocalSearchFilterManager* filter_manager);
   ~CheapestAdditionFilteredHeuristic() override {}
   bool BuildSolutionInternal() override;
 
@@ -3216,7 +3586,7 @@ class EvaluatorCheapestAdditionFilteredHeuristic
   /// Takes ownership of evaluator.
   EvaluatorCheapestAdditionFilteredHeuristic(
       RoutingModel* model, std::function<int64(int64, int64)> evaluator,
-      const std::vector<LocalSearchFilter*>& filters);
+      LocalSearchFilterManager* filter_manager);
   ~EvaluatorCheapestAdditionFilteredHeuristic() override {}
   std::string DebugString() const override {
     return "EvaluatorCheapestAdditionFilteredHeuristic";
@@ -3239,7 +3609,7 @@ class ComparatorCheapestAdditionFilteredHeuristic
   /// Takes ownership of evaluator.
   ComparatorCheapestAdditionFilteredHeuristic(
       RoutingModel* model, Solver::VariableValueComparator comparator,
-      const std::vector<LocalSearchFilter*>& filters);
+      LocalSearchFilterManager* filter_manager);
   ~ComparatorCheapestAdditionFilteredHeuristic() override {}
   std::string DebugString() const override {
     return "ComparatorCheapestAdditionFilteredHeuristic";
@@ -3282,7 +3652,7 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
   SavingsFilteredHeuristic(RoutingModel* model,
                            const RoutingIndexManager* manager,
                            SavingsParameters parameters,
-                           const std::vector<LocalSearchFilter*>& filters);
+                           LocalSearchFilterManager* filter_manager);
   ~SavingsFilteredHeuristic() override;
   bool BuildSolutionInternal() override;
 
@@ -3291,16 +3661,6 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
 
   template <typename S>
   class SavingsContainer;
-
-  struct VehicleClassEntry {
-    int vehicle_class;
-    int64 fixed_cost;
-
-    bool operator<(const VehicleClassEntry& other) const {
-      return std::tie(fixed_cost, vehicle_class) <
-             std::tie(other.fixed_cost, other.vehicle_class);
-    }
-  };
 
   virtual double ExtraSavingsMemoryMultiplicativeFactor() const = 0;
 
@@ -3333,12 +3693,10 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
   int StartNewRouteWithBestVehicleOfType(int type, int64 before_node,
                                          int64 after_node);
 
-  std::vector<int> type_index_of_vehicle_;
   // clang-format off
-  std::vector<std::set<VehicleClassEntry> > sorted_vehicle_classes_per_type_;
-  std::vector<std::deque<int> > vehicles_per_vehicle_class_;
   std::unique_ptr<SavingsContainer<Saving> > savings_container_;
   // clang-format on
+  std::unique_ptr<VehicleTypeCurator> vehicle_type_curator_;
 
  private:
   /// Used when add_reverse_arcs_ is true.
@@ -3364,15 +3722,6 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
                                       before_node * Size() + after_node);
   }
 
-  /// Computes the vehicle type of every vehicle and stores it in
-  /// type_index_of_vehicle_. A "vehicle type" consists of the set of vehicles
-  /// having the same cost class and start/end nodes, therefore the same savings
-  /// value for each arc.
-  /// The vehicle classes corresponding to each vehicle type index are stored
-  /// and sorted by fixed cost in sorted_vehicle_classes_per_type_, and the
-  /// vehicles for each vehicle class are stored in vehicles_per_vehicle_class_.
-  void ComputeVehicleTypes();
-
   /// Computes and returns the maximum number of (closest) neighbors to consider
   /// for each node when computing Savings, based on the neighbors ratio and max
   /// memory usage specified by the savings_params_.
@@ -3387,11 +3736,11 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
 
 class SequentialSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
  public:
-  SequentialSavingsFilteredHeuristic(
-      RoutingModel* model, const RoutingIndexManager* manager,
-      SavingsParameters parameters,
-      const std::vector<LocalSearchFilter*>& filters)
-      : SavingsFilteredHeuristic(model, manager, parameters, filters) {}
+  SequentialSavingsFilteredHeuristic(RoutingModel* model,
+                                     const RoutingIndexManager* manager,
+                                     SavingsParameters parameters,
+                                     LocalSearchFilterManager* filter_manager)
+      : SavingsFilteredHeuristic(model, manager, parameters, filter_manager) {}
   ~SequentialSavingsFilteredHeuristic() override{};
   std::string DebugString() const override {
     return "SequentialSavingsFilteredHeuristic";
@@ -3408,11 +3757,11 @@ class SequentialSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
 
 class ParallelSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
  public:
-  ParallelSavingsFilteredHeuristic(
-      RoutingModel* model, const RoutingIndexManager* manager,
-      SavingsParameters parameters,
-      const std::vector<LocalSearchFilter*>& filters)
-      : SavingsFilteredHeuristic(model, manager, parameters, filters) {}
+  ParallelSavingsFilteredHeuristic(RoutingModel* model,
+                                   const RoutingIndexManager* manager,
+                                   SavingsParameters parameters,
+                                   LocalSearchFilterManager* filter_manager)
+      : SavingsFilteredHeuristic(model, manager, parameters, filter_manager) {}
   ~ParallelSavingsFilteredHeuristic() override{};
   std::string DebugString() const override {
     return "ParallelSavingsFilteredHeuristic";
@@ -3456,7 +3805,7 @@ class ParallelSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
 class ChristofidesFilteredHeuristic : public RoutingFilteredHeuristic {
  public:
   ChristofidesFilteredHeuristic(RoutingModel* model,
-                                const std::vector<LocalSearchFilter*>& filters,
+                                LocalSearchFilterManager* filter_manager,
                                 bool use_minimum_matching);
   ~ChristofidesFilteredHeuristic() override {}
   bool BuildSolutionInternal() override;
@@ -3537,7 +3886,9 @@ class BasePathFilter : public IntVarLocalSearchFilter {
   std::vector<int64> new_nexts_;
   std::vector<int> delta_touched_;
   SparseBitset<> touched_paths_;
-  SparseBitset<> touched_path_nodes_;
+  // clang-format off
+  std::vector<std::pair<int64, int64> > touched_path_chain_start_ends_;
+  // clang-format on
   std::vector<int> ranks_;
 
   Status status_;
@@ -3556,7 +3907,7 @@ class BasePathFilter : public IntVarLocalSearchFilter {
 // TODO(user): Avoid such false negatives.
 class CPFeasibilityFilter : public IntVarLocalSearchFilter {
  public:
-  explicit CPFeasibilityFilter(const RoutingModel* routing_model);
+  explicit CPFeasibilityFilter(RoutingModel* routing_model);
   ~CPFeasibilityFilter() override {}
   std::string DebugString() const override { return "CPFeasibilityFilter"; }
   bool Accept(const Assignment* delta, const Assignment* deltadelta,
@@ -3572,9 +3923,12 @@ class CPFeasibilityFilter : public IntVarLocalSearchFilter {
   Assignment* const assignment_;
   Assignment* const temp_assignment_;
   DecisionBuilder* const restore_;
+  SearchLimit* const limit_;
 };
 
 #if !defined(SWIG)
+IntVarLocalSearchFilter* MakeMaxActiveVehiclesFilter(
+    const RoutingModel& routing_model);
 IntVarLocalSearchFilter* MakeNodeDisjunctionFilter(
     const RoutingModel& routing_model);
 IntVarLocalSearchFilter* MakeVehicleAmortizedCostFilter(
@@ -3584,11 +3938,16 @@ IntVarLocalSearchFilter* MakeTypeRegulationsFilter(
 void AppendDimensionCumulFilters(
     const std::vector<RoutingDimension*>& dimensions,
     const RoutingSearchParameters& parameters, bool filter_objective_cost,
-    std::vector<LocalSearchFilter*>* filters);
+    std::vector<LocalSearchFilterManager::FilterEvent>* filters);
+void AppendLightWeightDimensionFilters(
+    const PathState* path_state,
+    const std::vector<RoutingDimension*>& dimensions,
+    std::vector<LocalSearchFilterManager::FilterEvent>* filters);
 IntVarLocalSearchFilter* MakePathCumulFilter(
     const RoutingDimension& dimension,
     const RoutingSearchParameters& parameters,
-    bool propagate_own_objective_value, bool filter_objective_cost);
+    bool propagate_own_objective_value, bool filter_objective_cost,
+    bool can_use_lp = true);
 IntVarLocalSearchFilter* MakeCumulBoundsPropagatorFilter(
     const RoutingDimension& dimension);
 IntVarLocalSearchFilter* MakeGlobalLPCumulFilter(
@@ -3600,8 +3959,7 @@ IntVarLocalSearchFilter* MakeVehicleVarFilter(
     const RoutingModel& routing_model);
 IntVarLocalSearchFilter* MakeVehicleBreaksFilter(
     const RoutingModel& routing_model, const RoutingDimension& dimension);
-IntVarLocalSearchFilter* MakeCPFeasibilityFilter(
-    const RoutingModel* routing_model);
+IntVarLocalSearchFilter* MakeCPFeasibilityFilter(RoutingModel* routing_model);
 #endif
 
 }  // namespace operations_research

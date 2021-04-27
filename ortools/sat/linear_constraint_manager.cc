@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "absl/container/flat_hash_set.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/integer.h"
 #include "ortools/sat/linear_constraint.h"
 
@@ -55,11 +56,18 @@ LinearConstraintManager::~LinearConstraintManager() {
   if (num_coeff_strenghtening_ > 0) {
     VLOG(2) << "num_coeff_strenghtening: " << num_coeff_strenghtening_;
   }
-  if (sat_parameters_.log_search_progress()) {
-    LOG(INFO) << "Total cuts added: " << num_cuts_;
-    for (const auto entry : type_to_num_cuts_) {
-      LOG(INFO) << "Added " << entry.second << " cuts of type '" << entry.first
-                << "'.";
+  if (sat_parameters_.log_search_progress() && num_cuts_ > 0) {
+    LOG(INFO) << "Total cuts added: " << num_cuts_ << " (out of "
+              << num_add_cut_calls_ << " calls) worker: '" << model_->Name()
+              << "'";
+    LOG(INFO) << "  - num simplifications: " << num_simplifications_;
+    for (const auto& entry : type_to_num_cuts_) {
+      if (entry.second == 1) {
+        LOG(INFO) << "  - added 1 cut of type '" << entry.first << "'.";
+      } else {
+        LOG(INFO) << "  - added " << entry.second << " cuts of type '"
+                  << entry.first << "'.";
+      }
     }
   }
 }
@@ -78,7 +86,6 @@ bool LinearConstraintManager::MaybeRemoveSomeInactiveConstraints(
   const glop::RowIndex num_rows(lp_constraints_.size());
   const glop::ColIndex num_cols =
       solution_state->statuses.size() - RowToColIndex(num_rows);
-
   int new_size = 0;
   for (int i = 0; i < num_rows; ++i) {
     const ConstraintIndex constraint_index = lp_constraints_[i];
@@ -167,11 +174,7 @@ void LinearConstraintManager::ComputeObjectiveParallelism(
   CHECK(objective_is_defined_);
   // lazy computation of objective norm.
   if (!objective_norm_computed_) {
-    double sum = 0.0;
-    for (const double coeff : dense_objective_coeffs_) {
-      sum += coeff * coeff;
-    }
-    objective_l2_norm_ = std::sqrt(sum);
+    objective_l2_norm_ = std::sqrt(sum_of_squared_objective_coeffs_);
     objective_norm_computed_ = true;
   }
   CHECK_GT(objective_l2_norm_, 0.0);
@@ -186,11 +189,9 @@ void LinearConstraintManager::ComputeObjectiveParallelism(
   double unscaled_objective_parallelism = 0.0;
   for (int i = 0; i < lc.vars.size(); ++i) {
     const IntegerVariable var = lc.vars[i];
-    DCHECK(VariableIsPositive(var));
-    if (var < dense_objective_coeffs_.size()) {
-      unscaled_objective_parallelism +=
-          ToDouble(lc.coeffs[i]) * dense_objective_coeffs_[var];
-    }
+    const auto it = objective_map_.find(var);
+    if (it == objective_map_.end()) continue;
+    unscaled_objective_parallelism += it->second * ToDouble(lc.coeffs[i]);
   }
   const double objective_parallelism =
       unscaled_objective_parallelism /
@@ -203,7 +204,9 @@ void LinearConstraintManager::ComputeObjectiveParallelism(
 // Cuts are also handled slightly differently than normal constraints.
 bool LinearConstraintManager::AddCut(
     LinearConstraint ct, std::string type_name,
-    const gtl::ITIVector<IntegerVariable, double>& lp_solution) {
+    const absl::StrongVector<IntegerVariable, double>& lp_solution,
+    std::string extra_info) {
+  ++num_add_cut_calls_;
   if (ct.vars.empty()) return false;
 
   const double activity = ComputeActivity(ct, lp_solution);
@@ -230,7 +233,7 @@ bool LinearConstraintManager::AddCut(
           << " max_magnitude="
           << ComputeInfinityNorm(constraint_infos_[ct_index].constraint)
           << " norm=" << l2_norm << " violation=" << violation
-          << " eff=" << violation / l2_norm;
+          << " eff=" << violation / l2_norm << " " << extra_info;
 
   num_cuts_++;
   num_deletable_constraints_++;
@@ -260,7 +263,7 @@ void LinearConstraintManager::PermanentlyRemoveSomeConstraints() {
 
   ConstraintIndex new_size(0);
   equiv_constraints_.clear();
-  gtl::ITIVector<ConstraintIndex, ConstraintIndex> index_mapping(
+  absl::StrongVector<ConstraintIndex, ConstraintIndex> index_mapping(
       constraint_infos_.size());
   int num_deleted_constraints = 0;
   for (ConstraintIndex i(0); i < constraint_infos_.size(); ++i) {
@@ -302,10 +305,11 @@ void LinearConstraintManager::SetObjectiveCoefficient(IntegerVariable var,
     var = NegationOf(var);
     coeff = -coeff;
   }
-  if (var.value() >= dense_objective_coeffs_.size()) {
-    dense_objective_coeffs_.resize(var.value() + 1, 0.0);
-  }
-  dense_objective_coeffs_[var] = ToDouble(coeff);
+  const double coeff_as_double = ToDouble(coeff);
+  const auto insert = objective_map_.insert({var, coeff_as_double});
+  CHECK(insert.second)
+      << "SetObjectiveCoefficient() called twice with same variable";
+  sum_of_squared_objective_coeffs_ += coeff_as_double * coeff_as_double;
 }
 
 bool LinearConstraintManager::SimplifyConstraint(LinearConstraint* ct) {
@@ -434,10 +438,11 @@ bool LinearConstraintManager::SimplifyConstraint(LinearConstraint* ct) {
 }
 
 bool LinearConstraintManager::ChangeLp(
-    const gtl::ITIVector<IntegerVariable, double>& lp_solution,
+    const absl::StrongVector<IntegerVariable, double>& lp_solution,
     glop::BasisState* solution_state) {
   VLOG(3) << "Enter ChangeLP, scan " << constraint_infos_.size()
           << " constraints";
+  const double saved_dtime = dtime_;
   std::vector<ConstraintIndex> new_constraints;
   std::vector<double> new_constraints_efficacies;
   std::vector<double> new_constraints_orthogonalities;
@@ -447,13 +452,16 @@ bool LinearConstraintManager::ChangeLp(
   last_simplification_timestamp_ = integer_trail_.num_level_zero_enqueues();
 
   // We keep any constraints that is already present, and otherwise, we add the
-  // ones that are currently not satisfied by at least "tolerance".
+  // ones that are currently not satisfied by at least "tolerance" to the set
+  // of potential new constraints.
   bool rescale_active_count = false;
   const double tolerance = 1e-6;
   for (ConstraintIndex i(0); i < constraint_infos_.size(); ++i) {
     // Inprocessing of the constraint.
     if (simplify_constraints &&
         SimplifyConstraint(&constraint_infos_[i].constraint)) {
+      ++num_simplifications_;
+
       // Note that the canonicalization shouldn't be needed since the order
       // of the variable is not changed by the simplification, and we only
       // reduce the coefficients at both end of the spectrum.
@@ -476,6 +484,10 @@ bool LinearConstraintManager::ChangeLp(
 
     if (constraint_infos_[i].is_in_lp) continue;
 
+    // ComputeActivity() often represent the bulk of the time spent in
+    // ChangeLP().
+    dtime_ += 1.7e-9 *
+              static_cast<double>(constraint_infos_[i].constraint.vars.size());
     const double activity =
         ComputeActivity(constraint_infos_[i].constraint, lp_solution);
     const double lb_violation =
@@ -656,6 +668,8 @@ bool LinearConstraintManager::ChangeLp(
     PermanentlyRemoveSomeConstraints();
   }
 
+  time_limit_->AdvanceDeterministicTime(dtime_ - saved_dtime);
+
   // The LP changed only if we added new constraints or if some constraints
   // already inside changed (simplification or tighter bounds).
   if (current_lp_is_changed_) {
@@ -691,6 +705,26 @@ bool LinearConstraintManager::DebugCheckConstraint(
     return false;
   }
   return true;
+}
+
+void TopNCuts::AddCut(
+    LinearConstraint ct, const std::string& name,
+    const absl::StrongVector<IntegerVariable, double>& lp_solution) {
+  if (ct.vars.empty()) return;
+  const double activity = ComputeActivity(ct, lp_solution);
+  const double violation =
+      std::max(activity - ToDouble(ct.ub), ToDouble(ct.lb) - activity);
+  const double l2_norm = ComputeL2Norm(ct);
+  cuts_.Add({name, ct}, violation / l2_norm);
+}
+
+void TopNCuts::TransferToManager(
+    const absl::StrongVector<IntegerVariable, double>& lp_solution,
+    LinearConstraintManager* manager) {
+  for (const CutCandidate& candidate : cuts_.UnorderedElements()) {
+    manager->AddCut(candidate.cut, candidate.name, lp_solution);
+  }
+  cuts_.Clear();
 }
 
 }  // namespace sat

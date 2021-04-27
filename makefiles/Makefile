@@ -53,7 +53,7 @@ help:
 	@echo -e "\t\t${BOLD}python${RESET} (Python >= 3)"
 	@echo -e "\t\t${BOLD}java${RESET} (Java >= 8)"
 	@echo -e "\t\t${BOLD}dotnet${RESET} (.Net Core >= 2.1)"
-	@echo -e "\t\t${BOLD}go${RESET} (go >= 1.14)"
+	@echo -e "\t\t${BOLD}go${RESET} (go >= 1.16)"
 	@echo -e "\te.g. 'make alpine_cpp_devel'"
 	@echo
 	@echo -e "\t${BOLD}<stage>${RESET}:"
@@ -110,7 +110,7 @@ LANGUAGES = cpp python java dotnet go
 ## PRESTAGES ##
 ###############
 PRESTAGES = base swig
-define make-prestage-target
+define make-prestage-target =
 #$$(info STAGE: $1)
 #$$(info Create targets: $1 $(addsuffix _$1, $(DISTROS)).)
 targets_$1 = $(addsuffix _$1, $(DISTROS))
@@ -151,7 +151,7 @@ $(foreach stage,$(PRESTAGES),$(eval $(call make-prestage-target,$(stage))))
 ## STAGES ##
 ############
 STAGES = env devel build test package export
-define make-stage-target
+define make-stage-target =
 #$$(info STAGE: $1)
 #$$(info Create targets: $1 $(addsuffix _$1, $(DISTROS)).)
 targets_$1 = $(addsuffix _$1, $(DISTROS))

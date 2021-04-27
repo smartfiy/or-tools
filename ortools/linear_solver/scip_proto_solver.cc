@@ -23,17 +23,17 @@
 #include <string>
 #include <vector>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
-#include "absl/types/optional.h"
-#include "ortools/base/canonical_errors.h"
 #include "ortools/base/cleanup.h"
 #include "ortools/base/commandlineflags.h"
-#include "ortools/base/status.h"
 #include "ortools/base/status_macros.h"
+#include "ortools/gscip/legacy_scip_params.h"
 #include "ortools/linear_solver/linear_solver.pb.h"
 #include "ortools/linear_solver/model_validator.h"
 #include "ortools/linear_solver/scip_helper_macros.h"
@@ -52,101 +52,16 @@
 #include "scip/type_paramset.h"
 #include "scip/type_var.h"
 
-DEFINE_string(scip_proto_solver_output_cip_file, "",
-              "If given, saves the generated CIP file here. Useful for "
-              "reporting bugs to SCIP.");
+ABSL_FLAG(std::string, scip_proto_solver_output_cip_file, "",
+          "If given, saves the generated CIP file here. Useful for "
+          "reporting bugs to SCIP.");
 
 namespace operations_research {
-
-util::Status ScipSetSolverSpecificParameters(const std::string& parameters,
-                                             SCIP* scip) {
-  for (const auto parameter :
-       absl::StrSplit(parameters, '\n', absl::SkipWhitespace())) {
-    std::vector<std::string> key_value =
-        absl::StrSplit(parameter, '=', absl::SkipWhitespace());
-    if (key_value.size() != 2) {
-      return util::InvalidArgumentError(
-          absl::StrFormat("Cannot parse parameter '%s'. Expected format is "
-                          "'parameter/name = value'",
-                          parameter));
-    }
-
-    std::string name = key_value[0];
-    absl::RemoveExtraAsciiWhitespace(&name);
-    std::string value = key_value[1];
-    absl::RemoveExtraAsciiWhitespace(&value);
-    const double infinity = SCIPinfinity(scip);
-
-    SCIP_PARAM* param = SCIPgetParam(scip, name.c_str());
-    if (param == nullptr) {
-      return util::InvalidArgumentError(
-          absl::StrFormat("Invalid parameter name '%s'", name));
-    }
-    switch (param->paramtype) {
-      case SCIP_PARAMTYPE_BOOL: {
-        bool parsed_value;
-        if (absl::SimpleAtob(value, &parsed_value)) {
-          RETURN_IF_SCIP_ERROR(
-              SCIPsetBoolParam(scip, name.c_str(), parsed_value));
-          continue;
-        }
-        break;
-      }
-      case SCIP_PARAMTYPE_INT: {
-        int parsed_value;
-        if (absl::SimpleAtoi(value, &parsed_value)) {
-          RETURN_IF_SCIP_ERROR(
-              SCIPsetIntParam(scip, name.c_str(), parsed_value));
-          continue;
-        }
-        break;
-      }
-      case SCIP_PARAMTYPE_LONGINT: {
-        int64 parsed_value;
-        if (absl::SimpleAtoi(value, &parsed_value)) {
-          RETURN_IF_SCIP_ERROR(
-              SCIPsetLongintParam(scip, name.c_str(), parsed_value));
-          continue;
-        }
-        break;
-      }
-      case SCIP_PARAMTYPE_REAL: {
-        double parsed_value;
-        if (absl::SimpleAtod(value, &parsed_value)) {
-          if (parsed_value > infinity) parsed_value = infinity;
-          RETURN_IF_SCIP_ERROR(
-              SCIPsetRealParam(scip, name.c_str(), parsed_value));
-          continue;
-        }
-        break;
-      }
-      case SCIP_PARAMTYPE_CHAR: {
-        if (value.size() == 1) {
-          RETURN_IF_SCIP_ERROR(SCIPsetCharParam(scip, name.c_str(), value[0]));
-          continue;
-        }
-        break;
-      }
-      case SCIP_PARAMTYPE_STRING: {
-        if (value.front() == '"' && value.back() == '"') {
-          value.erase(value.begin());
-          value.erase(value.end() - 1);
-        }
-        RETURN_IF_SCIP_ERROR(
-            SCIPsetStringParam(scip, name.c_str(), value.c_str()));
-        continue;
-      }
-    }
-    return util::InvalidArgumentError(
-        absl::StrFormat("Invalid parameter value '%s'", parameter));
-  }
-  return util::OkStatus();
-}
 
 namespace {
 // This function will create a new constraint if the indicator constraint has
 // both a lower bound and an upper bound.
-util::Status AddIndicatorConstraint(const MPGeneralConstraintProto& gen_cst,
+absl::Status AddIndicatorConstraint(const MPGeneralConstraintProto& gen_cst,
                                     SCIP* scip, SCIP_CONS** scip_cst,
                                     std::vector<SCIP_VAR*>* scip_variables,
                                     std::vector<SCIP_CONS*>* scip_constraints,
@@ -162,7 +77,7 @@ util::Status AddIndicatorConstraint(const MPGeneralConstraintProto& gen_cst,
   constexpr double kInfinity = std::numeric_limits<double>::infinity();
 
   const auto& ind = gen_cst.indicator_constraint();
-  if (!ind.has_constraint()) return util::OkStatus();
+  if (!ind.has_constraint()) return absl::OkStatus();
 
   const MPConstraintProto& constraint = ind.constraint();
   const int size = constraint.var_index_size();
@@ -217,10 +132,10 @@ util::Status AddIndicatorConstraint(const MPGeneralConstraintProto& gen_cst,
     RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, *scip_cst));
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status AddSosConstraint(const MPGeneralConstraintProto& gen_cst,
+absl::Status AddSosConstraint(const MPGeneralConstraintProto& gen_cst,
                               const std::vector<SCIP_VAR*>& scip_variables,
                               SCIP* scip, SCIP_CONS** scip_cst,
                               std::vector<SCIP_VAR*>* tmp_variables,
@@ -236,10 +151,10 @@ util::Status AddSosConstraint(const MPGeneralConstraintProto& gen_cst,
   // SOS constraints of type N indicate at most N variables are non-zero.
   // Constraints with N variables or less are valid, but useless. They also
   // crash SCIP, so we skip them.
-  if (sos_cst.var_index_size() <= 1) return util::OkStatus();
+  if (sos_cst.var_index_size() <= 1) return absl::OkStatus();
   if (sos_cst.type() == MPSosConstraint::SOS2 &&
       sos_cst.var_index_size() <= 2) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   tmp_variables->resize(sos_cst.var_index_size(), nullptr);
@@ -277,10 +192,10 @@ util::Status AddSosConstraint(const MPGeneralConstraintProto& gen_cst,
       break;
   }
   RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, *scip_cst));
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status AddQuadraticConstraint(
+absl::Status AddQuadraticConstraint(
     const MPGeneralConstraintProto& gen_cst,
     const std::vector<SCIP_VAR*>& scip_variables, SCIP* scip,
     SCIP_CONS** scip_cst, std::vector<SCIP_VAR*>* tmp_variables,
@@ -336,12 +251,12 @@ util::Status AddQuadraticConstraint(
                                    /*lhs=*/quad_cst.lower_bound(),
                                    /*rhs=*/quad_cst.upper_bound()));
   RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, *scip_cst));
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // Models the constraint y = |x| as y >= 0 plus one disjunction constraint:
 //   y = x OR y = -x
-util::Status AddAbsConstraint(const MPGeneralConstraintProto& gen_cst,
+absl::Status AddAbsConstraint(const MPGeneralConstraintProto& gen_cst,
                               const std::vector<SCIP_VAR*>& scip_variables,
                               SCIP* scip, SCIP_CONS** scip_cst) {
   CHECK(scip != nullptr);
@@ -360,7 +275,7 @@ util::Status AddAbsConstraint(const MPGeneralConstraintProto& gen_cst,
   std::vector<double> vals;
   std::vector<SCIP_CONS*> cons;
   auto add_abs_constraint =
-      [&](const std::string& name_prefix) -> util::Status {
+      [&](const std::string& name_prefix) -> absl::Status {
     SCIP_CONS* scip_cons = nullptr;
     CHECK(vars.size() == vals.size());
     const std::string name =
@@ -372,7 +287,7 @@ util::Status AddAbsConstraint(const MPGeneralConstraintProto& gen_cst,
     // Note that the constraints are, by design, not added into the model using
     // SCIPaddCons.
     cons.push_back(scip_cons);
-    return util::OkStatus();
+    return absl::OkStatus();
   };
 
   // Create an intermediary constraint such that y = -x
@@ -392,10 +307,10 @@ util::Status AddAbsConstraint(const MPGeneralConstraintProto& gen_cst,
       /*nconss=*/cons.size(), /*conss=*/cons.data(), /*relaxcons=*/nullptr));
   RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, *scip_cst));
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status AddAndConstraint(const MPGeneralConstraintProto& gen_cst,
+absl::Status AddAndConstraint(const MPGeneralConstraintProto& gen_cst,
                               const std::vector<SCIP_VAR*>& scip_variables,
                               SCIP* scip, SCIP_CONS** scip_cst,
                               std::vector<SCIP_VAR*>* tmp_variables) {
@@ -416,10 +331,10 @@ util::Status AddAndConstraint(const MPGeneralConstraintProto& gen_cst,
       /*nvars=*/andcst.var_index_size(),
       /*vars=*/tmp_variables->data()));
   RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, *scip_cst));
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status AddOrConstraint(const MPGeneralConstraintProto& gen_cst,
+absl::Status AddOrConstraint(const MPGeneralConstraintProto& gen_cst,
                              const std::vector<SCIP_VAR*>& scip_variables,
                              SCIP* scip, SCIP_CONS** scip_cst,
                              std::vector<SCIP_VAR*>* tmp_variables) {
@@ -440,7 +355,7 @@ util::Status AddOrConstraint(const MPGeneralConstraintProto& gen_cst,
       /*nvars=*/orcst.var_index_size(),
       /*vars=*/tmp_variables->data()));
   RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, *scip_cst));
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // Models the constraint y = min(x1, x2, ... xn, c) with c being a constant with
@@ -448,7 +363,7 @@ util::Status AddOrConstraint(const MPGeneralConstraintProto& gen_cst,
 //  - one disjunction constraint among all of the possible y = x1, y = x2, ...
 //    y = xn, y = c constraints
 // Does the equivalent thing for max (with y >= max(...) instead).
-util::Status AddMinMaxConstraint(const MPGeneralConstraintProto& gen_cst,
+absl::Status AddMinMaxConstraint(const MPGeneralConstraintProto& gen_cst,
                                  const std::vector<SCIP_VAR*>& scip_variables,
                                  SCIP* scip, SCIP_CONS** scip_cst,
                                  std::vector<SCIP_CONS*>* scip_constraints,
@@ -468,7 +383,7 @@ util::Status AddMinMaxConstraint(const MPGeneralConstraintProto& gen_cst,
   std::vector<SCIP_CONS*> cons;
   auto add_lin_constraint = [&](const std::string& name_prefix,
                                 double lower_bound = 0.0,
-                                double upper_bound = 0.0) -> util::Status {
+                                double upper_bound = 0.0) -> absl::Status {
     SCIP_CONS* scip_cons = nullptr;
     CHECK(vars.size() == vals.size());
     const std::string name =
@@ -480,7 +395,7 @@ util::Status AddMinMaxConstraint(const MPGeneralConstraintProto& gen_cst,
     // Note that the constraints are, by design, not added into the model using
     // SCIPaddCons.
     cons.push_back(scip_cons);
-    return util::OkStatus();
+    return absl::OkStatus();
   };
 
   // Create intermediary constraints such that y = xi
@@ -535,10 +450,10 @@ util::Status AddMinMaxConstraint(const MPGeneralConstraintProto& gen_cst,
     scip_constraints->push_back(scip_cons);
     RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, scip_cons));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status AddQuadraticObjective(const MPQuadraticObjective& quadobj,
+absl::Status AddQuadraticObjective(const MPQuadraticObjective& quadobj,
                                    SCIP* scip,
                                    std::vector<SCIP_VAR*>* scip_variables,
                                    std::vector<SCIP_CONS*>* scip_constraints) {
@@ -549,7 +464,7 @@ util::Status AddQuadraticObjective(const MPQuadraticObjective& quadobj,
   constexpr double kInfinity = std::numeric_limits<double>::infinity();
 
   const int size = quadobj.coefficient_size();
-  if (size == 0) return util::OkStatus();
+  if (size == 0) return absl::OkStatus();
 
   // SCIP supports quadratic objectives by adding a quadratic constraint. We
   // need to create an extra variable to hold this quadratic objective.
@@ -580,13 +495,13 @@ util::Status AddQuadraticObjective(const MPQuadraticObjective& quadobj,
       /*lhs=*/0, /*rhs=*/0));
   RETURN_IF_SCIP_ERROR(SCIPaddCons(scip, scip_constraints->back()));
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status AddSolutionHint(const MPModelProto& model, SCIP* scip,
+absl::Status AddSolutionHint(const MPModelProto& model, SCIP* scip,
                              const std::vector<SCIP_VAR*>& scip_variables) {
   CHECK(scip != nullptr);
-  if (!model.has_solution_hint()) return util::OkStatus();
+  if (!model.has_solution_hint()) return absl::OkStatus();
 
   const PartialVariableAssignment& solution_hint = model.solution_hint();
   SCIP_SOL* solution;
@@ -609,7 +524,7 @@ util::Status AddSolutionHint(const MPModelProto& model, SCIP* scip,
   SCIP_Bool is_stored;
   RETURN_IF_SCIP_ERROR(SCIPaddSolFree(scip, &solution, &is_stored));
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 }  // namespace
 
@@ -739,7 +654,7 @@ std::string FindErrorInMPModelForScip(const MPModelProto& model, SCIP* scip) {
   return "";
 }
 
-util::StatusOr<MPSolutionResponse> ScipSolveProto(
+absl::StatusOr<MPSolutionResponse> ScipSolveProto(
     const MPModelRequest& request) {
   MPSolutionResponse response;
   const absl::optional<LazyMutableCopy<MPModelProto>> optional_model =
@@ -751,9 +666,9 @@ util::StatusOr<MPSolutionResponse> ScipSolveProto(
   std::vector<SCIP_CONS*> scip_constraints(
       model.constraint_size() + model.general_constraint_size(), nullptr);
 
-  auto delete_scip_objects = [&]() -> util::Status {
+  auto delete_scip_objects = [&]() -> absl::Status {
     // Release all created pointers.
-    if (scip == nullptr) return util::OkStatus();
+    if (scip == nullptr) return absl::OkStatus();
     for (SCIP_VAR* variable : scip_variables) {
       if (variable != nullptr) {
         RETURN_IF_SCIP_ERROR(SCIPreleaseVar(scip, &variable));
@@ -765,11 +680,11 @@ util::StatusOr<MPSolutionResponse> ScipSolveProto(
       }
     }
     RETURN_IF_SCIP_ERROR(SCIPfree(&scip));
-    return util::OkStatus();
+    return absl::OkStatus();
   };
 
-  auto scip_deleter = gtl::MakeCleanup([delete_scip_objects]() {
-    const util::Status deleter_status = delete_scip_objects();
+  auto scip_deleter = absl::MakeCleanup([delete_scip_objects]() {
+    const absl::Status deleter_status = delete_scip_objects();
     LOG_IF(DFATAL, !deleter_status.ok()) << deleter_status;
   });
 
@@ -783,11 +698,12 @@ util::StatusOr<MPSolutionResponse> ScipSolveProto(
     return response;
   }
 
-  const auto parameters_status = ScipSetSolverSpecificParameters(
+  const auto parameters_status = LegacyScipSetSolverSpecificParameters(
       request.solver_specific_parameters(), scip);
   if (!parameters_status.ok()) {
     response.set_status(MPSOLVER_MODEL_INVALID_SOLVER_PARAMETERS);
-    response.set_status_str(parameters_status.message());
+    response.set_status_str(
+        std::string(parameters_status.message()));  // NOLINT
     return response;
   }
   // Default clock type. We use wall clock time because getting CPU user seconds
@@ -905,7 +821,7 @@ util::StatusOr<MPSolutionResponse> ScipSolveProto(
           break;
         }
         default:
-          return util::UnimplementedError(
+          return absl::UnimplementedError(
               absl::StrFormat("General constraints of type %i not supported.",
                               gen_cst.general_constraint_case()));
       }
@@ -919,9 +835,10 @@ util::StatusOr<MPSolutionResponse> ScipSolveProto(
   RETURN_IF_SCIP_ERROR(SCIPaddOrigObjoffset(scip, model.objective_offset()));
   RETURN_IF_ERROR(AddSolutionHint(model, scip, scip_variables));
 
-  if (!FLAGS_scip_proto_solver_output_cip_file.empty()) {
-    SCIPwriteOrigProblem(scip, FLAGS_scip_proto_solver_output_cip_file.c_str(),
-                         nullptr, true);
+  if (!absl::GetFlag(FLAGS_scip_proto_solver_output_cip_file).empty()) {
+    SCIPwriteOrigProblem(
+        scip, absl::GetFlag(FLAGS_scip_proto_solver_output_cip_file).c_str(),
+        nullptr, true);
   }
   RETURN_IF_SCIP_ERROR(SCIPsolve(scip));
 

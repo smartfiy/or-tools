@@ -33,6 +33,7 @@ temp_test/
 temp_fz/
 temp_fz_test/
 temp_python*
+temp_java/
 temp_dotnet/
 temp_dotnet_test/
 temp_archive/
@@ -46,6 +47,8 @@ ortools/bazel-*
 examples/bazel-*
 bazel-*
 
+.vagrant/
+
 tools/docker/export
 
 CMakeLists.txt.user
@@ -58,6 +61,8 @@ cache/
 **/.vscode/*
 .DS_Store
 **/.vs/*
+
+ortools/linear_solver/lpi_glop.cc
 
 ortools/dotnet/*.props
 ortools/dotnet/*.png

@@ -11,6 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package com.google.ortools.sat.samples;
+
+import com.google.ortools.Loader;
 import com.google.ortools.sat.CpModel;
 import com.google.ortools.sat.CpSolver;
 import com.google.ortools.sat.CpSolverStatus;
@@ -22,11 +25,8 @@ import com.google.ortools.sat.IntervalVar;
  * possible.
  */
 public class NoOverlapSampleSat {
-  static {
-    System.loadLibrary("jniortools");
-  }
-
   public static void main(String[] args) throws Exception {
+    Loader.loadNativeLibraries();
     CpModel model = new CpModel();
     // Three weeks.
     int horizon = 21;

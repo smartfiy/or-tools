@@ -30,7 +30,7 @@ namespace sat {
 // positive variable ref in the proto is mapped to variable_mapping[ref] in the
 // model. All the variables referred in the search strategy must be correctly
 // mapped, the other entries can be set to kNoIntegerVariable.
-std::function<LiteralIndex()> ConstructSearchStrategy(
+std::function<BooleanOrIntegerLiteral()> ConstructSearchStrategy(
     const CpModelProto& cp_model_proto,
     const std::vector<IntegerVariable>& variable_mapping,
     IntegerVariable objective_var, Model* model);
@@ -39,19 +39,18 @@ std::function<LiteralIndex()> ConstructSearchStrategy(
 // domain before taking each decision. Note that we copy the instrumented
 // stategy so it doesn't have to outlive the returned functions like the other
 // arguments.
-std::function<LiteralIndex()> InstrumentSearchStrategy(
+std::function<BooleanOrIntegerLiteral()> InstrumentSearchStrategy(
     const CpModelProto& cp_model_proto,
     const std::vector<IntegerVariable>& variable_mapping,
-    const std::function<LiteralIndex()>& instrumented_strategy, Model* model);
+    const std::function<BooleanOrIntegerLiteral()>& instrumented_strategy,
+    Model* model);
 
-// Returns a different parameters depending on the given worker_id.
-// This assumes that worker will get an id in [0, num_workers).
-//
-// TODO(user): Find a way to know how many search heuristics there are,
-// and how many threads to pass to LNS with an optimization model.
-SatParameters DiversifySearchParameters(const SatParameters& params,
-                                        const CpModelProto& cp_model,
-                                        const int worker_id, std::string* name);
+// Returns up to "num_workers" different parameters. We do not always return
+// num_worker parameters to leave room for strategies like LNS that do not
+// consume a full worker and can always be interleaved.
+std::vector<SatParameters> GetDiverseSetOfParameters(
+    const SatParameters& base_params, const CpModelProto& cp_model,
+    const int num_workers);
 
 }  // namespace sat
 }  // namespace operations_research

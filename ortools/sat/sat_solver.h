@@ -30,7 +30,6 @@
 #include "absl/types/span.h"
 #include "ortools/base/hash.h"
 #include "ortools/base/int_type.h"
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/macros.h"
@@ -60,6 +59,10 @@ class SatSolver {
   SatSolver();
   explicit SatSolver(Model* model);
   ~SatSolver();
+
+  // TODO(user): Remove. This is temporary for accessing the model deep within
+  // some old code that didn't use the Model object.
+  Model* model() { return model_; }
 
   // Parameters management. Note that calling SetParameters() will reset the
   // value of many heuristics. For instance:
@@ -130,7 +133,7 @@ class SatSolver {
   // return true.
   //
   // TODO(user): Rename to ModelIsUnsat().
-  bool IsModelUnsat() const { return is_model_unsat_; }
+  bool IsModelUnsat() const { return model_is_unsat_; }
 
   // Adds and registers the given propagator with the sat solver. Note that
   // during propagation, they will be called in the order they were added.
@@ -317,17 +320,18 @@ class SatSolver {
   void ExtractClauses(Output* out) {
     CHECK(!IsModelUnsat());
     Backtrack(0);
-    out->SetNumVariables(NumVariables());
+    if (!FinishPropagation()) return;
 
     // It is important to process the newly fixed variables, so they are not
     // present in the clauses we export.
     if (num_processed_fixed_variables_ < trail_->Index()) {
       ProcessNewlyFixedVariables();
     }
-    clauses_propagator_->DeleteDetachedClauses();
+    clauses_propagator_->DeleteRemovedClauses();
 
     // Note(user): Putting the binary clauses first help because the presolver
     // currently process the clauses in order.
+    out->SetNumVariables(NumVariables());
     binary_implication_graph_->ExtractAllBinaryClauses(out);
     for (SatClause* clause : clauses_propagator_->AllClausesInCreationOrder()) {
       if (!clauses_propagator_->IsRemovable(clause)) {
@@ -344,9 +348,9 @@ class SatSolver {
   void ClearNewlyAddedBinaryClauses();
 
   struct Decision {
-    Decision() : trail_index(-1) {}
+    Decision() {}
     Decision(int i, Literal l) : trail_index(i), literal(l) {}
-    int trail_index;
+    int trail_index = 0;
     Literal literal;
   };
 
@@ -361,6 +365,11 @@ class SatSolver {
   int64 num_branches() const;
   int64 num_failures() const;
   int64 num_propagations() const;
+
+  // Note that we count the number of backtrack to level zero from a positive
+  // level. Those can corresponds to actual restarts, or conflicts that learn
+  // unit clauses or any other reason that trigger such backtrack.
+  int64 num_restarts() const;
 
   // A deterministic number that should be correlated with the time spent in
   // the Solve() function. The order of magnitude should be close to the time
@@ -380,6 +389,7 @@ class SatSolver {
   void SetDratProofHandler(DratProofHandler* drat_proof_handler) {
     drat_proof_handler_ = drat_proof_handler;
     clauses_propagator_->SetDratProofHandler(drat_proof_handler_);
+    binary_implication_graph_->SetDratProofHandler(drat_proof_handler_);
   }
 
   // This function is here to deal with the case where a SAT/CP model is found
@@ -388,20 +398,16 @@ class SatSolver {
   // just check if the solver is not UNSAT once the model is constructed. Note
   // that we usually log a warning on the first constraint that caused a
   // "trival" unsatisfiability.
-  void NotifyThatModelIsUnsat() { is_model_unsat_ = true; }
+  void NotifyThatModelIsUnsat() { model_is_unsat_ = true; }
 
-  // TODO(user): This internal function should probably not be exposed here.
-  void AddBinaryClauseDuringSearch(Literal a, Literal b) {
-    // The new clause should not propagate.
-    CHECK(!trail_->Assignment().LiteralIsFalse(a));
-    CHECK(!trail_->Assignment().LiteralIsFalse(b));
-    const bool init = binary_implication_graph_->NumberOfImplications() == 0;
-    binary_implication_graph_->AddBinaryClauseDuringSearch(a, b, trail_);
-    if (init) {
-      // This is needed because we just added the first binary clause.
-      InitializePropagators();
-    }
-  }
+  // Adds a clause at any level of the tree and propagate any new deductions.
+  // Returns false if the model becomes UNSAT. Important: We currently do not
+  // support adding a clause that is already falsified at a positive decision
+  // level. Doing that will cause a check fail.
+  //
+  // TODO(user): Backjump and propagate on a falsified clause? this is currently
+  // not needed.
+  bool AddClauseDuringSearch(absl::Span<const Literal> literals);
 
   // Performs propagation of the recently enqueued elements.
   // Mainly visible for testing.
@@ -418,6 +424,15 @@ class SatSolver {
     limit->AdvanceDeterministicTime(
         current - deterministic_time_at_last_advanced_time_limit_);
     deterministic_time_at_last_advanced_time_limit_ = current;
+  }
+
+  // Simplifies the problem when new variables are assigned at level 0.
+  void ProcessNewlyFixedVariables();
+
+  int64 NumFixedVariables() const {
+    if (!decisions_.empty()) return decisions_[0].trail_index;
+    CHECK_EQ(CurrentDecisionLevel(), 0);
+    return trail_->Index();
   }
 
  private:
@@ -469,7 +484,7 @@ class SatSolver {
   // Returns false if the thread memory is over the limit.
   bool IsMemoryLimitReached() const;
 
-  // Sets is_model_unsat_ to true and return false.
+  // Sets model_is_unsat_ to true and return false.
   bool SetModelUnsat();
 
   // Returns the decision level of a given variable.
@@ -545,9 +560,6 @@ class SatSolver {
   // Unrolls the trail until a given point. This unassign the assigned variables
   // and add them to the priority queue with the correct weight.
   void Untrail(int target_trail_index);
-
-  // Simplifies the problem when new variables are assigned at level 0.
-  void ProcessNewlyFixedVariables();
 
   // Output to the DRAT proof handler any newly fixed variables.
   void ProcessNewlyFixedVariablesForDratProof();
@@ -728,6 +740,7 @@ class SatSolver {
   struct Counters {
     int64 num_branches = 0;
     int64 num_failures = 0;
+    int64 num_restarts = 0;
 
     // Minimization stats.
     int64 num_minimizations = 0;
@@ -755,7 +768,7 @@ class SatSolver {
 
   // This is set to true if the model is found to be UNSAT when adding new
   // constraints.
-  bool is_model_unsat_ = false;
+  bool model_is_unsat_ = false;
 
   // Increment used to bump the variable activities.
   double clause_activity_increment_;
@@ -820,6 +833,15 @@ class SatSolver {
   mutable StatsGroup stats_;
   DISALLOW_COPY_AND_ASSIGN(SatSolver);
 };
+
+// Tries to minimize the given UNSAT core with a really simple heuristic.
+// The idea is to remove literals that are consequences of others in the core.
+// We already know that in the initial order, no literal is propagated by the
+// one before it, so we just look for propagation in the reverse order.
+//
+// Important: The given SatSolver must be the one that just produced the given
+// core.
+void MinimizeCore(SatSolver* solver, std::vector<Literal>* core);
 
 // ============================================================================
 // Model based functions.

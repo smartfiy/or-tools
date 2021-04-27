@@ -1,8 +1,9 @@
 FROM ortools/make:centos_swig AS env
-RUN yum -y update \
-&& yum -y install python36-devel python3-wheel \
-&& yum clean all \
-&& rm -rf /var/cache/yum
+RUN dnf -y update \
+&& dnf -y install python38-devel python38-pip python38-wheel \
+&& dnf clean all \
+&& rm -rf /var/cache/dnf
+RUN python3 -m pip install absl-py mypy-protobuf
 
 FROM env AS devel
 WORKDIR /home/project

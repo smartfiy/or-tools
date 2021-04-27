@@ -480,10 +480,10 @@ namespace operations_research {
   IntVar* IsLessOrEqual(IntExpr* const other) {
     return $self->solver()->MakeIsLessOrEqualVar($self->Var(), other->Var());
   }
-  OptimizeVar* Minimize(long step) {
+  OptimizeVar* Minimize(int64 step) {
     return $self->solver()->MakeMinimize($self->Var(), step);
   }
-  OptimizeVar* Maximize(long step) {
+  OptimizeVar* Maximize(int64 step) {
     return $self->solver()->MakeMaximize($self->Var(), step);
   }
 }
@@ -704,7 +704,8 @@ namespace operations_research {
 %ignore SearchLog::SearchLog(
     Solver* const s, OptimizeVar* const obj, IntVar* const var,
     double scaling_factor, double offset,
-    std::function<std::string()> display_callback, int period);
+    std::function<std::string()> display_callback,
+    bool display_on_new_solutions_only, int period);
 // Methods:
 %unignore SearchLog::Maintain;
 %unignore SearchLog::OutputDecision;
@@ -821,6 +822,13 @@ namespace operations_research {
 %unignore LocalSearchFilter::Accept;
 %unignore LocalSearchFilter::Synchronize;
 %unignore LocalSearchFilter::IsIncremental;
+
+// LocalSearchFilterManager
+%feature("director") LocalSearchFilterManager;
+%unignore LocalSearchFilterManager;
+// Methods:
+%unignore LocalSearchFilterManager::Accept;
+%unignore LocalSearchFilterManager::Synchronize;
 
 // IntVarLocalSearchFilter
 %feature("director") IntVarLocalSearchFilter;

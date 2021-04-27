@@ -68,7 +68,7 @@ cc_library(
     deps = [
         "//ortools/base",
         "//ortools/base:file",
-        "//ortools/base:status",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:str_format",
     ],
 )
@@ -226,18 +226,19 @@ cc_library(
     srcs = ["file_util.cc"],
     hdrs = ["file_util.h"],
     deps = [
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "//ortools/base",
         "//ortools/base:file",
+        "//ortools/base:gzipstring",
         "//ortools/base:hash",
         "//ortools/base:recordio",
-        "//ortools/base:statusor",
         "//ortools/base:status_macros",
         #        "//net/proto2/io/public",
         #        "//net/proto2/io/public:io",
         #        "//net/proto2/public",
         #        "//net/proto2/util/public:json",
-        "@com_google_protobuf_cc//:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -246,7 +247,10 @@ cc_library(
     srcs = ["proto_tools.cc"],
     hdrs = ["proto_tools.h"],
     deps = [
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
         "//ortools/base",
         "//ortools/base:file",
         "//ortools/base:hash",
@@ -254,7 +258,7 @@ cc_library(
         #        "//net/proto2/io/public:io",
         #        "//net/proto2/public",
         #        "//net/proto2/util/public:json",
-        "@com_google_protobuf_cc//:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 

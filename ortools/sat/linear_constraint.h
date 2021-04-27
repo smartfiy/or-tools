@@ -16,6 +16,7 @@
 
 #include <vector>
 
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/integer.h"
 #include "ortools/sat/model.h"
 
@@ -48,6 +49,11 @@ struct LinearConstraint {
   void AddTerm(IntegerVariable var, IntegerValue coeff) {
     vars.push_back(var);
     coeffs.push_back(coeff);
+  }
+
+  void ClearTerms() {
+    vars.clear();
+    coeffs.clear();
   }
 
   std::string DebugString() const {
@@ -83,12 +89,17 @@ class LinearConstraintBuilder {
  public:
   // We support "sticky" kMinIntegerValue for lb and kMaxIntegerValue for ub
   // for one-sided constraints.
+  //
+  // Assumes that the 'model' has IntegerEncoder.
   LinearConstraintBuilder(const Model* model, IntegerValue lb, IntegerValue ub)
       : encoder_(*model->Get<IntegerEncoder>()), lb_(lb), ub_(ub) {}
 
   // Adds var * coeff to the constraint.
   void AddTerm(IntegerVariable var, IntegerValue coeff);
   void AddTerm(AffineExpression expr, IntegerValue coeff);
+
+  // Add value as a constant term to the linear equation.
+  void AddConstant(IntegerValue value);
 
   // Add literal * coeff to the constaint. Returns false and do nothing if the
   // given literal didn't have an integer view.
@@ -107,7 +118,6 @@ class LinearConstraintBuilder {
   const IntegerEncoder& encoder_;
   IntegerValue lb_;
   IntegerValue ub_;
-  IntegerValue offset_;
 
   // Initially we push all AddTerm() here, and during Build() we merge terms
   // on the same variable.
@@ -116,8 +126,9 @@ class LinearConstraintBuilder {
 
 // Returns the activity of the given constraint. That is the current value of
 // the linear terms.
-double ComputeActivity(const LinearConstraint& constraint,
-                       const gtl::ITIVector<IntegerVariable, double>& values);
+double ComputeActivity(
+    const LinearConstraint& constraint,
+    const absl::StrongVector<IntegerVariable, double>& values);
 
 // Returns sqrt(sum square(coeff)).
 double ComputeL2Norm(const LinearConstraint& constraint);

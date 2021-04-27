@@ -41,7 +41,7 @@ void RunConstraintProgrammingExample() {
   solver.NewSearch(db);
   while (solver.NextSolution()) {
     LOG(INFO) << "Solution"
-              << ": x = " << x->Value() << "; y = " << x->Value()
+              << ": x = " << x->Value() << "; y = " << y->Value()
               << "; z = " << z->Value();
   }
   solver.EndSearch();
@@ -55,7 +55,7 @@ void RunConstraintProgrammingExample() {
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
-  FLAGS_logtostderr = 1;
+  absl::SetFlag(&FLAGS_logtostderr, 1);
   operations_research::RunConstraintProgrammingExample();
   return EXIT_SUCCESS;
 }

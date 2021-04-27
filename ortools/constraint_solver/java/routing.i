@@ -13,6 +13,9 @@
 
 // TODO(user): Refactor this file to adhere to the SWIG style guide.
 
+%include "std_pair.i"
+%template(IntBoolPair) std::pair<int, bool>;
+
 %include "ortools/constraint_solver/java/constraint_solver.i"
 %include "ortools/constraint_solver/java/routing_types.i"
 %include "ortools/constraint_solver/java/routing_index_manager.i"
@@ -62,17 +65,9 @@ import java.util.function.LongBinaryOperator;
 // see https://docs.oracle.com/javase/8/docs/api/java/util/function/LongUnaryOperator.html
 import java.util.function.LongUnaryOperator;
 %}
+
 %ignore RoutingModel::AddDimensionDependentDimensionWithVehicleCapacity;
-%ignore RoutingModel::AddHardTypeIncompatibility;
-%ignore RoutingModel::AddMatrixDimension(
-    std::vector<std::vector<int64> > values,
-    int64 capacity,
-    bool fix_start_cumul_to_zero,
-    const std::string& name);
 %ignore RoutingModel::AddSameVehicleRequiredTypeAlternatives;
-%ignore RoutingModel::AddTemporalRequiredTypeAlternatives;
-%ignore RoutingModel::AddTemporalTypeIncompatibility;
-%ignore RoutingModel::CloseVisitTypes;
 %ignore RoutingModel::GetAllDimensionNames;
 %ignore RoutingModel::GetAutomaticFirstSolutionStrategy;
 %ignore RoutingModel::GetDeliveryIndexPairs;
@@ -86,17 +81,9 @@ import java.util.function.LongUnaryOperator;
 %ignore RoutingModel::GetMutableGlobalCumulOptimizer;
 %ignore RoutingModel::GetMutableLocalCumulOptimizer;
 %ignore RoutingModel::GetMutableLocalCumulMPOptimizer;
-%ignore RoutingModel::GetNumberOfVisitTypes;
 %ignore RoutingModel::GetPerfectBinaryDisjunctions;
 %ignore RoutingModel::GetPickupIndexPairs;
 %ignore RoutingModel::GetSameVehicleRequiredTypeAlternativesOfType;
-%ignore RoutingModel::GetTemporalRequiredTypeAlternativesOfType;
-%ignore RoutingModel::GetTemporalTypeIncompatibilitiesOfType;
-%ignore RoutingModel::GetVisitType;
-%ignore RoutingModel::HasHardTypeIncompatibilities;
-%ignore RoutingModel::HasSameVehicleTypeRequirements;
-%ignore RoutingModel::HasTemporalTypeIncompatibilities;
-%ignore RoutingModel::HasTemporalTypeRequirements;
 %ignore RoutingModel::HasTypeRegulations;
 %ignore RoutingModel::MakeStateDependentTransit;
 %ignore RoutingModel::PackCumulsOfOptimizerDimensionsFromAssignment;
@@ -110,30 +97,38 @@ import java.util.function.LongUnaryOperator;
       const RoutingSearchParameters& search_parameters,
       std::vector<const Assignment*>* solutions);
 %ignore RoutingModel::TransitCallback;
-%ignore RoutingModel::SetVisitType;
 %ignore RoutingModel::StateDependentTransitCallback;
 %ignore RoutingModel::UnaryTransitCallbackOrNull;
 %rename (activeVar) RoutingModel::ActiveVar;
+%rename (activeVehicleVar) RoutingModel::ActiveVehicleVar;
 %rename (addAllActive) RoutingModel::AddAllActive;
 %rename (addAtSolutionCallback) RoutingModel::AddAtSolutionCallback;
+
 %rename (addConstantDimension) RoutingModel::AddConstantDimension;
 %rename (addConstantDimensionWithSlack) RoutingModel::AddConstantDimensionWithSlack;
+%rename (addVectorDimension) RoutingModel::AddVectorDimension;
+%rename (addMatrixDimension) RoutingModel::AddMatrixDimension;
 %rename (addDimension) RoutingModel::AddDimension;
 %rename (addDimensionWithVehicleCapacity) RoutingModel::AddDimensionWithVehicleCapacity;
 %rename (addDimensionWithVehicleTransitAndCapacity) RoutingModel::AddDimensionWithVehicleTransitAndCapacity;
 %rename (addDimensionWithVehicleTransits) RoutingModel::AddDimensionWithVehicleTransits;
+
 %rename (addDisjunction) RoutingModel::AddDisjunction;
+%rename (addHardTypeIncompatibility) RoutingModel::AddHardTypeIncompatibility;
 %rename (addIntervalToAssignment) RoutingModel::AddIntervalToAssignment;
 %rename (addLocalSearchFilter) RoutingModel::AddLocalSearchFilter;
 %rename (addLocalSearchOperator) RoutingModel::AddLocalSearchOperator;
 %rename (addPickupAndDelivery) RoutingModel::AddPickupAndDelivery;
 %rename (addPickupAndDeliverySets) RoutingModel::AddPickupAndDeliverySets;
+%rename (addRequiredTypeAlternativesWhenAddingType) RoutingModel::AddRequiredTypeAlternativesWhenAddingType;
+%rename (addRequiredTypeAlternativesWhenRemovingType) RoutingModel::AddRequiredTypeAlternativesWhenRemovingType;
 %rename (addSearchMonitor) RoutingModel::AddSearchMonitor;
 %rename (addSoftSameVehicleConstraint) RoutingModel::AddSoftSameVehicleConstraint;
+%rename (addTemporalTypeIncompatibility) RoutingModel::AddTemporalTypeIncompatibility;
 %rename (addToAssignment) RoutingModel::AddToAssignment;
 %rename (addVariableMaximizedByFinalizer) RoutingModel::AddVariableMaximizedByFinalizer;
 %rename (addVariableMinimizedByFinalizer) RoutingModel::AddVariableMinimizedByFinalizer;
-%rename (addVectorDimension) RoutingModel::AddVectorDimension;
+%rename (addVariableTargetToFinalizer) RoutingModel::AddVariableTargetToFinalizer;
 %rename (applyLocks) RoutingModel::ApplyLocks;
 %rename (applyLocksToAllVehicles) RoutingModel::ApplyLocksToAllVehicles;
 %rename (arcIsMoreConstrainedThanArc) RoutingModel::ArcIsMoreConstrainedThanArc;
@@ -141,6 +136,7 @@ import java.util.function.LongUnaryOperator;
 %rename (checkLimit) RoutingModel::CheckLimit;
 %rename (closeModel) RoutingModel::CloseModel;
 %rename (closeModelWithParameters) RoutingModel::CloseModelWithParameters;
+%rename (closeVisitTypes) RoutingModel::CloseVisitTypes;
 %rename (compactAndCheckAssignment) RoutingModel::CompactAndCheckAssignment;
 %rename (compactAssignment) RoutingModel::CompactAssignment;
 %rename (computeLowerBound) RoutingModel::ComputeLowerBound;
@@ -172,10 +168,15 @@ import java.util.function.LongUnaryOperator;
 %rename (getPickupAndDeliveryPolicyOfVehicle) RoutingModel::GetPickupAndDeliveryPolicyOfVehicle;
 %rename (getPrimaryConstrainedDimension) RoutingModel::GetPrimaryConstrainedDimension;
 %rename (getSameVehicleIndicesOfIndex) RoutingModel::GetSameVehicleIndicesOfIndex;
+%rename (getTemporalTypeIncompatibilitiesOfType) RoutingModel::GetTemporalTypeIncompatibilitiesOfType;
 %rename (getVehicleClassIndexOfVehicle) RoutingModel::GetVehicleClassIndexOfVehicle;
 %rename (getVehicleClassesCount) RoutingModel::GetVehicleClassesCount;
 %rename (getVisitType) RoutingModel::GetVisitType;
 %rename (hasDimension) RoutingModel::HasDimension;
+%rename (hasHardTypeIncompatibilities) RoutingModel::HasHardTypeIncompatibilities;
+%rename (hasSameVehicleTypeRequirements) RoutingModel::HasSameVehicleTypeRequirements;
+%rename (hasTemporalTypeIncompatibilities) RoutingModel::HasTemporalTypeIncompatibilities;
+%rename (hasTemporalTypeRequirements) RoutingModel::HasTemporalTypeRequirements;
 %rename (hasVehicleWithCostClassIndex) RoutingModel::HasVehicleWithCostClassIndex;
 %rename (ignoreDisjunctionsAlreadyForcedToZero) RoutingModel::IgnoreDisjunctionsAlreadyForcedToZero;
 %rename (isEnd) RoutingModel::IsEnd;
@@ -192,9 +193,15 @@ import java.util.function.LongUnaryOperator;
 %rename (preAssignment) RoutingModel::PreAssignment;
 %rename (readAssignment) RoutingModel::ReadAssignment;
 %rename (readAssignmentFromRoutes) RoutingModel::ReadAssignmentFromRoutes;
-%rename (registerPositiveTransitCallback) RoutingModel::RegisterPositiveTransitCallback;
-%rename (registerTransitCallback) RoutingModel::RegisterTransitCallback;
+
+%rename (registerUnaryTransitVector) RoutingModel::RegisterUnaryTransitVector;
 %rename (registerUnaryTransitCallback) RoutingModel::RegisterUnaryTransitCallback;
+%rename (registerPositiveUnaryTransitCallback) RoutingModel::RegisterPositiveUnaryTransitCallback; // not tested
+
+%rename (registerTransitMatrix) RoutingModel::RegisterTransitMatrix;
+%rename (registerTransitCallback) RoutingModel::RegisterTransitCallback;
+%rename (registerPositiveTransitCallback) RoutingModel::RegisterPositiveTransitCallback; // not tested
+
 %rename (restoreAssignment) RoutingModel::RestoreAssignment;
 %rename (routesToAssignment) RoutingModel::RoutesToAssignment;
 %rename (setAllowedVehiclesForIndex) RoutingModel::SetAllowedVehiclesForIndex;
@@ -220,14 +227,6 @@ import java.util.function.LongUnaryOperator;
 %rename (vehicleVar) RoutingModel::VehicleVar;
 %rename (vehicleVars) RoutingModel::VehicleVars;
 %rename (writeAssignment) RoutingModel::WriteAssignment;
-// Extend:
-%extend RoutingModel {
-  void addMatrixDimension(const std::vector<std::vector<int64> >& values,
-                          int64 capacity, bool fix_start_cumul_to_zero,
-                          const std::string& name) {
-    $self->AddMatrixDimension(values, capacity, fix_start_cumul_to_zero, name);
-  }
-}
 
 // RoutingDimension
 %unignore RoutingDimension;
@@ -257,6 +256,7 @@ import java.util.function.LongBinaryOperator;
 %rename (hasCumulVarSoftLowerBound) RoutingDimension::HasCumulVarSoftLowerBound;
 %rename (hasCumulVarSoftUpperBound) RoutingDimension::HasCumulVarSoftUpperBound;
 %rename (hasPickupToDeliveryLimits) RoutingDimension::HasPickupToDeliveryLimits;
+%rename (setBreakDistanceDurationOfVehicle) RoutingDimension::SetBreakDistanceDurationOfVehicle;
 %rename (setBreakIntervalsOfVehicle) RoutingDimension::SetBreakIntervalsOfVehicle;
 %rename (setCumulVarSoftLowerBound) RoutingDimension::SetCumulVarSoftLowerBound;
 %rename (setCumulVarSoftUpperBound) RoutingDimension::SetCumulVarSoftUpperBound;

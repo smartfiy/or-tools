@@ -13,16 +13,14 @@
 """Integer programming examples that show how to use the APIs."""
 # [START program]
 # [START import]
-from __future__ import print_function
 from ortools.linear_solver import pywraplp
 # [END import]
 
 
 def main():
     # [START solver]
-    # Create the mip solver with the CBC backend.
-    solver = pywraplp.Solver('simple_mip_program',
-                             pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
+    # Create the mip solver with the SCIP backend.
+    solver = pywraplp.Solver.CreateSolver('SCIP')
     # [END solver]
 
     # [START variables]

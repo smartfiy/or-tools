@@ -105,6 +105,13 @@ __pdoc__['Variable.thisown'] = False
     return error_message;
   }
 
+  // Change the API of LoadSolutionFromProto() to simply return a boolean.
+  bool LoadSolutionFromProto(
+      const operations_research::MPSolutionResponse& response,
+      double tolerance = operations_research::MPSolverParameters::kDefaultPrimalTolerance) {
+    return $self->LoadSolutionFromProto(response, tolerance).ok();
+  }
+
   std::string ExportModelAsLpFormat(bool obfuscated) {
     operations_research::MPModelExportOptions options;
     options.obfuscate = obfuscated;
@@ -270,6 +277,7 @@ PY_CONVERT(MPVariable);
 // These aren't unit tested, as they only run on machines with a Gurobi license.
 %unignore operations_research::MPSolver::GUROBI_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::GUROBI_MIXED_INTEGER_PROGRAMMING;
+%unignore operations_research::MPSolver::SetGurobiLibraryPath;
 %unignore operations_research::MPSolver::CPLEX_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::CPLEX_MIXED_INTEGER_PROGRAMMING;
 %unignore operations_research::MPSolver::XPRESS_LINEAR_PROGRAMMING;
@@ -299,6 +307,10 @@ PY_CONVERT(MPVariable);
 %rename (Constraint) operations_research::MPSolver::MakeRowConstraint(double, double, const std::string&);
 %rename (Constraint) operations_research::MPSolver::MakeRowConstraint(const std::string&);
 %unignore operations_research::MPSolver::~MPSolver;
+%newobject operations_research::MPSolver::CreateSolver;
+%unignore operations_research::MPSolver::CreateSolver;
+%unignore operations_research::MPSolver::ParseAndCheckSupportForProblemType;
+
 %unignore operations_research::MPSolver::Solve;
 %unignore operations_research::MPSolver::VerifySolution;
 %unignore operations_research::MPSolver::infinity;
@@ -309,7 +321,7 @@ PY_CONVERT(MPVariable);
 %unignore operations_research::MPSolver::ExportModelToProto;
 %unignore operations_research::MPSolver::FillSolutionResponseProto;
 // LoadModelFromProto() is also visible: it's overridden by an %extend, above.
-%unignore operations_research::MPSolver::LoadSolutionFromProto;  // No test
+// LoadSolutionFromProto() is also visible: it's overridden by an %extend, above.
 
 // Expose some of the more advanced MPSolver API.
 %unignore operations_research::MPSolver::InterruptSolve;
@@ -327,8 +339,8 @@ PY_CONVERT(MPVariable);
 %rename (LookupVariable) operations_research::MPSolver::LookupVariableOrNull;
 %unignore operations_research::MPSolver::SetSolverSpecificParametersAsString;
 %unignore operations_research::MPSolver::NextSolution;
-// %unignore operations_research::MPSolver::ExportModelAsLpFormat;
-// %unignore operations_research::MPSolver::ExportModelAsMpsFormat;
+// ExportModelAsLpFormat() is also visible: it's overridden by an %extend, above.
+// ExportModelAsMpsFormat() is also visible: it's overridden by an %extend, above.
 
 // Expose very advanced parts of the MPSolver API. For expert users only.
 %unignore operations_research::MPSolver::ComputeConstraintActivities;
@@ -347,6 +359,7 @@ PY_CONVERT(MPVariable);
 %unignore operations_research::MPVariable::SetUb;
 %unignore operations_research::MPVariable::SetBounds;
 %unignore operations_research::MPVariable::SetInteger;
+%unignore operations_research::MPVariable::SetBranchingPriority;
 
 // MPVariable: reader API.
 %unignore operations_research::MPVariable::solution_value;
@@ -357,6 +370,7 @@ PY_CONVERT(MPVariable);
 %unignore operations_research::MPVariable::index;  // No unit test
 %unignore operations_research::MPVariable::basis_status;
 %unignore operations_research::MPVariable::reduced_cost;  // For experts only.
+%unignore operations_research::MPVariable::branching_priority;  // no unit test.
 
 // MPConstraint: writer API.
 %unignore operations_research::MPConstraint::SetCoefficient;

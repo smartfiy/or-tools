@@ -11,6 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package com.google.ortools.sat.samples;
+
+import com.google.ortools.Loader;
 import com.google.ortools.sat.CpModel;
 import com.google.ortools.sat.CpSolver;
 import com.google.ortools.sat.CpSolverSolutionCallback;
@@ -21,11 +24,8 @@ import com.google.ortools.sat.SatParameters;
 
 /** Encode the piecewise linear expression. */
 public class EarlinessTardinessCostSampleSat {
-  static {
-    System.loadLibrary("jniortools");
-  }
-
   public static void main(String[] args) throws Exception {
+    Loader.loadNativeLibraries();
     long earlinessDate = 5;
     long earlinessCost = 8;
     long latenessDate = 15;

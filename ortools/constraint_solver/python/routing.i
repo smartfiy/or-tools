@@ -16,6 +16,8 @@
 
 %include "ortools/base/base.i"
 
+%include "ortools/util/python/pair.i"
+
 %include "ortools/constraint_solver/python/constraint_solver.i"
 %include "ortools/constraint_solver/python/routing_types.i"
 %include "ortools/constraint_solver/python/routing_index_manager.i"
@@ -50,21 +52,6 @@ DEFINE_INDEX_TYPE_TYPEDEF(
     operations_research::RoutingVehicleClassIndex,
     operations_research::RoutingModel::VehicleClassIndex);
 
-
-%ignore operations_research::RoutingModel::AddMatrixDimension(
-    std::vector<std::vector<int64> > values,
-    int64 capacity,
-    const std::string& name);
-
-%extend operations_research::RoutingModel {
-  void AddMatrixDimension(
-    const std::vector<std::vector<int64> >& values,
-    int64 capacity,
-    bool fix_start_cumul_to_zero,
-    const std::string& name) {
-    $self->AddMatrixDimension(values, capacity, fix_start_cumul_to_zero, name);
-  }
-}
 
 %ignore operations_research::RoutingModel::RegisterStateDependentTransitCallback;
 %ignore operations_research::RoutingModel::StateDependentTransitCallback;

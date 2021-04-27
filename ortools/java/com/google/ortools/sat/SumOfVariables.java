@@ -28,13 +28,19 @@ public final class SumOfVariables implements LinearExpr {
 
   @Override
   public IntVar getVariable(int index) {
-    assert (index >= 0);
-    assert (index < variables.length);
+    if (index < 0 || index >= variables.length) {
+      throw new IllegalArgumentException("wrong index in LinearExpr.getVariable(): " + index);
+    }
     return variables[index];
   }
 
   @Override
   public long getCoefficient(int index) {
     return 1;
+  }
+
+  @Override
+  public long getOffset() {
+    return 0;
   }
 }

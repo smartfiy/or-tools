@@ -43,14 +43,18 @@ README.md
 CONTRIBUTING.md
 #LICENSE-2.0.txt
 
-# Native cmake build
+# Native CMake/Make build
 classes
-dependencies
+dependencies/sources
+dependencies/install
+ortools/gen
 objs
 lib
 bin
 packages
 build/
+build_cmake/
+build_cross/
 examples/data/vector_packing
 examples/data/rcpsp
 examples/data/binpacking

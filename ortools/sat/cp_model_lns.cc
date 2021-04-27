@@ -13,30 +13,36 @@
 
 #include "ortools/sat/cp_model_lns.h"
 
+#include <limits>
 #include <numeric>
-#include <random>
 #include <vector>
 
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_loader.h"
 #include "ortools/sat/cp_model_utils.h"
+#include "ortools/sat/integer.h"
 #include "ortools/sat/linear_programming_constraint.h"
 #include "ortools/sat/rins.h"
+#include "ortools/sat/synchronization.h"
+#include "ortools/util/saturated_arithmetic.h"
 
 namespace operations_research {
 namespace sat {
 
 NeighborhoodGeneratorHelper::NeighborhoodGeneratorHelper(
-    int id, CpModelProto const* model_proto, SatParameters const* parameters,
+    CpModelProto const* model_proto, SatParameters const* parameters,
     SharedResponseManager* shared_response, SharedTimeLimit* shared_time_limit,
     SharedBoundsManager* shared_bounds)
-    : SubSolver(id, ""),
+    : SubSolver(""),
       parameters_(*parameters),
       model_proto_(*model_proto),
       shared_time_limit_(shared_time_limit),
       shared_bounds_(shared_bounds),
       shared_response_(shared_response) {
   CHECK(shared_response_ != nullptr);
+  if (shared_bounds_ != nullptr) {
+    shared_bounds_id_ = shared_bounds_->RegisterNewId();
+  }
   *model_proto_with_only_variables_.mutable_variables() =
       model_proto_.variables();
   RecomputeHelperData();
@@ -49,8 +55,8 @@ void NeighborhoodGeneratorHelper::Synchronize() {
     std::vector<int> model_variables;
     std::vector<int64> new_lower_bounds;
     std::vector<int64> new_upper_bounds;
-    shared_bounds_->GetChangedBounds(id_, &model_variables, &new_lower_bounds,
-                                     &new_upper_bounds);
+    shared_bounds_->GetChangedBounds(shared_bounds_id_, &model_variables,
+                                     &new_lower_bounds, &new_upper_bounds);
 
     for (int i = 0; i < model_variables.size(); ++i) {
       const int var = model_variables[i];
@@ -70,10 +76,20 @@ void NeighborhoodGeneratorHelper::Synchronize() {
       const Domain new_domain =
           old_domain.IntersectionWith(Domain(new_lb, new_ub));
       if (new_domain.IsEmpty()) {
-        shared_response_->NotifyThatImprovingProblemIsInfeasible(
-            "LNS base problem");
-        if (shared_time_limit_ != nullptr) shared_time_limit_->Stop();
-        return;
+        // This can mean two things:
+        // 1/ This variable is a normal one and the problem is UNSAT or
+        // 2/ This variable is optional, and its associated literal must be
+        //    set to false.
+        //
+        // Currently, we wait for any full solver to pick the crossing bounds
+        // and do the correct stuff on their own. We do not want to have empty
+        // domain in the proto as this would means INFEASIBLE. So we just ignore
+        // such bounds here.
+        //
+        // TODO(user): We could set the optional literal to false directly in
+        // the bound sharing manager. We do have to be careful that all the
+        // different solvers have the same optionality definition though.
+        continue;
       }
       FillDomainInProto(
           new_domain, model_proto_with_only_variables_.mutable_variables(var));
@@ -84,7 +100,6 @@ void NeighborhoodGeneratorHelper::Synchronize() {
       RecomputeHelperData();
     }
   }
-  shared_response_->MutableSolutionsRepository()->Synchronize();
 }
 
 void NeighborhoodGeneratorHelper::RecomputeHelperData() {
@@ -96,14 +111,30 @@ void NeighborhoodGeneratorHelper::RecomputeHelperData() {
   // presolve?
   var_to_constraint_.assign(model_proto_.variables_size(), {});
   constraint_to_var_.assign(model_proto_.constraints_size(), {});
+  const auto register_var = [&](int var, int ct_index) {
+    DCHECK(RefIsPositive(var));
+    if (IsConstant(var)) return;
+    var_to_constraint_[var].push_back(ct_index);
+    constraint_to_var_[ct_index].push_back(var);
+    CHECK_GE(var, 0);
+    CHECK_LT(var, model_proto_.variables_size());
+  };
+
   for (int ct_index = 0; ct_index < model_proto_.constraints_size();
        ++ct_index) {
     for (const int var : UsedVariables(model_proto_.constraints(ct_index))) {
-      if (IsConstant(var)) continue;
-      var_to_constraint_[var].push_back(ct_index);
-      constraint_to_var_[ct_index].push_back(var);
-      CHECK_GE(var, 0);
-      CHECK_LT(var, model_proto_.variables_size());
+      register_var(var, ct_index);
+    }
+
+    // We replace intervals by their underlying integer variables.
+    if (parameters_.lns_expand_intervals_in_constraint_graph()) {
+      for (const int interval :
+           UsedIntervals(model_proto_.constraints(ct_index))) {
+        for (const int var :
+             UsedVariables(model_proto_.constraints(interval))) {
+          register_var(var, ct_index);
+        }
+      }
     }
   }
 
@@ -162,6 +193,37 @@ Neighborhood NeighborhoodGeneratorHelper::FullNeighborhood() const {
   *neighborhood.cp_model.mutable_variables() =
       model_proto_with_only_variables_.variables();
   return neighborhood;
+}
+
+std::vector<int> NeighborhoodGeneratorHelper::GetActiveIntervals(
+    const CpSolverResponse& initial_solution) const {
+  std::vector<int> active_intervals;
+  for (const int i : TypeToConstraints(ConstraintProto::kInterval)) {
+    const ConstraintProto& interval_ct = ModelProto().constraints(i);
+    // We only look at intervals that are performed in the solution. The
+    // unperformed intervals should be automatically freed during the generation
+    // phase.
+    if (interval_ct.enforcement_literal().size() == 1) {
+      const int enforcement_ref = interval_ct.enforcement_literal(0);
+      const int enforcement_var = PositiveRef(enforcement_ref);
+      const int value = initial_solution.solution(enforcement_var);
+      if (RefIsPositive(enforcement_ref) == (value == 0)) {
+        continue;
+      }
+    }
+
+    // We filter out fixed intervals. Because of presolve, if there is an
+    // enforcement literal, it cannot be fixed.
+    if (interval_ct.enforcement_literal().empty() &&
+        IsConstant(PositiveRef(interval_ct.interval().start())) &&
+        IsConstant(PositiveRef(interval_ct.interval().size())) &&
+        IsConstant(PositiveRef(interval_ct.interval().end()))) {
+      continue;
+    }
+
+    active_intervals.push_back(i);
+  }
+  return active_intervals;
 }
 
 Neighborhood NeighborhoodGeneratorHelper::FixGivenVariables(
@@ -281,8 +343,10 @@ void NeighborhoodGenerator::Synchronize() {
     // This might not be a final solution, but it does work ok for now.
     const IntegerValue best_objective_improvement =
         IsRelaxationGenerator()
-            ? (data.new_objective_bound - data.initial_best_objective_bound)
-            : (data.initial_best_objective - data.new_objective);
+            ? IntegerValue(CapSub(data.new_objective_bound.value(),
+                                  data.initial_best_objective_bound.value()))
+            : IntegerValue(CapSub(data.initial_best_objective.value(),
+                                  data.new_objective.value()));
     if (best_objective_improvement > 0) {
       num_consecutive_non_improving_calls_ = 0;
     } else {
@@ -327,12 +391,11 @@ void NeighborhoodGenerator::Synchronize() {
 
 namespace {
 
-template <class Random>
 void GetRandomSubset(double relative_size, std::vector<int>* base,
-                     Random* random) {
+                     absl::BitGenRef random) {
   // TODO(user): we could generate this more efficiently than using random
   // shuffle.
-  std::shuffle(base->begin(), base->end(), *random);
+  std::shuffle(base->begin(), base->end(), random);
   const int target_size = std::round(relative_size * base->size());
   base->resize(target_size);
 }
@@ -341,15 +404,56 @@ void GetRandomSubset(double relative_size, std::vector<int>* base,
 
 Neighborhood SimpleNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
+    absl::BitGenRef random) {
   std::vector<int> fixed_variables = helper_.ActiveVariables();
   GetRandomSubset(1.0 - difficulty, &fixed_variables, random);
   return helper_.FixGivenVariables(initial_solution, fixed_variables);
 }
 
+Neighborhood SimpleConstraintNeighborhoodGenerator::Generate(
+    const CpSolverResponse& initial_solution, double difficulty,
+    absl::BitGenRef random) {
+  std::vector<int> active_constraints;
+  for (int ct = 0; ct < helper_.ModelProto().constraints_size(); ++ct) {
+    if (helper_.ModelProto().constraints(ct).constraint_case() ==
+        ConstraintProto::CONSTRAINT_NOT_SET) {
+      continue;
+    }
+    active_constraints.push_back(ct);
+  }
+
+  const int num_active_vars = helper_.ActiveVariables().size();
+  const int num_model_vars = helper_.ModelProto().variables_size();
+  const int target_size = std::ceil(difficulty * num_active_vars);
+  const int num_constraints = helper_.ConstraintToVar().size();
+  if (num_constraints == 0 || target_size == num_active_vars) {
+    return helper_.FullNeighborhood();
+  }
+  CHECK_GT(target_size, 0);
+
+  std::shuffle(active_constraints.begin(), active_constraints.end(), random);
+
+  std::vector<bool> visited_variables_set(num_model_vars, false);
+  std::vector<int> relaxed_variables;
+
+  for (const int constraint_index : active_constraints) {
+    CHECK_LT(constraint_index, num_constraints);
+    for (const int var : helper_.ConstraintToVar()[constraint_index]) {
+      if (visited_variables_set[var]) continue;
+      visited_variables_set[var] = true;
+      if (helper_.IsActive(var)) {
+        relaxed_variables.push_back(var);
+        if (relaxed_variables.size() == target_size) break;
+      }
+    }
+    if (relaxed_variables.size() == target_size) break;
+  }
+  return helper_.RelaxGivenVariables(initial_solution, relaxed_variables);
+}
+
 Neighborhood VariableGraphNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
+    absl::BitGenRef random) {
   const int num_active_vars = helper_.ActiveVariables().size();
   const int num_model_vars = helper_.ModelProto().variables_size();
   const int target_size = std::ceil(difficulty * num_active_vars);
@@ -363,8 +467,7 @@ Neighborhood VariableGraphNeighborhoodGenerator::Generate(
   std::vector<int> visited_variables;
 
   const int first_var =
-      helper_
-          .ActiveVariables()[absl::Uniform<int>(*random, 0, num_active_vars)];
+      helper_.ActiveVariables()[absl::Uniform<int>(random, 0, num_active_vars)];
   visited_variables_set[first_var] = true;
   visited_variables.push_back(first_var);
   relaxed_variables.push_back(first_var);
@@ -382,7 +485,7 @@ Neighborhood VariableGraphNeighborhoodGenerator::Generate(
       }
     }
     // We always randomize to change the partial subgraph explored afterwards.
-    std::shuffle(random_variables.begin(), random_variables.end(), *random);
+    std::shuffle(random_variables.begin(), random_variables.end(), random);
     for (const int var : random_variables) {
       if (relaxed_variables.size() < target_size) {
         visited_variables.push_back(var);
@@ -401,7 +504,7 @@ Neighborhood VariableGraphNeighborhoodGenerator::Generate(
 
 Neighborhood ConstraintGraphNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
+    absl::BitGenRef random) {
   const int num_active_vars = helper_.ActiveVariables().size();
   const int num_model_vars = helper_.ModelProto().variables_size();
   const int target_size = std::ceil(difficulty * num_active_vars);
@@ -417,7 +520,7 @@ Neighborhood ConstraintGraphNeighborhoodGenerator::Generate(
   std::vector<int> next_constraints;
 
   // Start by a random constraint.
-  next_constraints.push_back(absl::Uniform<int>(*random, 0, num_constraints));
+  next_constraints.push_back(absl::Uniform<int>(random, 0, num_constraints));
   added_constraints[next_constraints.back()] = true;
 
   std::vector<int> random_variables;
@@ -426,16 +529,16 @@ Neighborhood ConstraintGraphNeighborhoodGenerator::Generate(
     if (next_constraints.empty()) break;
 
     // Pick a random unprocessed constraint.
-    const int i = absl::Uniform<int>(*random, 0, next_constraints.size());
-    const int contraint_index = next_constraints[i];
+    const int i = absl::Uniform<int>(random, 0, next_constraints.size());
+    const int constraint_index = next_constraints[i];
     std::swap(next_constraints[i], next_constraints.back());
     next_constraints.pop_back();
 
     // Add all the variable of this constraint and increase the set of next
     // possible constraints.
-    CHECK_LT(contraint_index, num_constraints);
-    random_variables = helper_.ConstraintToVar()[contraint_index];
-    std::shuffle(random_variables.begin(), random_variables.end(), *random);
+    CHECK_LT(constraint_index, num_constraints);
+    random_variables = helper_.ConstraintToVar()[constraint_index];
+    std::shuffle(random_variables.begin(), random_variables.end(), random);
     for (const int var : random_variables) {
       if (visited_variables_set[var]) continue;
       visited_variables_set[var] = true;
@@ -479,20 +582,25 @@ Neighborhood GenerateSchedulingNeighborhoodForRelaxation(
     const int enforcement_var = PositiveRef(enforcement_ref);
     const int value = initial_solution.solution(enforcement_var);
 
+    // If the interval is not enforced, we just relax it. If it belongs to an
+    // exactly one constraint, and the enforced interval is not relaxed, then
+    // propagation will force this interval to stay not enforced. Otherwise,
+    // LNS will be able to change which interval will be enforced among all
+    // alternatives.
+    if (RefIsPositive(enforcement_ref) == (value == 0)) {
+      ignored_intervals.insert(i);
+      continue;
+    }
+
     // Fix the value.
     neighborhood.cp_model.mutable_variables(enforcement_var)->clear_domain();
     neighborhood.cp_model.mutable_variables(enforcement_var)->add_domain(value);
     neighborhood.cp_model.mutable_variables(enforcement_var)->add_domain(value);
-
-    // If the interval is ignored, skip for the loop below as there is no
-    // point adding precedence on it.
-    if (RefIsPositive(enforcement_ref) == (value == 0)) {
-      ignored_intervals.insert(i);
-    }
   }
 
   for (const int c : helper.TypeToConstraints(ConstraintProto::kNoOverlap)) {
-    // Sort all non-relaxed intervals of this constraint by current start time.
+    // Sort all non-relaxed intervals of this constraint by current start
+    // time.
     std::vector<std::pair<int64, int>> start_interval_pairs;
     for (const int i :
          neighborhood.cp_model.constraints(c).no_overlap().intervals()) {
@@ -549,9 +657,9 @@ Neighborhood GenerateSchedulingNeighborhoodForRelaxation(
 
 Neighborhood SchedulingNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
-  const auto span = helper_.TypeToConstraints(ConstraintProto::kInterval);
-  std::vector<int> intervals_to_relax(span.begin(), span.end());
+    absl::BitGenRef random) {
+  std::vector<int> intervals_to_relax =
+      helper_.GetActiveIntervals(initial_solution);
   GetRandomSubset(difficulty, &intervals_to_relax, random);
 
   return GenerateSchedulingNeighborhoodForRelaxation(intervals_to_relax,
@@ -560,11 +668,10 @@ Neighborhood SchedulingNeighborhoodGenerator::Generate(
 
 Neighborhood SchedulingTimeWindowNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
+    absl::BitGenRef random) {
   std::vector<std::pair<int64, int>> start_interval_pairs;
-  for (const int i : helper_.TypeToConstraints(ConstraintProto::kInterval)) {
+  for (const int i : helper_.GetActiveIntervals(initial_solution)) {
     const ConstraintProto& interval_ct = helper_.ModelProto().constraints(i);
-
     const int start_var = interval_ct.interval().start();
     const int64 start_value = initial_solution.solution(start_var);
     start_interval_pairs.push_back({start_value, i});
@@ -574,7 +681,7 @@ Neighborhood SchedulingTimeWindowNeighborhoodGenerator::Generate(
 
   std::uniform_int_distribution<int> random_var(
       0, start_interval_pairs.size() - relaxed_size - 1);
-  const int random_start_index = random_var(*random);
+  const int random_start_index = random_var(random);
   std::vector<int> intervals_to_relax;
   // TODO(user,user): Consider relaxing more than one time window intervals.
   // This seems to help with Giza models.
@@ -586,34 +693,85 @@ Neighborhood SchedulingTimeWindowNeighborhoodGenerator::Generate(
 }
 
 bool RelaxationInducedNeighborhoodGenerator::ReadyToGenerate() const {
-  SharedRINSNeighborhoodManager* rins_manager =
-      model_->Mutable<SharedRINSNeighborhoodManager>();
-  CHECK(rins_manager != nullptr);
-  return rins_manager->HasUnexploredNeighborhood();
+  if (incomplete_solutions_ != nullptr) {
+    return incomplete_solutions_->HasNewSolution();
+  }
+
+  if (response_manager_ != nullptr) {
+    if (response_manager_->SolutionsRepository().NumSolutions() == 0) {
+      return false;
+    }
+  }
+
+  // At least one relaxation solution should be available to generate a
+  // neighborhood.
+  if (lp_solutions_ != nullptr && lp_solutions_->NumSolutions() > 0) {
+    return true;
+  }
+
+  if (relaxation_solutions_ != nullptr &&
+      relaxation_solutions_->NumSolutions() > 0) {
+    return true;
+  }
+  return false;
 }
 
 Neighborhood RelaxationInducedNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
+    absl::BitGenRef random) {
   Neighborhood neighborhood = helper_.FullNeighborhood();
   neighborhood.is_generated = false;
 
-  SharedRINSNeighborhoodManager* rins_manager =
-      model_->Mutable<SharedRINSNeighborhoodManager>();
-  if (rins_manager == nullptr) {
+  const bool lp_solution_available =
+      (lp_solutions_ != nullptr && lp_solutions_->NumSolutions() > 0);
+
+  const bool relaxation_solution_available =
+      (relaxation_solutions_ != nullptr &&
+       relaxation_solutions_->NumSolutions() > 0);
+
+  const bool incomplete_solution_available =
+      (incomplete_solutions_ != nullptr &&
+       incomplete_solutions_->HasNewSolution());
+
+  if (!lp_solution_available && !relaxation_solution_available &&
+      !incomplete_solution_available) {
     return neighborhood;
   }
-  absl::optional<RINSNeighborhood> rins_neighborhood_opt =
-      rins_manager->GetUnexploredNeighborhood();
 
-  if (!rins_neighborhood_opt.has_value()) {
+  RINSNeighborhood rins_neighborhood;
+  // Randomly select the type of relaxation if both lp and relaxation solutions
+  // are available.
+  // TODO(user): Tune the probability value for this.
+  std::bernoulli_distribution random_bool(0.5);
+  const bool use_lp_relaxation =
+      (lp_solution_available && relaxation_solution_available)
+          ? random_bool(random)
+          : lp_solution_available;
+  if (use_lp_relaxation) {
+    rins_neighborhood =
+        GetRINSNeighborhood(response_manager_,
+                            /*relaxation_solutions=*/nullptr, lp_solutions_,
+                            incomplete_solutions_, random);
+    neighborhood.source_info =
+        incomplete_solution_available ? "incomplete" : "lp";
+  } else {
+    CHECK(relaxation_solution_available || incomplete_solution_available);
+    rins_neighborhood = GetRINSNeighborhood(
+        response_manager_, relaxation_solutions_,
+        /*lp_solutions=*/nullptr, incomplete_solutions_, random);
+    neighborhood.source_info =
+        incomplete_solution_available ? "incomplete" : "relaxation";
+  }
+
+  if (rins_neighborhood.fixed_vars.empty() &&
+      rins_neighborhood.reduced_domain_vars.empty()) {
     return neighborhood;
   }
 
   // Fix the variables in the local model.
-  for (const std::pair<RINSVariable, int64> fixed_var :
-       rins_neighborhood_opt.value().fixed_vars) {
-    const int var = fixed_var.first.model_var;
+  for (const std::pair</*model_var*/ int, /*value*/ int64> fixed_var :
+       rins_neighborhood.fixed_vars) {
+    const int var = fixed_var.first;
     const int64 value = fixed_var.second;
     if (var >= neighborhood.cp_model.variables_size()) continue;
     if (!helper_.IsActive(var)) continue;
@@ -631,9 +789,9 @@ Neighborhood RelaxationInducedNeighborhoodGenerator::Generate(
     neighborhood.is_reduced = true;
   }
 
-  for (const std::pair<RINSVariable, /*domain*/ std::pair<int64, int64>>
-           reduced_var : rins_neighborhood_opt.value().reduced_domain_vars) {
-    const int var = reduced_var.first.model_var;
+  for (const std::pair</*model_var*/ int, /*domain*/ std::pair<int64, int64>>
+           reduced_var : rins_neighborhood.reduced_domain_vars) {
+    const int var = reduced_var.first;
     const int64 lb = reduced_var.second.first;
     const int64 ub = reduced_var.second.second;
     if (var >= neighborhood.cp_model.variables_size()) continue;
@@ -653,7 +811,7 @@ Neighborhood RelaxationInducedNeighborhoodGenerator::Generate(
 
 Neighborhood ConsecutiveConstraintsRelaxationNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
+    absl::BitGenRef random) {
   std::vector<int> removable_constraints;
   const int num_constraints = helper_.ModelProto().constraints_size();
   removable_constraints.reserve(num_constraints);
@@ -671,7 +829,7 @@ Neighborhood ConsecutiveConstraintsRelaxationNeighborhoodGenerator::Generate(
       std::round((1.0 - difficulty) * removable_constraints.size());
 
   const int random_start_index =
-      absl::Uniform<int>(*random, 0, removable_constraints.size());
+      absl::Uniform<int>(random, 0, removable_constraints.size());
   std::vector<int> removed_constraints;
   removed_constraints.reserve(target_size);
   int c = random_start_index;
@@ -701,7 +859,6 @@ WeightedRandomRelaxationNeighborhoodGenerator::
       case ConstraintProto::kElement:
       case ConstraintProto::kRoutes:
       case ConstraintProto::kCircuit:
-      case ConstraintProto::kCircuitCovering:
         constraint_weights_.push_back(3.0);
         num_removable_constraints_++;
         break;
@@ -726,6 +883,7 @@ WeightedRandomRelaxationNeighborhoodGenerator::
       case ConstraintProto::kInverse:
       case ConstraintProto::kReservoir:
       case ConstraintProto::kAtMostOne:
+      case ConstraintProto::kExactlyOne:
         constraint_weights_.push_back(1.0);
         num_removable_constraints_++;
         break;
@@ -756,7 +914,7 @@ void WeightedRandomRelaxationNeighborhoodGenerator::
   // objective bounds are worse and the problem status is OPTIMAL, we bump down
   // the weights. Otherwise if the new objective bounds are same as current
   // bounds (which happens a lot on some instances), we do not update the
-  // weights as we do not have a clear signal wheather the constraints removed
+  // weights as we do not have a clear signal whether the constraints removed
   // were good choices or not.
   // TODO(user): We can improve this heuristic with more experiments.
   if (best_objective_improvement > 0) {
@@ -782,7 +940,7 @@ void WeightedRandomRelaxationNeighborhoodGenerator::
 
 Neighborhood WeightedRandomRelaxationNeighborhoodGenerator::Generate(
     const CpSolverResponse& initial_solution, double difficulty,
-    random_engine_t* random) {
+    absl::BitGenRef random) {
   const int target_size =
       std::round((1.0 - difficulty) * num_removable_constraints_);
 
@@ -795,7 +953,7 @@ Neighborhood WeightedRandomRelaxationNeighborhoodGenerator::Generate(
   std::uniform_real_distribution<double> random_var(0.0, 1.0);
   for (int c = 0; c < constraint_weights_.size(); ++c) {
     if (constraint_weights_[c] <= 0) continue;
-    const double u = random_var(*random);
+    const double u = random_var(random);
     const double score = std::pow(u, (1 / constraint_weights_[c]));
     constraint_removal_scores.push_back({score, c});
   }

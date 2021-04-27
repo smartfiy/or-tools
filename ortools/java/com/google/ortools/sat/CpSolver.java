@@ -16,6 +16,7 @@ package com.google.ortools.sat;
 import com.google.ortools.sat.CpSolverResponse;
 import com.google.ortools.sat.CpSolverStatus;
 import com.google.ortools.sat.SatParameters;
+import java.util.List;
 
 /**
  * Wrapper around the SAT solver.
@@ -113,6 +114,10 @@ public final class CpSolver {
   /** Returns the user time of the search. */
   public double userTime() {
     return solveResponse.getUserTime();
+  }
+
+  public List<Integer> sufficientAssumptionsForInfeasibility() {
+    return solveResponse.getSufficientAssumptionsForInfeasibilityList();
   }
 
   /** Returns the builder of the parameters of the SAT solver for modification. */

@@ -55,12 +55,12 @@ CircuitPropagator::CircuitPropagator(const int num_nodes,
     }
 
     if (assignment_.LiteralIsTrue(literal)) {
-      CHECK_EQ(next_[tail], -1)
-          << "Trivially UNSAT or duplicate arcs while adding " << tail << " -> "
-          << head;
-      CHECK_EQ(prev_[head], -1)
-          << "Trivially UNSAT or duplicate arcs while adding " << tail << " -> "
-          << head;
+      if (next_[tail] != -1 || prev_[head] != -1) {
+        VLOG(1) << "Trivially UNSAT or duplicate arcs while adding " << tail
+                << " -> " << head;
+        model->GetOrCreate<SatSolver>()->NotifyThatModelIsUnsat();
+        return;
+      }
       AddArc(tail, head, kNoLiteralIndex);
       continue;
     }
@@ -466,33 +466,6 @@ std::function<void(Model*)> ExactlyOnePerRowAndPerColumn(
       }
     }
   };
-}
-
-int ReindexArcs(std::vector<int>* tails, std::vector<int>* heads,
-                std::vector<Literal>* literals) {
-  const int num_arcs = tails->size();
-  if (num_arcs == 0) return 0;
-
-  // Put all nodes in a set.
-  std::set<int> nodes;
-  for (int arc = 0; arc < num_arcs; ++arc) {
-    nodes.insert((*tails)[arc]);
-    nodes.insert((*heads)[arc]);
-  }
-
-  // Compute the new indices while keeping a stable order.
-  int new_index = 0;
-  std::vector<int> mapping(*--nodes.end() + 1);
-  for (const int node : nodes) {
-    mapping[node] = new_index++;
-  }
-
-  // Remap the arcs.
-  for (int arc = 0; arc < num_arcs; ++arc) {
-    (*tails)[arc] = mapping[(*tails)[arc]];
-    (*heads)[arc] = mapping[(*heads)[arc]];
-  }
-  return nodes.size();
 }
 
 std::function<void(Model*)> SubcircuitConstraint(

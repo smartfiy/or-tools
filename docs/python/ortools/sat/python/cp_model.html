@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>cp_model API documentation</title>
 <meta name="description" content="Methods for building and solving CP-SAT models …" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 <style type="text/css">
 a:link { color: #46641e; text-decoration: none}
 .ident { color: #46641e }
@@ -50,7 +52,7 @@ Print both intermediate solutions and objective values.</li>
 <p>Additional methods for solving CP-SAT models:</p>
 <ul>
 <li><a href="#cp_model.Constraint"><code>Constraint</code></a>: A few utility methods for modifying
-contraints created by <code><a title="cp_model.CpModel" href="#cp_model.CpModel">CpModel</a></code>.</li>
+constraints created by <code><a title="cp_model.CpModel" href="#cp_model.CpModel">CpModel</a></code>.</li>
 <li><a href="#lineacp_model.LinearExpr"><code>LinearExpr</code></a>: Methods for creating constraints
 and the objective from large arrays of coefficients.</li>
 </ul>
@@ -98,7 +100,7 @@ solver calls each time it finds a new solution.
 Additional methods for solving CP-SAT models:
 
 * [`Constraint`](#cp_model.Constraint): A few utility methods for modifying
-  contraints created by `CpModel`.
+  constraints created by `CpModel`.
 * [`LinearExpr`](#lineacp_model.LinearExpr): Methods for creating constraints
   and the objective from large arrays of coefficients.
 
@@ -113,7 +115,6 @@ from __future__ import print_function
 import collections
 import numbers
 import time
-from six import iteritems
 
 from ortools.sat import cp_model_pb2
 from ortools.sat import sat_parameters_pb2
@@ -346,8 +347,7 @@ class LinearExpr(object):
             cp_model_helper.AssertIsInt64(arg)
             if arg == INT_MIN:
                 raise ArithmeticError(&#39;&lt; INT_MIN is not supported&#39;)
-            return BoundedLinearExpression(
-                self, [INT_MIN, cp_model_helper.CapInt64(arg - 1)])
+            return BoundedLinearExpression(self, [INT_MIN, arg - 1])
         else:
             return BoundedLinearExpression(self - arg, [INT_MIN, -1])
 
@@ -356,8 +356,7 @@ class LinearExpr(object):
             cp_model_helper.AssertIsInt64(arg)
             if arg == INT_MAX:
                 raise ArithmeticError(&#39;&gt; INT_MAX is not supported&#39;)
-            return BoundedLinearExpression(
-                self, [cp_model_helper.CapInt64(arg + 1), INT_MAX])
+            return BoundedLinearExpression(self, [arg + 1, INT_MAX])
         else:
             return BoundedLinearExpression(self - arg, [1, INT_MAX])
 
@@ -371,11 +370,8 @@ class LinearExpr(object):
             elif arg == INT_MIN:
                 return BoundedLinearExpression(self, [INT_MIN + 1, INT_MAX])
             else:
-                return BoundedLinearExpression(self, [
-                    INT_MIN,
-                    cp_model_helper.CapInt64(arg - 1),
-                    cp_model_helper.CapInt64(arg + 1), INT_MAX
-                ])
+                return BoundedLinearExpression(
+                    self, [INT_MIN, arg - 1, arg + 1, INT_MAX])
         else:
             return BoundedLinearExpression(self - arg,
                                            [INT_MIN, -1, 1, INT_MAX])
@@ -522,11 +518,22 @@ class IntVar(LinearExpr):
     def __init__(self, model, domain, name):
         &#34;&#34;&#34;See CpModel.NewIntVar below.&#34;&#34;&#34;
         self.__model = model
-        self.__index = len(model.variables)
-        self.__var = model.variables.add()
-        self.__var.domain.extend(domain.FlattenedIntervals())
-        self.__var.name = name
         self.__negation = None
+        # Python do not support multiple __init__ methods.
+        # This method is only called from the CpModel class.
+        # We hack the parameter to support the two cases:
+        # case 1:
+        #     model is a CpModelProto, domain is a Domain, and name is a string.
+        # case 2:
+        #     model is a CpModelProto, domain is an index (int), and name is None.
+        if isinstance(domain, numbers.Integral) and name is None:
+            self.__index = domain
+            self.__var = model.variables[domain]
+        else:
+            self.__index = len(model.variables)
+            self.__var = model.variables.add()
+            self.__var.domain.extend(domain.FlattenedIntervals())
+            self.__var.name = name
 
     def Index(self):
         &#34;&#34;&#34;Returns the index of the variable in the model.&#34;&#34;&#34;
@@ -634,9 +641,9 @@ class Constraint(object):
   The purpose of this class is to allow specification of enforcement literals
   for this constraint.
 
-      b = model.BoolVar(&#39;b&#39;)
-      x = model.IntVar(0, 10, &#39;x&#39;)
-      y = model.IntVar(0, 10, &#39;y&#39;)
+      b = model.NewBoolVar(&#39;b&#39;)
+      x = model.NewIntVar(0, 10, &#39;x&#39;)
+      y = model.NewIntVar(0, 10, &#39;y&#39;)
 
       model.Add(x + 2 * y == 5).OnlyEnforceIf(b.Not())
   &#34;&#34;&#34;
@@ -706,15 +713,28 @@ class IntervalVar(object):
     def __init__(self, model, start_index, size_index, end_index,
                  is_present_index, name):
         self.__model = model
-        self.__index = len(model.constraints)
-        self.__ct = self.__model.constraints.add()
-        self.__ct.interval.start = start_index
-        self.__ct.interval.size = size_index
-        self.__ct.interval.end = end_index
-        if is_present_index is not None:
-            self.__ct.enforcement_literal.append(is_present_index)
-        if name:
-            self.__ct.name = name
+        # As with the IntVar::__init__ method, we hack the __init__ method to
+        # support two use cases:
+        #   case 1: called when creating a new interval variable.
+        #      {start|size|end}_index are indices of integer variables
+        #      is_present_index is either None or the index of a Boolean literal.
+        #      name is a string
+        #   case 2: called when querying an existing interval variable.
+        #      start_index is an int, all parameters after are None.
+        if (size_index is None and end_index is None and
+                is_present_index is None and name is None):
+            self.__index = start_index
+            self.__ct = model.constraints[start_index]
+        else:
+            self.__index = len(model.constraints)
+            self.__ct = self.__model.constraints.add()
+            self.__ct.interval.start = start_index
+            self.__ct.interval.size = size_index
+            self.__ct.interval.end = end_index
+            if is_present_index is not None:
+                self.__ct.enforcement_literal.append(is_present_index)
+            if name:
+                self.__ct.name = name
 
     def Index(self):
         &#34;&#34;&#34;Returns the index of the interval constraint in the model.&#34;&#34;&#34;
@@ -757,7 +777,6 @@ class CpModel(object):
     def __init__(self):
         self.__model = cp_model_pb2.CpModelProto()
         self.__constant_map = {}
-        self.__optional_constant_map = {}
 
     # Integer variable.
 
@@ -801,7 +820,8 @@ class CpModel(object):
 
     def NewConstant(self, value):
         &#34;&#34;&#34;Declares a constant integer.&#34;&#34;&#34;
-        return IntVar(self.__model, Domain(value, value), &#39;&#39;)
+        return IntVar(self.__model, self.GetOrMakeIndexFromConstant(value),
+                      None)
 
     # Linear constraints.
 
@@ -815,7 +835,7 @@ class CpModel(object):
             ct = Constraint(self.__model.constraints)
             model_ct = self.__model.constraints[ct.Index()]
             coeffs_map, constant = linear_expr.GetVarValueMap()
-            for t in iteritems(coeffs_map):
+            for t in coeffs_map.items():
                 if not isinstance(t[0], IntVar):
                     raise TypeError(&#39;Wrong argument&#39; + str(t))
                 cp_model_helper.AssertIsInt64(t[1])
@@ -1045,7 +1065,7 @@ class CpModel(object):
             raise ValueError(&#39;AddAutomaton expects some final states&#39;)
 
         if not transition_triples:
-            raise ValueError(&#39;AddAutomaton expects some transtion triples&#39;)
+            raise ValueError(&#39;AddAutomaton expects some transition triples&#39;)
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -1105,37 +1125,47 @@ class CpModel(object):
         &#34;&#34;&#34;Adds Reservoir(times, demands, min_level, max_level).
 
     Maintains a reservoir level within bounds. The water level starts at 0, and
-    at any time &gt;= 0, it must be between min_level and max_level. Furthermore,
-    this constraint expects all times variables to be &gt;= 0.
+    at any time, it must be between min_level and max_level.
+
     If the variable `times[i]` is assigned a value t, then the current level
     changes by `demands[i]`, which is constant, at time t.
 
-    Note that level min can be &gt; 0, or level max can be &lt; 0. It just forces
-    some demands to be executed at time 0 to make sure that we are within those
-    bounds with the executed demands. Therefore, at any time t &gt;= 0:
+     Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+     use fixed demands to simulate initial state.
 
-        sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]
+     Therefore, at any time:
+         sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]
 
     Args:
-      times: A list of positive integer variables which specify the time of the
+      times: A list of integer variables which specify the time of the
         filling or emptying the reservoir.
       demands: A list of integer values that specifies the amount of the
         emptying or filling.
-      min_level: At any time &gt;= 0, the level of the reservoir must be greater of
+      min_level: At any time, the level of the reservoir must be greater or
         equal than the min level.
-      max_level: At any time &gt;= 0, the level of the reservoir must be less or
-        equal than the max level.
+      max_level: At any time, the level of the reservoir must be less or equal
+        than the max level.
 
     Returns:
       An instance of the `Constraint` class.
 
     Raises:
       ValueError: if max_level &lt; min_level.
+
+      ValueError: if max_level &lt; 0.
+
+      ValueError: if min_level &gt; 0
     &#34;&#34;&#34;
 
         if max_level &lt; min_level:
             return ValueError(
                 &#39;Reservoir constraint must have a max_level &gt;= min_level&#39;)
+
+        if max_level &lt; 0:
+            return ValueError(&#39;Reservoir constraint must have a max_level &gt;= 0&#39;)
+
+        if min_level &gt; 0:
+            return ValueError(&#39;Reservoir constraint must have a min_level &lt;= 0&#39;)
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -1149,45 +1179,55 @@ class CpModel(object):
                                          min_level, max_level):
         &#34;&#34;&#34;Adds Reservoir(times, demands, actives, min_level, max_level).
 
-    Maintain a reservoir level within bounds. The water level starts at 0, and
-    at
-    any time &gt;= 0, it must be within min_level, and max_level. Furthermore, this
-    constraints expect all times variables to be &gt;= 0.
-    If `actives[i]` is true, and if `times[i]` is assigned a value t, then the
-    level of the reservoir changes by `demands[i]`, which is constant, at
-    time t.
+    Maintains a reservoir level within bounds. The water level starts at 0, and
+    at any time, it must be between min_level and max_level.
 
-    Note that level_min can be &gt; 0, or level_max can be &lt; 0. It just forces
-    some demands to be executed at time 0 to make sure that we are within those
-    bounds with the executed demands. Therefore, at any time t &gt;= 0:
+    If the variable `times[i]` is assigned a value t, and `actives[i]` is
+    `True`, then the current level changes by `demands[i]`, which is constant,
+    at time t.
 
-        sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]
+     Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+     use fixed demands to simulate initial state.
+
+     Therefore, at any time:
+         sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]
+
 
     The array of boolean variables &#39;actives&#39;, if defined, indicates which
     actions are actually performed.
 
     Args:
-      times: A list of positive integer variables which specify the time of the
+      times: A list of integer variables which specify the time of the
         filling or emptying the reservoir.
       demands: A list of integer values that specifies the amount of the
         emptying or filling.
       actives: a list of boolean variables. They indicates if the
         emptying/refilling events actually take place.
-      min_level: At any time &gt;= 0, the level of the reservoir must be greater of
+      min_level: At any time, the level of the reservoir must be greater or
         equal than the min level.
-      max_level: At any time &gt;= 0, the level of the reservoir must be less or
-        equal than the max level.
+      max_level: At any time, the level of the reservoir must be less or equal
+        than the max level.
 
     Returns:
       An instance of the `Constraint` class.
 
     Raises:
       ValueError: if max_level &lt; min_level.
+
+      ValueError: if max_level &lt; 0.
+
+      ValueError: if min_level &gt; 0
     &#34;&#34;&#34;
 
         if max_level &lt; min_level:
             return ValueError(
                 &#39;Reservoir constraint must have a max_level &gt;= min_level&#39;)
+
+        if max_level &lt; 0:
+            return ValueError(&#39;Reservoir constraint must have a max_level &gt;= 0&#39;)
+
+        if min_level &gt; 0:
+            return ValueError(&#39;Reservoir constraint must have a min_level &lt;= 0&#39;)
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -1440,6 +1480,50 @@ class CpModel(object):
         model_ct.cumulative.capacity = self.GetOrMakeIndex(capacity)
         return ct
 
+    # Support for deep copy.
+    def CopyFrom(self, other_model):
+        &#34;&#34;&#34;Reset the model, and creates a new one from a CpModelProto instance.&#34;&#34;&#34;
+        self.__model.CopyFrom(other_model.Proto())
+
+        # Rebuild constant map.
+        self.__constant_map.clear()
+        for i, var in enumerate(self.__model.variables):
+            if len(var.domain) == 2 and var.domain[0] == var.domain[1]:
+                self.__constant_map[var.domain[0]] = i
+
+    def GetBoolVarFromProtoIndex(self, index):
+        &#34;&#34;&#34;Returns an already created Boolean variable from its index.&#34;&#34;&#34;
+        if index &lt; 0 or index &gt;= len(self.__model.variables):
+            raise ValueError(
+                f&#39;GetBoolVarFromProtoIndex: out of bound index {index}&#39;)
+        var = self.__model.variables[index]
+        if len(var.domain) != 2 or var.domain[0] &lt; 0 or var.domain[1] &gt; 1:
+            raise ValueError(
+                f&#39;GetBoolVarFromProtoIndex: index {index} does not reference&#39; +
+                &#39; a Boolean variable&#39;)
+
+        return IntVar(self.__model, index, None)
+
+    def GetIntVarFromProtoIndex(self, index):
+        &#34;&#34;&#34;Returns an already created integer variable from its index.&#34;&#34;&#34;
+        if index &lt; 0 or index &gt;= len(self.__model.variables):
+            raise ValueError(
+                f&#39;GetIntVarFromProtoIndex: out of bound index {index}&#39;)
+        return IntVar(self.__model, index, None)
+
+    def GetIntervalVarFromProtoIndex(self, index):
+        &#34;&#34;&#34;Returns an already created interval variable from its index.&#34;&#34;&#34;
+        if index &lt; 0 or index &gt;= len(self.__model.constraints):
+            raise ValueError(
+                f&#39;GetIntervalVarFromProtoIndex: out of bound index {index}&#39;)
+        ct = self.__model.constraints[index]
+        if not ct.HasField(&#39;interval&#39;):
+            raise ValueError(
+                f&#39;GetIntervalVarFromProtoIndex: index {index} does not reference an&#39;
+                + &#39; interval variable&#39;)
+
+        return IntervalVar(self.__model, index, None, None, None, None)
+
     # Helpers.
 
     def __str__(self):
@@ -1522,7 +1606,7 @@ class CpModel(object):
             else:
                 self.__model.objective.scaling_factor = -1
                 self.__model.objective.offset = -constant
-            for v, c, in iteritems(coeffs_map):
+            for v, c, in coeffs_map.items():
                 self.__model.objective.coeffs.append(c)
                 if minimize:
                     self.__model.objective.vars.append(v.Index())
@@ -1572,6 +1656,10 @@ class CpModel(object):
         &#34;&#34;&#34;Returns a string indicating that the model is invalid.&#34;&#34;&#34;
         return pywrapsat.SatHelper.ValidateModel(self.__model)
 
+    def ExportToFile(self, file):
+        &#34;&#34;&#34;Write the model as a ascii protocol buffer to &#39;file&#39;.&#34;&#34;&#34;
+        return pywrapsat.SatHelper.WriteModelToFile(self.__model, file)
+
     def AssertIsBooleanVariable(self, x):
         if isinstance(x, IntVar):
             var = self.__model.variables[x.Index()]
@@ -1583,8 +1671,26 @@ class CpModel(object):
                             &#39; is not a boolean variable&#39;)
 
     def AddHint(self, var, value):
+        &#34;&#34;&#34;Adds &#39;var == value&#39; as a hint to the solver.&#34;&#34;&#34;
         self.__model.solution_hint.vars.append(self.GetOrMakeIndex(var))
         self.__model.solution_hint.values.append(value)
+
+    def ClearHints(self):
+        &#34;&#34;&#34;Remove any solution hint from the model.&#34;&#34;&#34;
+        self.__model.ClearField(&#39;solution_hint&#39;)
+
+    def AddAssumption(self, lit):
+        &#34;&#34;&#34;Add the literal &#39;lit&#39; to the model as assumptions.&#34;&#34;&#34;
+        self.__model.assumptions.append(self.GetOrMakeBooleanIndex(lit))
+
+    def AddAssumptions(self, literals):
+        &#34;&#34;&#34;Add the literals to the model as assumptions.&#34;&#34;&#34;
+        for lit in literals:
+            self.AddAssumption(lit)
+
+    def ClearAssumptions(self):
+        &#34;&#34;&#34;Remove all assumptions from the model.&#34;&#34;&#34;
+        self.__model.ClearField(&#39;assumptions&#39;)
 
 
 def EvaluateLinearExpr(expression, solution):
@@ -1645,7 +1751,7 @@ class CpSolver(object):
 
     def __init__(self):
         self.__model = None
-        self.__solution = None
+        self.__solution: cp_model_pb2.CpSolverResponse = None
         self.parameters = sat_parameters_pb2.SatParameters()
 
     def Solve(self, model):
@@ -1746,6 +1852,10 @@ class CpSolver(object):
     def ResponseProto(self):
         &#34;&#34;&#34;Returns the response object.&#34;&#34;&#34;
         return self.__solution
+
+    def SufficientAssumptionsForInfeasibility(self):
+        &#34;&#34;&#34;Returns the indices of the infeasible assumptions.&#34;&#34;&#34;
+        return self.__solution.sufficient_assumptions_for_infeasibility
 
 
 class CpSolverSolutionCallback(pywrapsat.SolutionCallback):
@@ -2018,9 +2128,9 @@ class VarArraySolutionPrinter(CpSolverSolutionCallback):
 Once created by the CpModel class, they are automatically added to the model.
 The purpose of this class is to allow specification of enforcement literals
 for this constraint.</p>
-<pre><code>b = model.BoolVar('b')
-x = model.IntVar(0, 10, 'x')
-y = model.IntVar(0, 10, 'y')
+<pre><code>b = model.NewBoolVar('b')
+x = model.NewIntVar(0, 10, 'x')
+y = model.NewIntVar(0, 10, 'y')
 
 model.Add(x + 2 * y == 5).OnlyEnforceIf(b.Not())
 </code></pre></div>
@@ -2036,9 +2146,9 @@ model.Add(x + 2 * y == 5).OnlyEnforceIf(b.Not())
   The purpose of this class is to allow specification of enforcement literals
   for this constraint.
 
-      b = model.BoolVar(&#39;b&#39;)
-      x = model.IntVar(0, 10, &#39;x&#39;)
-      y = model.IntVar(0, 10, &#39;y&#39;)
+      b = model.NewBoolVar(&#39;b&#39;)
+      x = model.NewIntVar(0, 10, &#39;x&#39;)
+      y = model.NewIntVar(0, 10, &#39;y&#39;)
 
       model.Add(x + 2 * y == 5).OnlyEnforceIf(b.Not())
   &#34;&#34;&#34;
@@ -2198,7 +2308,6 @@ Returns:
     def __init__(self):
         self.__model = cp_model_pb2.CpModelProto()
         self.__constant_map = {}
-        self.__optional_constant_map = {}
 
     # Integer variable.
 
@@ -2242,7 +2351,8 @@ Returns:
 
     def NewConstant(self, value):
         &#34;&#34;&#34;Declares a constant integer.&#34;&#34;&#34;
-        return IntVar(self.__model, Domain(value, value), &#39;&#39;)
+        return IntVar(self.__model, self.GetOrMakeIndexFromConstant(value),
+                      None)
 
     # Linear constraints.
 
@@ -2256,7 +2366,7 @@ Returns:
             ct = Constraint(self.__model.constraints)
             model_ct = self.__model.constraints[ct.Index()]
             coeffs_map, constant = linear_expr.GetVarValueMap()
-            for t in iteritems(coeffs_map):
+            for t in coeffs_map.items():
                 if not isinstance(t[0], IntVar):
                     raise TypeError(&#39;Wrong argument&#39; + str(t))
                 cp_model_helper.AssertIsInt64(t[1])
@@ -2486,7 +2596,7 @@ Returns:
             raise ValueError(&#39;AddAutomaton expects some final states&#39;)
 
         if not transition_triples:
-            raise ValueError(&#39;AddAutomaton expects some transtion triples&#39;)
+            raise ValueError(&#39;AddAutomaton expects some transition triples&#39;)
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -2546,37 +2656,47 @@ Returns:
         &#34;&#34;&#34;Adds Reservoir(times, demands, min_level, max_level).
 
     Maintains a reservoir level within bounds. The water level starts at 0, and
-    at any time &gt;= 0, it must be between min_level and max_level. Furthermore,
-    this constraint expects all times variables to be &gt;= 0.
+    at any time, it must be between min_level and max_level.
+
     If the variable `times[i]` is assigned a value t, then the current level
     changes by `demands[i]`, which is constant, at time t.
 
-    Note that level min can be &gt; 0, or level max can be &lt; 0. It just forces
-    some demands to be executed at time 0 to make sure that we are within those
-    bounds with the executed demands. Therefore, at any time t &gt;= 0:
+     Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+     use fixed demands to simulate initial state.
 
-        sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]
+     Therefore, at any time:
+         sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]
 
     Args:
-      times: A list of positive integer variables which specify the time of the
+      times: A list of integer variables which specify the time of the
         filling or emptying the reservoir.
       demands: A list of integer values that specifies the amount of the
         emptying or filling.
-      min_level: At any time &gt;= 0, the level of the reservoir must be greater of
+      min_level: At any time, the level of the reservoir must be greater or
         equal than the min level.
-      max_level: At any time &gt;= 0, the level of the reservoir must be less or
-        equal than the max level.
+      max_level: At any time, the level of the reservoir must be less or equal
+        than the max level.
 
     Returns:
       An instance of the `Constraint` class.
 
     Raises:
       ValueError: if max_level &lt; min_level.
+
+      ValueError: if max_level &lt; 0.
+
+      ValueError: if min_level &gt; 0
     &#34;&#34;&#34;
 
         if max_level &lt; min_level:
             return ValueError(
                 &#39;Reservoir constraint must have a max_level &gt;= min_level&#39;)
+
+        if max_level &lt; 0:
+            return ValueError(&#39;Reservoir constraint must have a max_level &gt;= 0&#39;)
+
+        if min_level &gt; 0:
+            return ValueError(&#39;Reservoir constraint must have a min_level &lt;= 0&#39;)
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -2590,45 +2710,55 @@ Returns:
                                          min_level, max_level):
         &#34;&#34;&#34;Adds Reservoir(times, demands, actives, min_level, max_level).
 
-    Maintain a reservoir level within bounds. The water level starts at 0, and
-    at
-    any time &gt;= 0, it must be within min_level, and max_level. Furthermore, this
-    constraints expect all times variables to be &gt;= 0.
-    If `actives[i]` is true, and if `times[i]` is assigned a value t, then the
-    level of the reservoir changes by `demands[i]`, which is constant, at
-    time t.
+    Maintains a reservoir level within bounds. The water level starts at 0, and
+    at any time, it must be between min_level and max_level.
 
-    Note that level_min can be &gt; 0, or level_max can be &lt; 0. It just forces
-    some demands to be executed at time 0 to make sure that we are within those
-    bounds with the executed demands. Therefore, at any time t &gt;= 0:
+    If the variable `times[i]` is assigned a value t, and `actives[i]` is
+    `True`, then the current level changes by `demands[i]`, which is constant,
+    at time t.
 
-        sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]
+     Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+     use fixed demands to simulate initial state.
+
+     Therefore, at any time:
+         sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]
+
 
     The array of boolean variables &#39;actives&#39;, if defined, indicates which
     actions are actually performed.
 
     Args:
-      times: A list of positive integer variables which specify the time of the
+      times: A list of integer variables which specify the time of the
         filling or emptying the reservoir.
       demands: A list of integer values that specifies the amount of the
         emptying or filling.
       actives: a list of boolean variables. They indicates if the
         emptying/refilling events actually take place.
-      min_level: At any time &gt;= 0, the level of the reservoir must be greater of
+      min_level: At any time, the level of the reservoir must be greater or
         equal than the min level.
-      max_level: At any time &gt;= 0, the level of the reservoir must be less or
-        equal than the max level.
+      max_level: At any time, the level of the reservoir must be less or equal
+        than the max level.
 
     Returns:
       An instance of the `Constraint` class.
 
     Raises:
       ValueError: if max_level &lt; min_level.
+
+      ValueError: if max_level &lt; 0.
+
+      ValueError: if min_level &gt; 0
     &#34;&#34;&#34;
 
         if max_level &lt; min_level:
             return ValueError(
                 &#39;Reservoir constraint must have a max_level &gt;= min_level&#39;)
+
+        if max_level &lt; 0:
+            return ValueError(&#39;Reservoir constraint must have a max_level &gt;= 0&#39;)
+
+        if min_level &gt; 0:
+            return ValueError(&#39;Reservoir constraint must have a min_level &lt;= 0&#39;)
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -2881,6 +3011,50 @@ Returns:
         model_ct.cumulative.capacity = self.GetOrMakeIndex(capacity)
         return ct
 
+    # Support for deep copy.
+    def CopyFrom(self, other_model):
+        &#34;&#34;&#34;Reset the model, and creates a new one from a CpModelProto instance.&#34;&#34;&#34;
+        self.__model.CopyFrom(other_model.Proto())
+
+        # Rebuild constant map.
+        self.__constant_map.clear()
+        for i, var in enumerate(self.__model.variables):
+            if len(var.domain) == 2 and var.domain[0] == var.domain[1]:
+                self.__constant_map[var.domain[0]] = i
+
+    def GetBoolVarFromProtoIndex(self, index):
+        &#34;&#34;&#34;Returns an already created Boolean variable from its index.&#34;&#34;&#34;
+        if index &lt; 0 or index &gt;= len(self.__model.variables):
+            raise ValueError(
+                f&#39;GetBoolVarFromProtoIndex: out of bound index {index}&#39;)
+        var = self.__model.variables[index]
+        if len(var.domain) != 2 or var.domain[0] &lt; 0 or var.domain[1] &gt; 1:
+            raise ValueError(
+                f&#39;GetBoolVarFromProtoIndex: index {index} does not reference&#39; +
+                &#39; a Boolean variable&#39;)
+
+        return IntVar(self.__model, index, None)
+
+    def GetIntVarFromProtoIndex(self, index):
+        &#34;&#34;&#34;Returns an already created integer variable from its index.&#34;&#34;&#34;
+        if index &lt; 0 or index &gt;= len(self.__model.variables):
+            raise ValueError(
+                f&#39;GetIntVarFromProtoIndex: out of bound index {index}&#39;)
+        return IntVar(self.__model, index, None)
+
+    def GetIntervalVarFromProtoIndex(self, index):
+        &#34;&#34;&#34;Returns an already created interval variable from its index.&#34;&#34;&#34;
+        if index &lt; 0 or index &gt;= len(self.__model.constraints):
+            raise ValueError(
+                f&#39;GetIntervalVarFromProtoIndex: out of bound index {index}&#39;)
+        ct = self.__model.constraints[index]
+        if not ct.HasField(&#39;interval&#39;):
+            raise ValueError(
+                f&#39;GetIntervalVarFromProtoIndex: index {index} does not reference an&#39;
+                + &#39; interval variable&#39;)
+
+        return IntervalVar(self.__model, index, None, None, None, None)
+
     # Helpers.
 
     def __str__(self):
@@ -2963,7 +3137,7 @@ Returns:
             else:
                 self.__model.objective.scaling_factor = -1
                 self.__model.objective.offset = -constant
-            for v, c, in iteritems(coeffs_map):
+            for v, c, in coeffs_map.items():
                 self.__model.objective.coeffs.append(c)
                 if minimize:
                     self.__model.objective.vars.append(v.Index())
@@ -3013,6 +3187,10 @@ Returns:
         &#34;&#34;&#34;Returns a string indicating that the model is invalid.&#34;&#34;&#34;
         return pywrapsat.SatHelper.ValidateModel(self.__model)
 
+    def ExportToFile(self, file):
+        &#34;&#34;&#34;Write the model as a ascii protocol buffer to &#39;file&#39;.&#34;&#34;&#34;
+        return pywrapsat.SatHelper.WriteModelToFile(self.__model, file)
+
     def AssertIsBooleanVariable(self, x):
         if isinstance(x, IntVar):
             var = self.__model.variables[x.Index()]
@@ -3024,8 +3202,26 @@ Returns:
                             &#39; is not a boolean variable&#39;)
 
     def AddHint(self, var, value):
+        &#34;&#34;&#34;Adds &#39;var == value&#39; as a hint to the solver.&#34;&#34;&#34;
         self.__model.solution_hint.vars.append(self.GetOrMakeIndex(var))
-        self.__model.solution_hint.values.append(value)</code></pre>
+        self.__model.solution_hint.values.append(value)
+
+    def ClearHints(self):
+        &#34;&#34;&#34;Remove any solution hint from the model.&#34;&#34;&#34;
+        self.__model.ClearField(&#39;solution_hint&#39;)
+
+    def AddAssumption(self, lit):
+        &#34;&#34;&#34;Add the literal &#39;lit&#39; to the model as assumptions.&#34;&#34;&#34;
+        self.__model.assumptions.append(self.GetOrMakeBooleanIndex(lit))
+
+    def AddAssumptions(self, literals):
+        &#34;&#34;&#34;Add the literals to the model as assumptions.&#34;&#34;&#34;
+        for lit in literals:
+            self.AddAssumption(lit)
+
+    def ClearAssumptions(self):
+        &#34;&#34;&#34;Remove all assumptions from the model.&#34;&#34;&#34;
+        self.__model.ClearField(&#39;assumptions&#39;)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -3191,6 +3387,35 @@ Raises:
     return ct</code></pre>
 </details>
 </dd>
+<dt id="cp_model.CpModel.AddAssumption"><code class="name flex">
+<span>def <span class="ident">AddAssumption</span></span>(<span>self, lit)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add the literal 'lit' to the model as assumptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AddAssumption(self, lit):
+    &#34;&#34;&#34;Add the literal &#39;lit&#39; to the model as assumptions.&#34;&#34;&#34;
+    self.__model.assumptions.append(self.GetOrMakeBooleanIndex(lit))</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpModel.AddAssumptions"><code class="name flex">
+<span>def <span class="ident">AddAssumptions</span></span>(<span>self, literals)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add the literals to the model as assumptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AddAssumptions(self, literals):
+    &#34;&#34;&#34;Add the literals to the model as assumptions.&#34;&#34;&#34;
+    for lit in literals:
+        self.AddAssumption(lit)</code></pre>
+</details>
+</dd>
 <dt id="cp_model.CpModel.AddAutomaton"><code class="name flex">
 <span>def <span class="ident">AddAutomaton</span></span>(<span>self, transition_variables, starting_state, final_states, transition_triples)</span>
 </code></dt>
@@ -3289,7 +3514,7 @@ Raises:
         raise ValueError(&#39;AddAutomaton expects some final states&#39;)
 
     if not transition_triples:
-        raise ValueError(&#39;AddAutomaton expects some transtion triples&#39;)
+        raise ValueError(&#39;AddAutomaton expects some transition triples&#39;)
 
     ct = Constraint(self.__model.constraints)
     model_ct = self.__model.constraints[ct.Index()]
@@ -3643,12 +3868,13 @@ Raises:
 <span>def <span class="ident">AddHint</span></span>(<span>self, var, value)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Adds 'var == value' as a hint to the solver.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def AddHint(self, var, value):
+    &#34;&#34;&#34;Adds &#39;var == value&#39; as a hint to the solver.&#34;&#34;&#34;
     self.__model.solution_hint.vars.append(self.GetOrMakeIndex(var))
     self.__model.solution_hint.values.append(value)</code></pre>
 </details>
@@ -3760,7 +3986,7 @@ Raises:
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
         coeffs_map, constant = linear_expr.GetVarValueMap()
-        for t in iteritems(coeffs_map):
+        for t in coeffs_map.items():
             if not isinstance(t[0], IntVar):
                 raise TypeError(&#39;Wrong argument&#39; + str(t))
             cp_model_helper.AssertIsInt64(t[1])
@@ -3990,29 +4216,27 @@ Returns:
 <dd>
 <div class="desc"><p>Adds Reservoir(times, demands, min_level, max_level).</p>
 <p>Maintains a reservoir level within bounds. The water level starts at 0, and
-at any time &gt;= 0, it must be between min_level and max_level. Furthermore,
-this constraint expects all times variables to be &gt;= 0.
-If the variable <code>times[i]</code> is assigned a value t, then the current level
+at any time, it must be between min_level and max_level.</p>
+<p>If the variable <code>times[i]</code> is assigned a value t, then the current level
 changes by <code>demands[i]</code>, which is constant, at time t.</p>
-<p>Note that level min can be &gt; 0, or level max can be &lt; 0. It just forces
-some demands to be executed at time 0 to make sure that we are within those
-bounds with the executed demands. Therefore, at any time t &gt;= 0:</p>
-<pre><code>sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]
-</code></pre>
+<p>Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+use fixed demands to simulate initial state.</p>
+<p>Therefore, at any time:
+sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>times</code></strong></dt>
-<dd>A list of positive integer variables which specify the time of the
+<dd>A list of integer variables which specify the time of the
 filling or emptying the reservoir.</dd>
 <dt><strong><code>demands</code></strong></dt>
 <dd>A list of integer values that specifies the amount of the
 emptying or filling.</dd>
 <dt><strong><code>min_level</code></strong></dt>
-<dd>At any time &gt;= 0, the level of the reservoir must be greater of
+<dd>At any time, the level of the reservoir must be greater or
 equal than the min level.</dd>
 <dt><strong><code>max_level</code></strong></dt>
-<dd>At any time &gt;= 0, the level of the reservoir must be less or
-equal than the max level.</dd>
+<dd>At any time, the level of the reservoir must be less or equal
+than the max level.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>An instance of the <code><a title="cp_model.Constraint" href="#cp_model.Constraint">Constraint</a></code> class.</p>
@@ -4020,6 +4244,10 @@ equal than the max level.</dd>
 <dl>
 <dt><code>ValueError</code></dt>
 <dd>if max_level &lt; min_level.</dd>
+<dt><code>ValueError</code></dt>
+<dd>if max_level &lt; 0.</dd>
+<dt><code>ValueError</code></dt>
+<dd>if min_level &gt; 0</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -4029,37 +4257,47 @@ equal than the max level.</dd>
     &#34;&#34;&#34;Adds Reservoir(times, demands, min_level, max_level).
 
 Maintains a reservoir level within bounds. The water level starts at 0, and
-at any time &gt;= 0, it must be between min_level and max_level. Furthermore,
-this constraint expects all times variables to be &gt;= 0.
+at any time, it must be between min_level and max_level.
+
 If the variable `times[i]` is assigned a value t, then the current level
 changes by `demands[i]`, which is constant, at time t.
 
-Note that level min can be &gt; 0, or level max can be &lt; 0. It just forces
-some demands to be executed at time 0 to make sure that we are within those
-bounds with the executed demands. Therefore, at any time t &gt;= 0:
+ Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+ use fixed demands to simulate initial state.
 
-    sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]
+ Therefore, at any time:
+     sum(demands[i] if times[i] &lt;= t) in [min_level, max_level]
 
 Args:
-  times: A list of positive integer variables which specify the time of the
+  times: A list of integer variables which specify the time of the
     filling or emptying the reservoir.
   demands: A list of integer values that specifies the amount of the
     emptying or filling.
-  min_level: At any time &gt;= 0, the level of the reservoir must be greater of
+  min_level: At any time, the level of the reservoir must be greater or
     equal than the min level.
-  max_level: At any time &gt;= 0, the level of the reservoir must be less or
-    equal than the max level.
+  max_level: At any time, the level of the reservoir must be less or equal
+    than the max level.
 
 Returns:
   An instance of the `Constraint` class.
 
 Raises:
   ValueError: if max_level &lt; min_level.
+
+  ValueError: if max_level &lt; 0.
+
+  ValueError: if min_level &gt; 0
 &#34;&#34;&#34;
 
     if max_level &lt; min_level:
         return ValueError(
             &#39;Reservoir constraint must have a max_level &gt;= min_level&#39;)
+
+    if max_level &lt; 0:
+        return ValueError(&#39;Reservoir constraint must have a max_level &gt;= 0&#39;)
+
+    if min_level &gt; 0:
+        return ValueError(&#39;Reservoir constraint must have a min_level &lt;= 0&#39;)
 
     ct = Constraint(self.__model.constraints)
     model_ct = self.__model.constraints[ct.Index()]
@@ -4075,24 +4313,21 @@ Raises:
 </code></dt>
 <dd>
 <div class="desc"><p>Adds Reservoir(times, demands, actives, min_level, max_level).</p>
-<p>Maintain a reservoir level within bounds. The water level starts at 0, and
-at
-any time &gt;= 0, it must be within min_level, and max_level. Furthermore, this
-constraints expect all times variables to be &gt;= 0.
-If <code>actives[i]</code> is true, and if <code>times[i]</code> is assigned a value t, then the
-level of the reservoir changes by <code>demands[i]</code>, which is constant, at
-time t.</p>
-<p>Note that level_min can be &gt; 0, or level_max can be &lt; 0. It just forces
-some demands to be executed at time 0 to make sure that we are within those
-bounds with the executed demands. Therefore, at any time t &gt;= 0:</p>
-<pre><code>sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]
-</code></pre>
+<p>Maintains a reservoir level within bounds. The water level starts at 0, and
+at any time, it must be between min_level and max_level.</p>
+<p>If the variable <code>times[i]</code> is assigned a value t, and <code>actives[i]</code> is
+<code>True</code>, then the current level changes by <code>demands[i]</code>, which is constant,
+at time t.</p>
+<p>Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+use fixed demands to simulate initial state.</p>
+<p>Therefore, at any time:
+sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]</p>
 <p>The array of boolean variables 'actives', if defined, indicates which
 actions are actually performed.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>times</code></strong></dt>
-<dd>A list of positive integer variables which specify the time of the
+<dd>A list of integer variables which specify the time of the
 filling or emptying the reservoir.</dd>
 <dt><strong><code>demands</code></strong></dt>
 <dd>A list of integer values that specifies the amount of the
@@ -4101,11 +4336,11 @@ emptying or filling.</dd>
 <dd>a list of boolean variables. They indicates if the
 emptying/refilling events actually take place.</dd>
 <dt><strong><code>min_level</code></strong></dt>
-<dd>At any time &gt;= 0, the level of the reservoir must be greater of
+<dd>At any time, the level of the reservoir must be greater or
 equal than the min level.</dd>
 <dt><strong><code>max_level</code></strong></dt>
-<dd>At any time &gt;= 0, the level of the reservoir must be less or
-equal than the max level.</dd>
+<dd>At any time, the level of the reservoir must be less or equal
+than the max level.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>An instance of the <code><a title="cp_model.Constraint" href="#cp_model.Constraint">Constraint</a></code> class.</p>
@@ -4113,6 +4348,10 @@ equal than the max level.</dd>
 <dl>
 <dt><code>ValueError</code></dt>
 <dd>if max_level &lt; min_level.</dd>
+<dt><code>ValueError</code></dt>
+<dd>if max_level &lt; 0.</dd>
+<dt><code>ValueError</code></dt>
+<dd>if min_level &gt; 0</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -4122,45 +4361,55 @@ equal than the max level.</dd>
                                      min_level, max_level):
     &#34;&#34;&#34;Adds Reservoir(times, demands, actives, min_level, max_level).
 
-Maintain a reservoir level within bounds. The water level starts at 0, and
-at
-any time &gt;= 0, it must be within min_level, and max_level. Furthermore, this
-constraints expect all times variables to be &gt;= 0.
-If `actives[i]` is true, and if `times[i]` is assigned a value t, then the
-level of the reservoir changes by `demands[i]`, which is constant, at
-time t.
+Maintains a reservoir level within bounds. The water level starts at 0, and
+at any time, it must be between min_level and max_level.
 
-Note that level_min can be &gt; 0, or level_max can be &lt; 0. It just forces
-some demands to be executed at time 0 to make sure that we are within those
-bounds with the executed demands. Therefore, at any time t &gt;= 0:
+If the variable `times[i]` is assigned a value t, and `actives[i]` is
+`True`, then the current level changes by `demands[i]`, which is constant,
+at time t.
 
-    sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]
+ Note that min level must be &lt;= 0, and the max level must be &gt;= 0. Please
+ use fixed demands to simulate initial state.
+
+ Therefore, at any time:
+     sum(demands[i] * actives[i] if times[i] &lt;= t) in [min_level, max_level]
+
 
 The array of boolean variables &#39;actives&#39;, if defined, indicates which
 actions are actually performed.
 
 Args:
-  times: A list of positive integer variables which specify the time of the
+  times: A list of integer variables which specify the time of the
     filling or emptying the reservoir.
   demands: A list of integer values that specifies the amount of the
     emptying or filling.
   actives: a list of boolean variables. They indicates if the
     emptying/refilling events actually take place.
-  min_level: At any time &gt;= 0, the level of the reservoir must be greater of
+  min_level: At any time, the level of the reservoir must be greater or
     equal than the min level.
-  max_level: At any time &gt;= 0, the level of the reservoir must be less or
-    equal than the max level.
+  max_level: At any time, the level of the reservoir must be less or equal
+    than the max level.
 
 Returns:
   An instance of the `Constraint` class.
 
 Raises:
   ValueError: if max_level &lt; min_level.
+
+  ValueError: if max_level &lt; 0.
+
+  ValueError: if min_level &gt; 0
 &#34;&#34;&#34;
 
     if max_level &lt; min_level:
         return ValueError(
             &#39;Reservoir constraint must have a max_level &gt;= min_level&#39;)
+
+    if max_level &lt; 0:
+        return ValueError(&#39;Reservoir constraint must have a max_level &gt;= 0&#39;)
+
+    if min_level &gt; 0:
+        return ValueError(&#39;Reservoir constraint must have a min_level &lt;= 0&#39;)
 
     ct = Constraint(self.__model.constraints)
     model_ct = self.__model.constraints[ct.Index()]
@@ -4193,6 +4442,108 @@ Raises:
                         &#39; is not a boolean variable&#39;)</code></pre>
 </details>
 </dd>
+<dt id="cp_model.CpModel.ClearAssumptions"><code class="name flex">
+<span>def <span class="ident">ClearAssumptions</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove all assumptions from the model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ClearAssumptions(self):
+    &#34;&#34;&#34;Remove all assumptions from the model.&#34;&#34;&#34;
+    self.__model.ClearField(&#39;assumptions&#39;)</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpModel.ClearHints"><code class="name flex">
+<span>def <span class="ident">ClearHints</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove any solution hint from the model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ClearHints(self):
+    &#34;&#34;&#34;Remove any solution hint from the model.&#34;&#34;&#34;
+    self.__model.ClearField(&#39;solution_hint&#39;)</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpModel.CopyFrom"><code class="name flex">
+<span>def <span class="ident">CopyFrom</span></span>(<span>self, other_model)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reset the model, and creates a new one from a CpModelProto instance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def CopyFrom(self, other_model):
+    &#34;&#34;&#34;Reset the model, and creates a new one from a CpModelProto instance.&#34;&#34;&#34;
+    self.__model.CopyFrom(other_model.Proto())
+
+    # Rebuild constant map.
+    self.__constant_map.clear()
+    for i, var in enumerate(self.__model.variables):
+        if len(var.domain) == 2 and var.domain[0] == var.domain[1]:
+            self.__constant_map[var.domain[0]] = i</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpModel.ExportToFile"><code class="name flex">
+<span>def <span class="ident">ExportToFile</span></span>(<span>self, file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write the model as a ascii protocol buffer to 'file'.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ExportToFile(self, file):
+    &#34;&#34;&#34;Write the model as a ascii protocol buffer to &#39;file&#39;.&#34;&#34;&#34;
+    return pywrapsat.SatHelper.WriteModelToFile(self.__model, file)</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpModel.GetBoolVarFromProtoIndex"><code class="name flex">
+<span>def <span class="ident">GetBoolVarFromProtoIndex</span></span>(<span>self, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an already created Boolean variable from its index.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def GetBoolVarFromProtoIndex(self, index):
+    &#34;&#34;&#34;Returns an already created Boolean variable from its index.&#34;&#34;&#34;
+    if index &lt; 0 or index &gt;= len(self.__model.variables):
+        raise ValueError(
+            f&#39;GetBoolVarFromProtoIndex: out of bound index {index}&#39;)
+    var = self.__model.variables[index]
+    if len(var.domain) != 2 or var.domain[0] &lt; 0 or var.domain[1] &gt; 1:
+        raise ValueError(
+            f&#39;GetBoolVarFromProtoIndex: index {index} does not reference&#39; +
+            &#39; a Boolean variable&#39;)
+
+    return IntVar(self.__model, index, None)</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpModel.GetIntVarFromProtoIndex"><code class="name flex">
+<span>def <span class="ident">GetIntVarFromProtoIndex</span></span>(<span>self, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an already created integer variable from its index.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def GetIntVarFromProtoIndex(self, index):
+    &#34;&#34;&#34;Returns an already created integer variable from its index.&#34;&#34;&#34;
+    if index &lt; 0 or index &gt;= len(self.__model.variables):
+        raise ValueError(
+            f&#39;GetIntVarFromProtoIndex: out of bound index {index}&#39;)
+    return IntVar(self.__model, index, None)</code></pre>
+</details>
+</dd>
 <dt id="cp_model.CpModel.GetIntervalIndex"><code class="name flex">
 <span>def <span class="ident">GetIntervalIndex</span></span>(<span>self, arg)</span>
 </code></dt>
@@ -4206,6 +4557,29 @@ Raises:
     if not isinstance(arg, IntervalVar):
         raise TypeError(&#39;NotSupported: model.GetIntervalIndex(%s)&#39; % arg)
     return arg.Index()</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpModel.GetIntervalVarFromProtoIndex"><code class="name flex">
+<span>def <span class="ident">GetIntervalVarFromProtoIndex</span></span>(<span>self, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns an already created interval variable from its index.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def GetIntervalVarFromProtoIndex(self, index):
+    &#34;&#34;&#34;Returns an already created interval variable from its index.&#34;&#34;&#34;
+    if index &lt; 0 or index &gt;= len(self.__model.constraints):
+        raise ValueError(
+            f&#39;GetIntervalVarFromProtoIndex: out of bound index {index}&#39;)
+    ct = self.__model.constraints[index]
+    if not ct.HasField(&#39;interval&#39;):
+        raise ValueError(
+            f&#39;GetIntervalVarFromProtoIndex: index {index} does not reference an&#39;
+            + &#39; interval variable&#39;)
+
+    return IntervalVar(self.__model, index, None, None, None, None)</code></pre>
 </details>
 </dd>
 <dt id="cp_model.CpModel.GetOrMakeBooleanIndex"><code class="name flex">
@@ -4369,7 +4743,8 @@ Raises:
 </summary>
 <pre><code class="python">def NewConstant(self, value):
     &#34;&#34;&#34;Declares a constant integer.&#34;&#34;&#34;
-    return IntVar(self.__model, Domain(value, value), &#39;&#39;)</code></pre>
+    return IntVar(self.__model, self.GetOrMakeIndexFromConstant(value),
+                  None)</code></pre>
 </details>
 </dd>
 <dt id="cp_model.CpModel.NewIntVar"><code class="name flex">
@@ -4644,7 +5019,7 @@ about the solve procedure.</p></div>
 
     def __init__(self):
         self.__model = None
-        self.__solution = None
+        self.__solution: cp_model_pb2.CpSolverResponse = None
         self.parameters = sat_parameters_pb2.SatParameters()
 
     def Solve(self, model):
@@ -4744,7 +5119,11 @@ about the solve procedure.</p></div>
 
     def ResponseProto(self):
         &#34;&#34;&#34;Returns the response object.&#34;&#34;&#34;
-        return self.__solution</code></pre>
+        return self.__solution
+
+    def SufficientAssumptionsForInfeasibility(self):
+        &#34;&#34;&#34;Returns the indices of the infeasible assumptions.&#34;&#34;&#34;
+        return self.__solution.sufficient_assumptions_for_infeasibility</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -4878,10 +5257,7 @@ Then it feeds the solution to the callback.</p>
 <dd>The callback that will be called at each solution.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>The status</code> of <code>the solve:</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>The status of the solve:</p>
 <ul>
 <li><em>FEASIBLE</em> if some solutions have been found</li>
 <li><em>INFEASIBLE</em> if the solver has proved there are no solution</li>
@@ -4971,6 +5347,20 @@ Returns:
     if status is None:
         status = self.__solution.status
     return cp_model_pb2.CpSolverStatus.Name(status)</code></pre>
+</details>
+</dd>
+<dt id="cp_model.CpSolver.SufficientAssumptionsForInfeasibility"><code class="name flex">
+<span>def <span class="ident">SufficientAssumptionsForInfeasibility</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the indices of the infeasible assumptions.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def SufficientAssumptionsForInfeasibility(self):
+    &#34;&#34;&#34;Returns the indices of the infeasible assumptions.&#34;&#34;&#34;
+    return self.__solution.sufficient_assumptions_for_infeasibility</code></pre>
 </details>
 </dd>
 <dt id="cp_model.CpSolver.UserTime"><code class="name flex">
@@ -5224,11 +5614,8 @@ Raises:
 <dd>a linear expression of the model.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>An integer value equal to the evaluation</code> of <code>the linear expression</code></dt>
-<dd>&nbsp;</dd>
-</dl>
-<p>against the current solution.</p>
+<p>An integer value equal to the evaluation of the linear expression
+against the current solution.</p>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>RuntimeError</code></dt>
@@ -5320,11 +5707,22 @@ model is feasible, or optimal if you provided an objective function.</p>
     def __init__(self, model, domain, name):
         &#34;&#34;&#34;See CpModel.NewIntVar below.&#34;&#34;&#34;
         self.__model = model
-        self.__index = len(model.variables)
-        self.__var = model.variables.add()
-        self.__var.domain.extend(domain.FlattenedIntervals())
-        self.__var.name = name
         self.__negation = None
+        # Python do not support multiple __init__ methods.
+        # This method is only called from the CpModel class.
+        # We hack the parameter to support the two cases:
+        # case 1:
+        #     model is a CpModelProto, domain is a Domain, and name is a string.
+        # case 2:
+        #     model is a CpModelProto, domain is an index (int), and name is None.
+        if isinstance(domain, numbers.Integral) and name is None:
+            self.__index = domain
+            self.__var = model.variables[domain]
+        else:
+            self.__index = len(model.variables)
+            self.__var = model.variables.add()
+            self.__var.domain.extend(domain.FlattenedIntervals())
+            self.__var.name = name
 
     def Index(self):
         &#34;&#34;&#34;Returns the index of the variable in the model.&#34;&#34;&#34;
@@ -5498,15 +5896,28 @@ intervals into the schedule.</p></div>
     def __init__(self, model, start_index, size_index, end_index,
                  is_present_index, name):
         self.__model = model
-        self.__index = len(model.constraints)
-        self.__ct = self.__model.constraints.add()
-        self.__ct.interval.start = start_index
-        self.__ct.interval.size = size_index
-        self.__ct.interval.end = end_index
-        if is_present_index is not None:
-            self.__ct.enforcement_literal.append(is_present_index)
-        if name:
-            self.__ct.name = name
+        # As with the IntVar::__init__ method, we hack the __init__ method to
+        # support two use cases:
+        #   case 1: called when creating a new interval variable.
+        #      {start|size|end}_index are indices of integer variables
+        #      is_present_index is either None or the index of a Boolean literal.
+        #      name is a string
+        #   case 2: called when querying an existing interval variable.
+        #      start_index is an int, all parameters after are None.
+        if (size_index is None and end_index is None and
+                is_present_index is None and name is None):
+            self.__index = start_index
+            self.__ct = model.constraints[start_index]
+        else:
+            self.__index = len(model.constraints)
+            self.__ct = self.__model.constraints.add()
+            self.__ct.interval.start = start_index
+            self.__ct.interval.size = size_index
+            self.__ct.interval.end = end_index
+            if is_present_index is not None:
+                self.__ct.enforcement_literal.append(is_present_index)
+            if name:
+                self.__ct.name = name
 
     def Index(self):
         &#34;&#34;&#34;Returns the index of the interval constraint in the model.&#34;&#34;&#34;
@@ -5759,8 +6170,7 @@ model.Add(cp_model.LinearExpr.ScalProd(expressions, coefficients) &gt;= 0)
             cp_model_helper.AssertIsInt64(arg)
             if arg == INT_MIN:
                 raise ArithmeticError(&#39;&lt; INT_MIN is not supported&#39;)
-            return BoundedLinearExpression(
-                self, [INT_MIN, cp_model_helper.CapInt64(arg - 1)])
+            return BoundedLinearExpression(self, [INT_MIN, arg - 1])
         else:
             return BoundedLinearExpression(self - arg, [INT_MIN, -1])
 
@@ -5769,8 +6179,7 @@ model.Add(cp_model.LinearExpr.ScalProd(expressions, coefficients) &gt;= 0)
             cp_model_helper.AssertIsInt64(arg)
             if arg == INT_MAX:
                 raise ArithmeticError(&#39;&gt; INT_MAX is not supported&#39;)
-            return BoundedLinearExpression(
-                self, [cp_model_helper.CapInt64(arg + 1), INT_MAX])
+            return BoundedLinearExpression(self, [arg + 1, INT_MAX])
         else:
             return BoundedLinearExpression(self - arg, [1, INT_MAX])
 
@@ -5784,11 +6193,8 @@ model.Add(cp_model.LinearExpr.ScalProd(expressions, coefficients) &gt;= 0)
             elif arg == INT_MIN:
                 return BoundedLinearExpression(self, [INT_MIN + 1, INT_MAX])
             else:
-                return BoundedLinearExpression(self, [
-                    INT_MIN,
-                    cp_model_helper.CapInt64(arg - 1),
-                    cp_model_helper.CapInt64(arg + 1), INT_MAX
-                ])
+                return BoundedLinearExpression(
+                    self, [INT_MIN, arg - 1, arg + 1, INT_MAX])
         else:
             return BoundedLinearExpression(self - arg,
                                            [INT_MIN, -1, 1, INT_MAX])</code></pre>
@@ -6183,6 +6589,8 @@ def Term(cls, expression, coefficient):
 <li><code><a title="cp_model.CpModel.AddAbsEquality" href="#cp_model.CpModel.AddAbsEquality">AddAbsEquality</a></code></li>
 <li><code><a title="cp_model.CpModel.AddAllDifferent" href="#cp_model.CpModel.AddAllDifferent">AddAllDifferent</a></code></li>
 <li><code><a title="cp_model.CpModel.AddAllowedAssignments" href="#cp_model.CpModel.AddAllowedAssignments">AddAllowedAssignments</a></code></li>
+<li><code><a title="cp_model.CpModel.AddAssumption" href="#cp_model.CpModel.AddAssumption">AddAssumption</a></code></li>
+<li><code><a title="cp_model.CpModel.AddAssumptions" href="#cp_model.CpModel.AddAssumptions">AddAssumptions</a></code></li>
 <li><code><a title="cp_model.CpModel.AddAutomaton" href="#cp_model.CpModel.AddAutomaton">AddAutomaton</a></code></li>
 <li><code><a title="cp_model.CpModel.AddBoolAnd" href="#cp_model.CpModel.AddBoolAnd">AddBoolAnd</a></code></li>
 <li><code><a title="cp_model.CpModel.AddBoolOr" href="#cp_model.CpModel.AddBoolOr">AddBoolOr</a></code></li>
@@ -6209,7 +6617,14 @@ def Term(cls, expression, coefficient):
 <li><code><a title="cp_model.CpModel.AddReservoirConstraint" href="#cp_model.CpModel.AddReservoirConstraint">AddReservoirConstraint</a></code></li>
 <li><code><a title="cp_model.CpModel.AddReservoirConstraintWithActive" href="#cp_model.CpModel.AddReservoirConstraintWithActive">AddReservoirConstraintWithActive</a></code></li>
 <li><code><a title="cp_model.CpModel.AssertIsBooleanVariable" href="#cp_model.CpModel.AssertIsBooleanVariable">AssertIsBooleanVariable</a></code></li>
+<li><code><a title="cp_model.CpModel.ClearAssumptions" href="#cp_model.CpModel.ClearAssumptions">ClearAssumptions</a></code></li>
+<li><code><a title="cp_model.CpModel.ClearHints" href="#cp_model.CpModel.ClearHints">ClearHints</a></code></li>
+<li><code><a title="cp_model.CpModel.CopyFrom" href="#cp_model.CpModel.CopyFrom">CopyFrom</a></code></li>
+<li><code><a title="cp_model.CpModel.ExportToFile" href="#cp_model.CpModel.ExportToFile">ExportToFile</a></code></li>
+<li><code><a title="cp_model.CpModel.GetBoolVarFromProtoIndex" href="#cp_model.CpModel.GetBoolVarFromProtoIndex">GetBoolVarFromProtoIndex</a></code></li>
+<li><code><a title="cp_model.CpModel.GetIntVarFromProtoIndex" href="#cp_model.CpModel.GetIntVarFromProtoIndex">GetIntVarFromProtoIndex</a></code></li>
 <li><code><a title="cp_model.CpModel.GetIntervalIndex" href="#cp_model.CpModel.GetIntervalIndex">GetIntervalIndex</a></code></li>
+<li><code><a title="cp_model.CpModel.GetIntervalVarFromProtoIndex" href="#cp_model.CpModel.GetIntervalVarFromProtoIndex">GetIntervalVarFromProtoIndex</a></code></li>
 <li><code><a title="cp_model.CpModel.GetOrMakeBooleanIndex" href="#cp_model.CpModel.GetOrMakeBooleanIndex">GetOrMakeBooleanIndex</a></code></li>
 <li><code><a title="cp_model.CpModel.GetOrMakeIndex" href="#cp_model.CpModel.GetOrMakeIndex">GetOrMakeIndex</a></code></li>
 <li><code><a title="cp_model.CpModel.GetOrMakeIndexFromConstant" href="#cp_model.CpModel.GetOrMakeIndexFromConstant">GetOrMakeIndexFromConstant</a></code></li>
@@ -6244,6 +6659,7 @@ def Term(cls, expression, coefficient):
 <li><code><a title="cp_model.CpSolver.Solve" href="#cp_model.CpSolver.Solve">Solve</a></code></li>
 <li><code><a title="cp_model.CpSolver.SolveWithSolutionCallback" href="#cp_model.CpSolver.SolveWithSolutionCallback">SolveWithSolutionCallback</a></code></li>
 <li><code><a title="cp_model.CpSolver.StatusName" href="#cp_model.CpSolver.StatusName">StatusName</a></code></li>
+<li><code><a title="cp_model.CpSolver.SufficientAssumptionsForInfeasibility" href="#cp_model.CpSolver.SufficientAssumptionsForInfeasibility">SufficientAssumptionsForInfeasibility</a></code></li>
 <li><code><a title="cp_model.CpSolver.UserTime" href="#cp_model.CpSolver.UserTime">UserTime</a></code></li>
 <li><code><a title="cp_model.CpSolver.Value" href="#cp_model.CpSolver.Value">Value</a></code></li>
 <li><code><a title="cp_model.CpSolver.WallTime" href="#cp_model.CpSolver.WallTime">WallTime</a></code></li>
@@ -6310,9 +6726,7 @@ def Term(cls, expression, coefficient):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

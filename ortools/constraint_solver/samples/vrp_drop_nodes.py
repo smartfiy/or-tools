@@ -14,7 +14,6 @@
 """Capacited Vehicles Routing Problem (CVRP)."""
 
 # [START import]
-from __future__ import print_function
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 # [END import]
@@ -207,6 +206,9 @@ def main():
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
         routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+    search_parameters.local_search_metaheuristic = (
+        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
+    search_parameters.time_limit.FromSeconds(1)
     # [END parameters]
 
     # Solve the problem.

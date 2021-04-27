@@ -13,18 +13,12 @@
 
 #include "ortools/sat/cp_model_utils.h"
 
-#include "absl/container/flat_hash_set.h"
 #include "ortools/base/stl_util.h"
 
 namespace operations_research {
 namespace sat {
 
 namespace {
-
-template <typename IntList>
-void AddIndices(const IntList& indices, absl::flat_hash_set<int>* output) {
-  output->insert(indices.begin(), indices.end());
-}
 
 template <typename IntList>
 void AddIndices(const IntList& indices, std::vector<int>* output) {
@@ -54,6 +48,9 @@ IndexReferences GetReferencesUsedByConstraint(const ConstraintProto& ct) {
       break;
     case ConstraintProto::ConstraintCase::kAtMostOne:
       AddIndices(ct.at_most_one().literals(), &output.literals);
+      break;
+    case ConstraintProto::ConstraintCase::kExactlyOne:
+      AddIndices(ct.exactly_one().literals(), &output.literals);
       break;
     case ConstraintProto::ConstraintCase::kBoolXor:
       AddIndices(ct.bool_xor().literals(), &output.literals);
@@ -109,9 +106,6 @@ IndexReferences GetReferencesUsedByConstraint(const ConstraintProto& ct) {
     case ConstraintProto::ConstraintCase::kRoutes:
       AddIndices(ct.routes().literals(), &output.literals);
       break;
-    case ConstraintProto::ConstraintCase::kCircuitCovering:
-      AddIndices(ct.circuit_covering().nexts(), &output.variables);
-      break;
     case ConstraintProto::ConstraintCase::kInverse:
       AddIndices(ct.inverse().f_direct(), &output.variables);
       AddIndices(ct.inverse().f_inverse(), &output.variables);
@@ -127,9 +121,21 @@ IndexReferences GetReferencesUsedByConstraint(const ConstraintProto& ct) {
       AddIndices(ct.automaton().vars(), &output.variables);
       break;
     case ConstraintProto::ConstraintCase::kInterval:
-      output.variables.push_back(ct.interval().start());
-      output.variables.push_back(ct.interval().end());
-      output.variables.push_back(ct.interval().size());
+      if (ct.interval().has_start_view()) {
+        AddIndices(ct.interval().start_view().vars(), &output.variables);
+      } else {
+        output.variables.push_back(ct.interval().start());
+      }
+      if (ct.interval().has_size_view()) {
+        AddIndices(ct.interval().size_view().vars(), &output.variables);
+      } else {
+        output.variables.push_back(ct.interval().size());
+      }
+      if (ct.interval().has_end_view()) {
+        AddIndices(ct.interval().end_view().vars(), &output.variables);
+      } else {
+        output.variables.push_back(ct.interval().end());
+      }
       break;
     case ConstraintProto::ConstraintCase::kNoOverlap:
       break;
@@ -170,6 +176,9 @@ void ApplyToAllLiteralIndices(const std::function<void(int*)>& f,
     case ConstraintProto::ConstraintCase::kAtMostOne:
       APPLY_TO_REPEATED_FIELD(at_most_one, literals);
       break;
+    case ConstraintProto::ConstraintCase::kExactlyOne:
+      APPLY_TO_REPEATED_FIELD(exactly_one, literals);
+      break;
     case ConstraintProto::ConstraintCase::kBoolXor:
       APPLY_TO_REPEATED_FIELD(bool_xor, literals);
       break;
@@ -198,8 +207,6 @@ void ApplyToAllLiteralIndices(const std::function<void(int*)>& f,
       break;
     case ConstraintProto::ConstraintCase::kRoutes:
       APPLY_TO_REPEATED_FIELD(routes, literals);
-      break;
-    case ConstraintProto::ConstraintCase::kCircuitCovering:
       break;
     case ConstraintProto::ConstraintCase::kInverse:
       break;
@@ -231,6 +238,8 @@ void ApplyToAllVariableIndices(const std::function<void(int*)>& f,
     case ConstraintProto::ConstraintCase::kBoolAnd:
       break;
     case ConstraintProto::ConstraintCase::kAtMostOne:
+      break;
+    case ConstraintProto::ConstraintCase::kExactlyOne:
       break;
     case ConstraintProto::ConstraintCase::kBoolXor:
       break;
@@ -281,9 +290,6 @@ void ApplyToAllVariableIndices(const std::function<void(int*)>& f,
       break;
     case ConstraintProto::ConstraintCase::kRoutes:
       break;
-    case ConstraintProto::ConstraintCase::kCircuitCovering:
-      APPLY_TO_REPEATED_FIELD(circuit_covering, nexts);
-      break;
     case ConstraintProto::ConstraintCase::kInverse:
       APPLY_TO_REPEATED_FIELD(inverse, f_direct);
       APPLY_TO_REPEATED_FIELD(inverse, f_inverse);
@@ -298,9 +304,21 @@ void ApplyToAllVariableIndices(const std::function<void(int*)>& f,
       APPLY_TO_REPEATED_FIELD(automaton, vars);
       break;
     case ConstraintProto::ConstraintCase::kInterval:
-      APPLY_TO_SINGULAR_FIELD(interval, start);
-      APPLY_TO_SINGULAR_FIELD(interval, end);
-      APPLY_TO_SINGULAR_FIELD(interval, size);
+      if (ct->interval().has_start_view()) {
+        APPLY_TO_REPEATED_FIELD(interval, start_view()->mutable_vars);
+      } else {
+        APPLY_TO_SINGULAR_FIELD(interval, start);
+      }
+      if (ct->interval().has_size_view()) {
+        APPLY_TO_REPEATED_FIELD(interval, size_view()->mutable_vars);
+      } else {
+        APPLY_TO_SINGULAR_FIELD(interval, size);
+      }
+      if (ct->interval().has_end_view()) {
+        APPLY_TO_REPEATED_FIELD(interval, end_view()->mutable_vars);
+      } else {
+        APPLY_TO_SINGULAR_FIELD(interval, end);
+      }
       break;
     case ConstraintProto::ConstraintCase::kNoOverlap:
       break;
@@ -323,6 +341,8 @@ void ApplyToAllIntervalIndices(const std::function<void(int*)>& f,
     case ConstraintProto::ConstraintCase::kBoolAnd:
       break;
     case ConstraintProto::ConstraintCase::kAtMostOne:
+      break;
+    case ConstraintProto::ConstraintCase::kExactlyOne:
       break;
     case ConstraintProto::ConstraintCase::kBoolXor:
       break;
@@ -349,8 +369,6 @@ void ApplyToAllIntervalIndices(const std::function<void(int*)>& f,
     case ConstraintProto::ConstraintCase::kCircuit:
       break;
     case ConstraintProto::ConstraintCase::kRoutes:
-      break;
-    case ConstraintProto::ConstraintCase::kCircuitCovering:
       break;
     case ConstraintProto::ConstraintCase::kInverse:
       break;
@@ -389,6 +407,8 @@ std::string ConstraintCaseName(
       return "kBoolAnd";
     case ConstraintProto::ConstraintCase::kAtMostOne:
       return "kAtMostOne";
+    case ConstraintProto::ConstraintCase::kExactlyOne:
+      return "kExactlyOne";
     case ConstraintProto::ConstraintCase::kBoolXor:
       return "kBoolXor";
     case ConstraintProto::ConstraintCase::kIntDiv:
@@ -415,8 +435,6 @@ std::string ConstraintCaseName(
       return "kCircuit";
     case ConstraintProto::ConstraintCase::kRoutes:
       return "kRoutes";
-    case ConstraintProto::ConstraintCase::kCircuitCovering:
-      return "kCircuitCovering";
     case ConstraintProto::ConstraintCase::kInverse:
       return "kInverse";
     case ConstraintProto::ConstraintCase::kReservoir:
@@ -462,6 +480,8 @@ std::vector<int> UsedIntervals(const ConstraintProto& ct) {
       break;
     case ConstraintProto::ConstraintCase::kAtMostOne:
       break;
+    case ConstraintProto::ConstraintCase::kExactlyOne:
+      break;
     case ConstraintProto::ConstraintCase::kBoolXor:
       break;
     case ConstraintProto::ConstraintCase::kIntDiv:
@@ -487,8 +507,6 @@ std::vector<int> UsedIntervals(const ConstraintProto& ct) {
     case ConstraintProto::ConstraintCase::kCircuit:
       break;
     case ConstraintProto::ConstraintCase::kRoutes:
-      break;
-    case ConstraintProto::ConstraintCase::kCircuitCovering:
       break;
     case ConstraintProto::ConstraintCase::kInverse:
       break;

@@ -17,6 +17,7 @@
 #include <functional>
 
 #include "absl/container/flat_hash_set.h"
+#include "ortools/constraint_solver/constraint_solveri.h"
 
 namespace operations_research {
 
@@ -494,6 +495,7 @@ bool PairExchangeRelocateOperator::GetPreviousAndSibling(
 
 SwapIndexPairOperator::SwapIndexPairOperator(
     const std::vector<IntVar*>& vars, const std::vector<IntVar*>& path_vars,
+    std::function<int(int64)> start_empty_path_class,
     const RoutingIndexPairs& index_pairs)
     : IntVarLocalSearchOperator(vars),
       index_pairs_(index_pairs),
@@ -530,7 +532,7 @@ bool SwapIndexPairOperator::MakeNextNeighbor(Assignment* delta,
         prev_second = insert_first;
       }
       DCHECK_EQ(path, ignore_path_vars_
-                          ? 0LL
+                          ? int64{0}
                           : Value(second_active_ + number_of_nexts_));
       const int64 next_second = Value(second_active_);
       // Making current active "delivery" unperformed.
@@ -650,19 +652,101 @@ void IndexPairSwapActiveOperator::OnNodeInitialization() {
   inactive_node_ = Size();
 }
 
-FilteredHeuristicPathLNSOperator::FilteredHeuristicPathLNSOperator(
-    std::unique_ptr<RoutingFilteredHeuristic> heuristic)
-    : IntVarLocalSearchOperator(heuristic->model()->Nexts()),
+// FilteredHeuristicLocalSearchOperator
+
+FilteredHeuristicLocalSearchOperator::FilteredHeuristicLocalSearchOperator(
+    std::unique_ptr<RoutingFilteredHeuristic> heuristic,
+    bool keep_inverse_values)
+    : IntVarLocalSearchOperator(heuristic->model()->Nexts(),
+                                keep_inverse_values),
+      model_(*heuristic->model()),
+      removed_nodes_(model_.Size()),
       heuristic_(std::move(heuristic)),
-      model_(*heuristic_->model()),
-      consider_vehicle_vars_(!model_.CostsAreHomogeneousAcrossVehicles()),
-      current_route_(0),
-      last_route_(0),
-      just_started_(false) {
+      consider_vehicle_vars_(!model_.CostsAreHomogeneousAcrossVehicles()) {
   if (consider_vehicle_vars_) {
     AddVars(model_.VehicleVars());
   }
 }
+
+bool FilteredHeuristicLocalSearchOperator::MakeOneNeighbor() {
+  while (IncrementPosition()) {
+    // NOTE: No need to call RevertChanges() here as MakeChangeAndInsertNodes()
+    // will always return true if any change was made.
+    if (MakeChangesAndInsertNodes()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool FilteredHeuristicLocalSearchOperator::MakeChangesAndInsertNodes() {
+  removed_nodes_.SparseClearAll();
+
+  const std::function<int64(int64)> next_accessor =
+      SetupNextAccessorForNeighbor();
+  if (next_accessor == nullptr) {
+    return false;
+  }
+  const Assignment* const result_assignment =
+      heuristic_->BuildSolutionFromRoutes(next_accessor);
+
+  if (result_assignment == nullptr) {
+    return false;
+  }
+
+  bool has_change = false;
+  const std::vector<IntVarElement>& elements =
+      result_assignment->IntVarContainer().elements();
+  for (int vehicle = 0; vehicle < model_.vehicles(); vehicle++) {
+    int64 node_index = model_.Start(vehicle);
+    while (!model_.IsEnd(node_index)) {
+      // NOTE: When building the solution in the heuristic, Next vars are added
+      // to the assignment at the position corresponding to their index.
+      const IntVarElement& node_element = elements[node_index];
+      DCHECK_EQ(node_element.Var(), model_.NextVar(node_index));
+
+      const int64 new_node_value = node_element.Value();
+      DCHECK_NE(new_node_value, node_index);
+
+      const int64 vehicle_var_index = VehicleVarIndex(node_index);
+      if (OldValue(node_index) != new_node_value ||
+          (consider_vehicle_vars_ && OldValue(vehicle_var_index) != vehicle)) {
+        has_change = true;
+        SetValue(node_index, new_node_value);
+        if (consider_vehicle_vars_) {
+          SetValue(vehicle_var_index, vehicle);
+        }
+      }
+      node_index = new_node_value;
+    }
+  }
+  // Check for newly unperformed nodes among the ones removed for insertion by
+  // the heuristic.
+  for (int64 node : removed_nodes_.PositionsSetAtLeastOnce()) {
+    const IntVarElement& node_element = elements[node];
+    DCHECK_EQ(node_element.Var(), model_.NextVar(node));
+    if (node_element.Value() == node) {
+      DCHECK_NE(OldValue(node), node);
+      has_change = true;
+      SetValue(node, node);
+      if (consider_vehicle_vars_) {
+        const int64 vehicle_var_index = VehicleVarIndex(node);
+        DCHECK_NE(OldValue(vehicle_var_index), -1);
+        SetValue(vehicle_var_index, -1);
+      }
+    }
+  }
+  return has_change;
+}
+
+// FilteredHeuristicPathLNSOperator
+
+FilteredHeuristicPathLNSOperator::FilteredHeuristicPathLNSOperator(
+    std::unique_ptr<RoutingFilteredHeuristic> heuristic)
+    : FilteredHeuristicLocalSearchOperator(std::move(heuristic)),
+      current_route_(0),
+      last_route_(0),
+      just_started_(false) {}
 
 void FilteredHeuristicPathLNSOperator::OnStart() {
   // NOTE: We set last_route_ to current_route_ here to make sure all routes
@@ -674,19 +758,7 @@ void FilteredHeuristicPathLNSOperator::OnStart() {
   just_started_ = true;
 }
 
-bool FilteredHeuristicPathLNSOperator::MakeOneNeighbor() {
-  while (IncrementRoute()) {
-    // NOTE: No need to call RevertChanges() here as
-    // DestroyRouteAndReinsertNodes() will always return true if any change was
-    // made.
-    if (DestroyRouteAndReinsertNodes()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool FilteredHeuristicPathLNSOperator::IncrementRoute() {
+bool FilteredHeuristicPathLNSOperator::IncrementPosition() {
   if (just_started_) {
     just_started_ = false;
     return !CurrentRouteIsEmpty();
@@ -710,66 +782,268 @@ void FilteredHeuristicPathLNSOperator::IncrementCurrentRouteToNextNonEmpty() {
   } while (CurrentRouteIsEmpty());
 }
 
-bool FilteredHeuristicPathLNSOperator::DestroyRouteAndReinsertNodes() {
+std::function<int64(int64)>
+FilteredHeuristicPathLNSOperator::SetupNextAccessorForNeighbor() {
   const int64 start_node = model_.Start(current_route_);
   const int64 end_node = model_.End(current_route_);
 
-  const Assignment* const result_assignment =
-      heuristic_->BuildSolutionFromRoutes(
-          [this, start_node, end_node](int64 node) {
-            if (node == start_node) return end_node;
-            return Value(node);
-          });
+  int64 node = Value(start_node);
+  while (node != end_node) {
+    removed_nodes_.Set(node);
+    node = Value(node);
+  }
 
-  if (result_assignment == nullptr) {
+  return [this, start_node, end_node](int64 node) {
+    if (node == start_node) return end_node;
+    return Value(node);
+  };
+}
+
+// RelocatePathAndHeuristicInsertUnperformedOperator
+
+RelocatePathAndHeuristicInsertUnperformedOperator::
+    RelocatePathAndHeuristicInsertUnperformedOperator(
+        std::unique_ptr<RoutingFilteredHeuristic> heuristic)
+    : FilteredHeuristicLocalSearchOperator(std::move(heuristic)),
+      route_to_relocate_index_(0),
+      empty_route_index_(0),
+      just_started_(false) {}
+
+void RelocatePathAndHeuristicInsertUnperformedOperator::OnStart() {
+  has_unperformed_nodes_ = false;
+  last_node_on_route_.resize(model_.vehicles());
+  routes_to_relocate_.clear();
+  empty_routes_.clear();
+  std::vector<bool> empty_vehicle_of_vehicle_class_added(
+      model_.GetVehicleClassesCount(), false);
+  for (int64 node = 0; node < model_.Size(); node++) {
+    const int64 next = OldValue(node);
+    if (next == node) {
+      has_unperformed_nodes_ = true;
+      continue;
+    }
+    if (model_.IsEnd(next)) {
+      last_node_on_route_[model_.VehicleIndex(next)] = node;
+    }
+  }
+
+  for (int vehicle = 0; vehicle < model_.vehicles(); vehicle++) {
+    const int64 next = OldValue(model_.Start(vehicle));
+    if (!model_.IsEnd(next)) {
+      routes_to_relocate_.push_back(vehicle);
+      continue;
+    }
+    const int vehicle_class =
+        model_.GetVehicleClassIndexOfVehicle(vehicle).value();
+    if (!empty_vehicle_of_vehicle_class_added[vehicle_class]) {
+      empty_routes_.push_back(vehicle);
+      empty_vehicle_of_vehicle_class_added[vehicle_class] = true;
+    }
+  }
+
+  if (empty_route_index_ >= empty_routes_.size()) {
+    empty_route_index_ = 0;
+  }
+  if (route_to_relocate_index_ >= routes_to_relocate_.size()) {
+    route_to_relocate_index_ = 0;
+  }
+  last_empty_route_index_ = empty_route_index_;
+  last_route_to_relocate_index_ = route_to_relocate_index_;
+
+  just_started_ = true;
+}
+
+bool RelocatePathAndHeuristicInsertUnperformedOperator::IncrementPosition() {
+  if (!has_unperformed_nodes_ || empty_routes_.empty() ||
+      routes_to_relocate_.empty()) {
     return false;
   }
+  if (just_started_) {
+    just_started_ = false;
+    return true;
+  }
+  return IncrementRoutes();
+}
 
-  bool has_change = false;
-  std::vector<bool> node_performed(model_.Size(), false);
-  const std::vector<IntVarElement>& elements =
-      result_assignment->IntVarContainer().elements();
-  for (int vehicle = 0; vehicle < model_.vehicles(); vehicle++) {
-    int64 node_index = model_.Start(vehicle);
-    while (!model_.IsEnd(node_index)) {
-      // NOTE: When building the solution in the heuristic, Next vars are added
-      // to the assignment at the position corresponding to their index.
-      const IntVarElement& node_element = elements[node_index];
-      DCHECK_EQ(node_element.Var(), model_.NextVar(node_index));
+bool RelocatePathAndHeuristicInsertUnperformedOperator::IncrementRoutes() {
+  ++empty_route_index_ %= empty_routes_.size();
+  if (empty_route_index_ != last_empty_route_index_) {
+    return true;
+  }
+  ++route_to_relocate_index_ %= routes_to_relocate_.size();
+  return route_to_relocate_index_ != last_route_to_relocate_index_;
+}
 
-      const int64 new_node_value = node_element.Value();
-      DCHECK_NE(new_node_value, node_index);
-      node_performed[node_index] = true;
+std::function<int64(int64)> RelocatePathAndHeuristicInsertUnperformedOperator::
+    SetupNextAccessorForNeighbor() {
+  const int empty_route = empty_routes_[empty_route_index_];
+  const int relocated_route = routes_to_relocate_[route_to_relocate_index_];
+  if (model_.GetVehicleClassIndexOfVehicle(empty_route) ==
+      model_.GetVehicleClassIndexOfVehicle(relocated_route)) {
+    // Don't try to relocate the route to an empty vehicle of the same class.
+    return nullptr;
+  }
 
-      const int64 vehicle_var_index = VehicleVarIndex(node_index);
-      if (OldValue(node_index) != new_node_value ||
-          (consider_vehicle_vars_ && OldValue(vehicle_var_index) != vehicle)) {
-        has_change = true;
-        SetValue(node_index, new_node_value);
-        if (consider_vehicle_vars_) {
-          SetValue(vehicle_var_index, vehicle);
-        }
+  const int64 empty_start_node = model_.Start(empty_route);
+  const int64 empty_end_node = model_.End(empty_route);
+
+  const int64 relocated_route_start = model_.Start(relocated_route);
+  const int64 first_relocated_node = OldValue(relocated_route_start);
+  const int64 last_relocated_node = last_node_on_route_[relocated_route];
+  const int64 relocated_route_end = model_.End(relocated_route);
+
+  return [this, empty_start_node, empty_end_node, first_relocated_node,
+          last_relocated_node, relocated_route_start,
+          relocated_route_end](int64 node) {
+    if (node == relocated_route_start) return relocated_route_end;
+    if (node == empty_start_node) return first_relocated_node;
+    if (node == last_relocated_node) return empty_end_node;
+    return Value(node);
+  };
+}
+
+// FilteredHeuristicCloseNodesLNSOperator
+
+FilteredHeuristicCloseNodesLNSOperator::FilteredHeuristicCloseNodesLNSOperator(
+    std::unique_ptr<RoutingFilteredHeuristic> heuristic, int num_close_nodes)
+    : FilteredHeuristicLocalSearchOperator(std::move(heuristic),
+                                           /*keep_inverse_values*/ true),
+      pickup_delivery_pairs_(model_.GetPickupAndDeliveryPairs()),
+      current_node_(0),
+      last_node_(0),
+      close_nodes_(model_.Size()),
+      new_nexts_(model_.Size()),
+      changed_nexts_(model_.Size()),
+      new_prevs_(model_.Size()),
+      changed_prevs_(model_.Size()) {
+  const int64 size = model_.Size();
+  const int64 max_num_neighbors =
+      std::max<int64>(0, size - 1 - model_.vehicles());
+  const int64 num_closest_neighbors =
+      std::min<int64>(num_close_nodes, max_num_neighbors);
+  DCHECK_GE(num_closest_neighbors, 0);
+
+  if (num_closest_neighbors == 0) return;
+
+  const int64 num_cost_classes = model_.GetCostClassesCount();
+
+  for (int64 node = 0; node < size; node++) {
+    if (model_.IsStart(node) || model_.IsEnd(node)) continue;
+
+    std::vector<std::pair</*cost*/ double, /*node*/ int64>> costed_after_nodes;
+    costed_after_nodes.reserve(size);
+    for (int64 after_node = 0; after_node < size; after_node++) {
+      if (model_.IsStart(after_node) || model_.IsEnd(after_node) ||
+          after_node == node) {
+        continue;
       }
+      double total_cost = 0.0;
+      // NOTE: We don't consider the 'always-zero' cost class when searching for
+      // closest neighbors.
+      for (int cost_class = 1; cost_class < num_cost_classes; cost_class++) {
+        total_cost += model_.GetArcCostForClass(node, after_node, cost_class);
+      }
+      costed_after_nodes.emplace_back(total_cost, after_node);
+    }
 
-      node_index = new_node_value;
+    std::nth_element(costed_after_nodes.begin(),
+                     costed_after_nodes.begin() + num_closest_neighbors - 1,
+                     costed_after_nodes.end());
+    std::vector<int64>& neighbors = close_nodes_[node];
+    neighbors.reserve(num_closest_neighbors);
+    for (int index = 0; index < num_closest_neighbors; index++) {
+      neighbors.push_back(costed_after_nodes[index].second);
     }
   }
-  for (int64 node = 0; node < model_.Size(); node++) {
-    if (node_performed[node]) continue;
-    const IntVarElement& node_element = elements[node];
-    DCHECK_EQ(node_element.Var(), model_.NextVar(node));
-    DCHECK_EQ(node_element.Value(), node);
-    if (OldValue(node) != node) {
-      has_change = true;
-      SetValue(node, node);
-      if (consider_vehicle_vars_) {
-        const int64 vehicle_var_index = VehicleVarIndex(node);
-        DCHECK_NE(OldValue(vehicle_var_index), -1);
-        SetValue(vehicle_var_index, -1);
+}
+
+void FilteredHeuristicCloseNodesLNSOperator::OnStart() {
+  last_node_ = current_node_;
+  just_started_ = true;
+}
+
+bool FilteredHeuristicCloseNodesLNSOperator::IncrementPosition() {
+  if (just_started_) {
+    just_started_ = false;
+    return true;
+  }
+  ++current_node_ %= model_.Size();
+  return current_node_ != last_node_;
+}
+
+void FilteredHeuristicCloseNodesLNSOperator::RemoveNode(int64 node) {
+  DCHECK(!model_.IsEnd(node) && !model_.IsStart(node));
+  DCHECK_NE(Value(node), node);
+  DCHECK(IsActive(node));
+
+  removed_nodes_.Set(node);
+  const int64 prev = Prev(node);
+  const int64 next = Next(node);
+  changed_nexts_.Set(prev);
+  new_nexts_[prev] = next;
+  if (next < model_.Size()) {
+    changed_prevs_.Set(next);
+    new_prevs_[next] = prev;
+  }
+}
+
+void FilteredHeuristicCloseNodesLNSOperator::RemoveNodeAndActiveSibling(
+    int64 node) {
+  if (!IsActive(node)) return;
+  RemoveNode(node);
+
+  for (int64 sibling_node : GetActiveSiblings(node)) {
+    if (!model_.IsStart(sibling_node) && !model_.IsEnd(sibling_node)) {
+      RemoveNode(sibling_node);
+    }
+  }
+}
+
+std::vector<int64> FilteredHeuristicCloseNodesLNSOperator::GetActiveSiblings(
+    int64 node) const {
+  // NOTE: In most use-cases, where each node is a pickup or delivery in a
+  // single index pair, this function is in O(k) where k is the number of
+  // alternative deliveries or pickups for this index pair.
+  std::vector<int64> active_siblings;
+  for (std::pair<int64, int64> index_pair : model_.GetPickupIndexPairs(node)) {
+    for (int64 sibling_delivery :
+         pickup_delivery_pairs_[index_pair.first].second) {
+      if (IsActive(sibling_delivery)) {
+        active_siblings.push_back(sibling_delivery);
+        break;
       }
     }
   }
-  return has_change;
+  for (std::pair<int64, int64> index_pair :
+       model_.GetDeliveryIndexPairs(node)) {
+    for (int64 sibling_pickup :
+         pickup_delivery_pairs_[index_pair.first].first) {
+      if (IsActive(sibling_pickup)) {
+        active_siblings.push_back(sibling_pickup);
+        break;
+      }
+    }
+  }
+  return active_siblings;
+}
+
+std::function<int64(int64)>
+FilteredHeuristicCloseNodesLNSOperator::SetupNextAccessorForNeighbor() {
+  if (model_.IsStart(current_node_)) {
+    return nullptr;
+  }
+  DCHECK(!model_.IsEnd(current_node_));
+
+  changed_nexts_.SparseClearAll();
+  changed_prevs_.SparseClearAll();
+
+  RemoveNodeAndActiveSibling(current_node_);
+
+  for (int64 neighbor : close_nodes_[current_node_]) {
+    RemoveNodeAndActiveSibling(neighbor);
+  }
+
+  return [this](int64 node) { return Next(node); };
 }
 
 // FilteredHeuristicExpensiveChainLNSOperator
@@ -779,10 +1053,7 @@ FilteredHeuristicExpensiveChainLNSOperator::
         std::unique_ptr<RoutingFilteredHeuristic> heuristic,
         int num_arcs_to_consider,
         std::function<int64(int64, int64, int64)> arc_cost_for_route_start)
-    : IntVarLocalSearchOperator(heuristic->model()->Nexts()),
-      heuristic_(std::move(heuristic)),
-      model_(*heuristic_->model()),
-      consider_vehicle_vars_(!model_.CostsAreHomogeneousAcrossVehicles()),
+    : FilteredHeuristicLocalSearchOperator(std::move(heuristic)),
       current_route_(0),
       last_route_(0),
       num_arcs_to_consider_(num_arcs_to_consider),
@@ -790,26 +1061,11 @@ FilteredHeuristicExpensiveChainLNSOperator::
       arc_cost_for_route_start_(std::move(arc_cost_for_route_start)),
       just_started_(false) {
   DCHECK_GE(num_arcs_to_consider_, 2);
-  if (consider_vehicle_vars_) {
-    AddVars(model_.VehicleVars());
-  }
 }
 
 void FilteredHeuristicExpensiveChainLNSOperator::OnStart() {
   last_route_ = current_route_;
   just_started_ = true;
-}
-
-bool FilteredHeuristicExpensiveChainLNSOperator::MakeOneNeighbor() {
-  while (IncrementPosition()) {
-    // NOTE: No need to call RevertChanges() here as
-    // DestroyChainAndReinsertNodes() will always return true if any change was
-    // made.
-    if (DestroyChainAndReinsertNodes()) {
-      return true;
-    }
-  }
-  return false;
 }
 
 bool FilteredHeuristicExpensiveChainLNSOperator::IncrementPosition() {
@@ -823,8 +1079,8 @@ bool FilteredHeuristicExpensiveChainLNSOperator::IncrementPosition() {
   return IncrementRoute() && FindMostExpensiveChainsOnRemainingRoutes();
 }
 
-bool FilteredHeuristicExpensiveChainLNSOperator::
-    DestroyChainAndReinsertNodes() {
+std::function<int64(int64)>
+FilteredHeuristicExpensiveChainLNSOperator::SetupNextAccessorForNeighbor() {
   const int first_arc_index = current_expensive_arc_indices_.first;
   const int second_arc_index = current_expensive_arc_indices_.second;
   DCHECK_LE(0, first_arc_index);
@@ -844,62 +1100,16 @@ bool FilteredHeuristicExpensiveChainLNSOperator::
     after_chain = OldValue(first_start_and_rank.first);
   }
 
-  const Assignment* const result_assignment =
-      heuristic_->BuildSolutionFromRoutes(
-          [this, before_chain, after_chain](int64 node) {
-            if (node == before_chain) return after_chain;
-            return OldValue(node);
-          });
-
-  if (result_assignment == nullptr) {
-    return false;
+  int node = Value(before_chain);
+  while (node != after_chain) {
+    removed_nodes_.Set(node);
+    node = Value(node);
   }
 
-  bool has_change = false;
-  std::vector<bool> node_performed(model_.Size(), false);
-  const std::vector<IntVarElement>& elements =
-      result_assignment->IntVarContainer().elements();
-  for (int vehicle = 0; vehicle < model_.vehicles(); vehicle++) {
-    int64 node_index = model_.Start(vehicle);
-    while (!model_.IsEnd(node_index)) {
-      // NOTE: When building the solution in the heuristic, Next vars are added
-      // to the assignment at the position corresponding to their index.
-      const IntVarElement& node_element = elements[node_index];
-      DCHECK_EQ(node_element.Var(), model_.NextVar(node_index));
-
-      const int64 new_node_value = node_element.Value();
-      DCHECK_NE(new_node_value, node_index);
-      node_performed[node_index] = true;
-
-      const int64 vehicle_var_index = VehicleVarIndex(node_index);
-      if (OldValue(node_index) != new_node_value ||
-          (consider_vehicle_vars_ && OldValue(vehicle_var_index) != vehicle)) {
-        has_change = true;
-        SetValue(node_index, new_node_value);
-        if (consider_vehicle_vars_) {
-          SetValue(vehicle_var_index, vehicle);
-        }
-      }
-
-      node_index = new_node_value;
-    }
-  }
-  for (int64 node = 0; node < model_.Size(); node++) {
-    if (node_performed[node]) continue;
-    const IntVarElement& node_element = elements[node];
-    DCHECK_EQ(node_element.Var(), model_.NextVar(node));
-    DCHECK_EQ(node_element.Value(), node);
-    if (OldValue(node) != node) {
-      has_change = true;
-      SetValue(node, node);
-      if (consider_vehicle_vars_) {
-        const int64 vehicle_var_index = VehicleVarIndex(node);
-        DCHECK_NE(OldValue(vehicle_var_index), -1);
-        SetValue(vehicle_var_index, -1);
-      }
-    }
-  }
-  return has_change;
+  return [this, before_chain, after_chain](int64 node) {
+    if (node == before_chain) return after_chain;
+    return OldValue(node);
+  };
 }
 
 bool FilteredHeuristicExpensiveChainLNSOperator::IncrementRoute() {

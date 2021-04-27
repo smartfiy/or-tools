@@ -19,6 +19,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/glop/revised_simplex.h"
 #include "ortools/sat/linear_constraint.h"
 #include "ortools/sat/model.h"
@@ -37,9 +38,6 @@ namespace sat {
 // relaxation and to get new cuts as they are generated. Thus, it can both
 // manage cuts but also only add the initial constraints lazily if there is too
 // many of them.
-//
-// TODO(user): Also store the LP objective there as it can be useful to decide
-// which constraint should go into the current LP.
 class LinearConstraintManager {
  public:
   struct ConstraintInfo {
@@ -86,10 +84,14 @@ class LinearConstraintManager {
   // Returns true if a new cut was added and false if this cut is not
   // efficacious or if it is a duplicate of an already existing one.
   bool AddCut(LinearConstraint ct, std::string type_name,
-              const gtl::ITIVector<IntegerVariable, double>& lp_solution);
+              const absl::StrongVector<IntegerVariable, double>& lp_solution,
+              std::string extra_info = "");
 
   // The objective is used as one of the criterion to score cuts.
   // The more a cut is parallel to the objective, the better its score is.
+  //
+  // Currently this should only be called once per IntegerVariable (Checked). It
+  // is easy to support dynamic modification if it becomes needed.
   void SetObjectiveCoefficient(IntegerVariable var, IntegerValue coeff);
 
   // Heuristic to decides what LP is best solved next. The given lp_solution
@@ -101,7 +103,7 @@ class LinearConstraintManager {
   // simplex can be fully iterative on restart by loading this modified state.
   //
   // Returns true iff LpConstraints() will return a different LP than before.
-  bool ChangeLp(const gtl::ITIVector<IntegerVariable, double>& lp_solution,
+  bool ChangeLp(const absl::StrongVector<IntegerVariable, double>& lp_solution,
                 glop::BasisState* solution_state);
 
   // This can be called initially to add all the current constraint to the LP
@@ -109,7 +111,7 @@ class LinearConstraintManager {
   void AddAllConstraintsToLp();
 
   // All the constraints managed by this class.
-  const gtl::ITIVector<ConstraintIndex, ConstraintInfo>& AllConstraints()
+  const absl::StrongVector<ConstraintIndex, ConstraintInfo>& AllConstraints()
       const {
     return constraint_infos_;
   }
@@ -170,7 +172,7 @@ class LinearConstraintManager {
   // Optimization to avoid calling SimplifyConstraint() when not needed.
   int64 last_simplification_timestamp_ = 0;
 
-  gtl::ITIVector<ConstraintIndex, ConstraintInfo> constraint_infos_;
+  absl::StrongVector<ConstraintIndex, ConstraintInfo> constraint_infos_;
 
   // The subset of constraints currently in the lp.
   std::vector<ConstraintIndex> lp_constraints_;
@@ -182,22 +184,29 @@ class LinearConstraintManager {
   // constraints.
   absl::flat_hash_map<size_t, ConstraintIndex> equiv_constraints_;
 
+  int64 num_simplifications_ = 0;
   int64 num_merged_constraints_ = 0;
   int64 num_shortened_constraints_ = 0;
   int64 num_splitted_constraints_ = 0;
   int64 num_coeff_strenghtening_ = 0;
 
   int64 num_cuts_ = 0;
+  int64 num_add_cut_calls_ = 0;
   std::map<std::string, int> type_to_num_cuts_;
 
   bool objective_is_defined_ = false;
   bool objective_norm_computed_ = false;
   double objective_l2_norm_ = 0.0;
 
-  // Dense representation of the objective coeffs indexed by positive variables
-  // indices. It contains 0.0 where the variables does not appear in the
-  // objective.
-  gtl::ITIVector<IntegerVariable, double> dense_objective_coeffs_;
+  // Total deterministic time spent in this class.
+  double dtime_ = 0.0;
+
+  // Sparse representation of the objective coeffs indexed by positive variables
+  // indices. Important: We cannot use a dense representation here in the corner
+  // case where we have many indepedent LPs. Alternatively, we could share a
+  // dense vector between all LinearConstraintManager.
+  double sum_of_squared_objective_coeffs_ = 0.0;
+  absl::flat_hash_map<IntegerVariable, double> objective_map_;
 
   TimeLimit* time_limit_;
   Model* model_;
@@ -212,6 +221,87 @@ class LinearConstraintManager {
   double constraint_active_count_increase_ = 1.0;
 
   int32 num_deletable_constraints_ = 0;
+};
+
+// Keep the top n elements from a stream of elements.
+//
+// TODO(user): We could use gtl::TopN when/if it gets open sourced. Note that
+// we might be slighlty faster here since we use an indirection and don't move
+// the Element class around as much.
+template <typename Element>
+class TopN {
+ public:
+  explicit TopN(int n) : n_(n) {}
+
+  void Clear() {
+    heap_.clear();
+    elements_.clear();
+  }
+
+  void Add(Element e, double score) {
+    if (heap_.size() < n_) {
+      const int index = elements_.size();
+      heap_.push_back({index, score});
+      elements_.push_back(std::move(e));
+      if (heap_.size() == n_) {
+        // TODO(user): We could delay that on the n + 1 push.
+        std::make_heap(heap_.begin(), heap_.end());
+      }
+    } else {
+      if (score <= heap_.front().score) return;
+      const int index_to_replace = heap_.front().index;
+      elements_[index_to_replace] = std::move(e);
+
+      // If needed, we could be faster here with an update operation.
+      std::pop_heap(heap_.begin(), heap_.end());
+      heap_.back() = {index_to_replace, score};
+      std::push_heap(heap_.begin(), heap_.end());
+    }
+  }
+
+  const std::vector<Element>& UnorderedElements() const { return elements_; }
+
+ private:
+  const int n_;
+
+  // We keep a heap of the n lowest score.
+  struct HeapElement {
+    int index;  // in elements_;
+    double score;
+    const double operator<(const HeapElement& other) const {
+      return score > other.score;
+    }
+  };
+  std::vector<HeapElement> heap_;
+  std::vector<Element> elements_;
+};
+
+// Before adding cuts to the global pool, it is a classical thing to only keep
+// the top n of a given type during one generation round. This is there to help
+// doing that.
+//
+// TODO(user): Avoid computing efficacity twice.
+// TODO(user): We don't use any orthogonality consideration here.
+// TODO(user): Detect duplicate cuts?
+class TopNCuts {
+ public:
+  explicit TopNCuts(int n) : cuts_(n) {}
+
+  // Add a cut to the local pool
+  void AddCut(LinearConstraint ct, const std::string& name,
+              const absl::StrongVector<IntegerVariable, double>& lp_solution);
+
+  // Empty the local pool and add all its content to the manager.
+  void TransferToManager(
+      const absl::StrongVector<IntegerVariable, double>& lp_solution,
+      LinearConstraintManager* manager);
+
+ private:
+  struct CutCandidate {
+    std::string name;
+    LinearConstraint cut;
+  };
+  TopN<CutCandidate> cuts_;
 };
 
 }  // namespace sat

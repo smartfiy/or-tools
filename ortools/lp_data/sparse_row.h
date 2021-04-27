@@ -14,6 +14,7 @@
 #ifndef OR_TOOLS_LP_DATA_SPARSE_ROW_H_
 #define OR_TOOLS_LP_DATA_SPARSE_ROW_H_
 
+#include "ortools/base/strong_vector.h"
 #include "ortools/lp_data/sparse_vector.h"
 
 namespace operations_research {
@@ -57,7 +58,7 @@ class SparseRow : public SparseVector<ColIndex, SparseRowIterator> {
 };
 
 // A matrix stored by rows.
-typedef gtl::ITIVector<RowIndex, SparseRow> RowMajorSparseMatrix;
+typedef absl::StrongVector<RowIndex, SparseRow> RowMajorSparseMatrix;
 
 }  // namespace glop
 }  // namespace operations_research

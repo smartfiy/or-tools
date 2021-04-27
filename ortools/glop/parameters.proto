@@ -22,7 +22,7 @@ syntax = "proto2";
 
 package operations_research.glop;
 
-// next id = 60
+// next id = 62
 message GlopParameters {
 
   // Supported algorithms for scaling:
@@ -192,6 +192,29 @@ message GlopParameters {
   // each line and each column is 1.0.
   optional bool use_scaling = 16 [default = true];
 
+  // This is only used if use_scaling is true. After the scaling is done, we
+  // also scale the objective by a constant factor. This is important because
+  // scaling the cost has a direct influence on the meaning of the
+  // dual_feasibility_tolerance. Because we usually use a fixed tolerance, the
+  // objective must be well scaled to make sense.
+  enum CostScalingAlgorithm {
+    // Leave the cost as is.
+    NO_COST_SCALING = 0;
+
+    // This is the most defensive option. It makes sure that
+    // [min_cost_magnitude, max_cost_magnitude] contains 1.0, and if not, it
+    // makes the closest magnitude bound equal to one.
+    CONTAIN_ONE_COST_SCALING = 1;
+
+    // Make the mean of the non-zero costs equals to one.
+    MEAN_COST_SCALING = 2;
+
+    // Make the median of the non-zero costs equals to one.
+    MEDIAN_COST_SCALING = 3;
+  }
+  optional CostScalingAlgorithm cost_scaling = 60
+      [default = CONTAIN_ONE_COST_SCALING];
+
   // What heuristic is used to try to replace the fixed slack columns in the
   // initial basis of the primal simplex.
   optional InitialBasisHeuristic initial_basis = 17 [default = TRIANGULAR];
@@ -334,9 +357,12 @@ message GlopParameters {
   // The solver will stop as soon as it has proven that the objective is smaller
   // than objective_lower_limit or greater than objective_upper_limit. Depending
   // on the simplex algorithm (primal or dual) and the optimization direction,
-  // note that only one bound will be used at the time. The parameter
-  // solution_objective_gap_tolerance is used as a relative tolerance to improve
-  // the 'proven' guarantee.
+  // note that only one bound will be used at the time.
+  //
+  // Important: The solver does not add any tolerances to these values, and as
+  // soon as the objective (as computed by the solver, so with some imprecision)
+  // crosses one of these bounds (strictly), the search will stop. It is up to
+  // the client to add any tolerance if needed.
   optional double objective_lower_limit = 40 [default = -inf];
   optional double objective_upper_limit = 41 [default = inf];
 
@@ -398,5 +424,10 @@ message GlopParameters {
   // heurisitic or a warm start) is above this threshold, we revert to an all
   // slack basis.
   optional double initial_condition_number_threshold = 59 [default = 1e50];
+
+  // If true, logs the progress of a solve to LOG(INFO). Note that the same
+  // messages can also be turned on by displaying logs at level 1 for the
+  // relevant files.
+  optional bool log_search_progress = 61 [default = false];
 
 }

@@ -31,7 +31,6 @@ The Norwegian lives next to the blue house.
 
 Who owns a zebra and who drinks water?
 """
-from __future__ import print_function
 
 from ortools.sat.python import cp_model
 
@@ -110,7 +109,7 @@ def solve_zebra():
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
-    if status == cp_model.FEASIBLE:
+    if status == cp_model.OPTIMAL:
         people = [englishman, spaniard, japanese, ukrainian, norwegian]
         water_drinker = [
             p for p in people if solver.Value(p) == solver.Value(water)

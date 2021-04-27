@@ -20,9 +20,9 @@
 
 #include "absl/container/inlined_vector.h"
 #include "ortools/base/int_type.h"
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/macros.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/integer.h"
 #include "ortools/sat/model.h"
 #include "ortools/sat/sat_base.h"
@@ -36,7 +36,7 @@ namespace sat {
 // variables of the form (i1 + offset <= i2). The offset can be constant or
 // given by the value of a third integer variable. Offsets can also be negative.
 //
-// The algorithm work by mapping the problem onto a graph where the edges carry
+// The algorithm works by mapping the problem onto a graph where the edges carry
 // the offset and the nodes correspond to one of the two bounds of an integer
 // variable (lower_bound or -upper_bound). It then find the fixed point using an
 // incremental variant of the Bellman-Ford(-Tarjan) algorithm.
@@ -234,21 +234,21 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
   // consecutive like in StaticGraph should have a big performance impact.
   //
   // TODO(user): We do not need to store ArcInfo.tail_var here.
-  gtl::ITIVector<IntegerVariable, absl::InlinedVector<ArcIndex, 6>>
+  absl::StrongVector<IntegerVariable, absl::InlinedVector<ArcIndex, 6>>
       impacted_arcs_;
-  gtl::ITIVector<ArcIndex, ArcInfo> arcs_;
+  absl::StrongVector<ArcIndex, ArcInfo> arcs_;
 
   // This is similar to impacted_arcs_/arcs_ but it is only used to propagate
   // one of the presence literals when the arc cannot be present. An arc needs
   // to appear only once in potential_arcs_, but it will be referenced by
   // all its variable in impacted_potential_arcs_.
-  gtl::ITIVector<IntegerVariable, absl::InlinedVector<OptionalArcIndex, 6>>
+  absl::StrongVector<IntegerVariable, absl::InlinedVector<OptionalArcIndex, 6>>
       impacted_potential_arcs_;
-  gtl::ITIVector<OptionalArcIndex, ArcInfo> potential_arcs_;
+  absl::StrongVector<OptionalArcIndex, ArcInfo> potential_arcs_;
 
   // Temporary vectors used by ComputePrecedences().
-  gtl::ITIVector<IntegerVariable, int> var_to_degree_;
-  gtl::ITIVector<IntegerVariable, int> var_to_last_index_;
+  absl::StrongVector<IntegerVariable, int> var_to_degree_;
+  absl::StrongVector<IntegerVariable, int> var_to_last_index_;
   struct SortedVar {
     IntegerVariable var;
     IntegerValue lower_bound;
@@ -266,9 +266,9 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
   //
   // TODO(user): Try a one-watcher approach instead. Note that in most cases
   // arc should be controlled by 1 or 2 literals, so not sure it is worth it.
-  gtl::ITIVector<LiteralIndex, absl::InlinedVector<ArcIndex, 6>>
+  absl::StrongVector<LiteralIndex, absl::InlinedVector<ArcIndex, 6>>
       literal_to_new_impacted_arcs_;
-  gtl::ITIVector<ArcIndex, int> arc_counts_;
+  absl::StrongVector<ArcIndex, int> arc_counts_;
 
   // Temp vectors to hold the reason of an assignment.
   std::vector<Literal> literal_reason_;
@@ -429,6 +429,16 @@ inline std::function<void(Model*)> ConditionalLowerOrEqual(IntegerVariable a,
                                                            IntegerVariable b,
                                                            Literal is_le) {
   return ConditionalLowerOrEqualWithOffset(a, b, 0, is_le);
+}
+
+// literals => (a <= b).
+inline std::function<void(Model*)> ConditionalLowerOrEqual(
+    IntegerVariable a, IntegerVariable b, absl::Span<const Literal> literals) {
+  return [=](Model* model) {
+    PrecedencesPropagator* p = model->GetOrCreate<PrecedencesPropagator>();
+    p->AddPrecedenceWithAllOptions(a, b, IntegerValue(0),
+                                   /*offset_var*/ kNoIntegerVariable, literals);
+  };
 }
 
 // is_le <=> (a + offset <= b).

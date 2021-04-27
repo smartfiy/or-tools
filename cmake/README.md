@@ -7,36 +7,36 @@
 | Windows  | [![Status][cpp_win_svg]][cpp_win_link] | [![Status][python_win_svg]][python_win_link] | [![Status][java_win_svg]][java_win_link] | [![Status][dotnet_win_svg]][dotnet_win_link] |
 
 
-[cpp_linux_svg]: https://github.com/google/or-tools/workflows/C++%20Linux%20CI/badge.svg
+[cpp_linux_svg]: https://github.com/google/or-tools/workflows/C++%20Linux%20CI/badge.svg?branch=master
 [cpp_linux_link]: https://github.com/google/or-tools/actions?query=workflow%3A"C%2B%2B+Linux+CI"
-[python_linux_svg]: https://github.com/google/or-tools/workflows/Python%20Linux%20CI/badge.svg
+[python_linux_svg]: https://github.com/google/or-tools/workflows/Python%20Linux%20CI/badge.svg?branch=master
 [python_linux_link]: https://github.com/google/or-tools/actions?query=workflow%3A"Python+Linux+CI"
-[java_linux_svg]: https://github.com/google/or-tools/workflows/Java%20Linux%20CI/badge.svg
+[java_linux_svg]: https://github.com/google/or-tools/workflows/Java%20Linux%20CI/badge.svg?branch=master
 [java_linux_link]: https://github.com/google/or-tools/actions?query=workflow%3A"Java+Linux+CI"
-[dotnet_linux_svg]: https://github.com/google/or-tools/workflows/.Net%20Linux%20CI/badge.svg
+[dotnet_linux_svg]: https://github.com/google/or-tools/workflows/.Net%20Linux%20CI/badge.svg?branch=master
 [dotnet_linux_link]: https://github.com/google/or-tools/actions?query=workflow%3A".Net+Linux+CI"
 
-[cpp_osx_svg]: https://github.com/google/or-tools/workflows/C++%20MacOS%20CI/badge.svg
+[cpp_osx_svg]: https://github.com/google/or-tools/workflows/C++%20MacOS%20CI/badge.svg?branch=master
 [cpp_osx_link]: https://github.com/google/or-tools/actions?query=workflow%3A"C%2B%2B+MacOS+CI"
-[python_osx_svg]: https://github.com/google/or-tools/workflows/Python%20MacOS%20CI/badge.svg
+[python_osx_svg]: https://github.com/google/or-tools/workflows/Python%20MacOS%20CI/badge.svg?branch=master
 [python_osx_link]: https://github.com/google/or-tools/actions?query=workflow%3A"Python+MacOS+CI"
-[java_osx_svg]: https://github.com/google/or-tools/workflows/Java%20MacOS%20CI/badge.svg
+[java_osx_svg]: https://github.com/google/or-tools/workflows/Java%20MacOS%20CI/badge.svg?branch=master
 [java_osx_link]: https://github.com/google/or-tools/actions?query=workflow%3A"Java+MacOS+CI"
-[dotnet_osx_svg]: https://github.com/google/or-tools/workflows/.Net%20MacOS%20CI/badge.svg
+[dotnet_osx_svg]: https://github.com/google/or-tools/workflows/.Net%20MacOS%20CI/badge.svg?branch=master
 [dotnet_osx_link]: https://github.com/google/or-tools/actions?query=workflow%3A".Net+MacOS+CI"
 
-[cpp_win_svg]: https://github.com/google/or-tools/workflows/C++%20Windows%20CI/badge.svg
+[cpp_win_svg]: https://github.com/google/or-tools/workflows/C++%20Windows%20CI/badge.svg?branch=master
 [cpp_win_link]: https://github.com/google/or-tools/actions?query=workflow%3A"C%2B%2B+Windows+CI"
-[python_win_svg]: https://github.com/google/or-tools/workflows/Python%20Windows%20CI/badge.svg
+[python_win_svg]: https://github.com/google/or-tools/workflows/Python%20Windows%20CI/badge.svg?branch=master
 [python_win_link]: https://github.com/google/or-tools/actions?query=workflow%3A"Python+Windows+CI"
-[java_win_svg]: https://github.com/google/or-tools/workflows/Java%20Windows%20CI/badge.svg
+[java_win_svg]: https://github.com/google/or-tools/workflows/Java%20Windows%20CI/badge.svg?branch=master
 [java_win_link]: https://github.com/google/or-tools/actions?query=workflow%3A"Java+Windows+CI"
-[dotnet_win_svg]: https://github.com/google/or-tools/workflows/.Net%20Windows%20CI/badge.svg
+[dotnet_win_svg]: https://github.com/google/or-tools/workflows/.Net%20Windows%20CI/badge.svg?branch=master
 [dotnet_win_link]: https://github.com/google/or-tools/actions?query=workflow%3A".Net+Windows+CI"
 
 Dockers: [![Status][docker_svg]][docker_link]
 
-[docker_svg]: https://github.com/google/or-tools/workflows/Docker%20CMake/badge.svg
+[docker_svg]: https://github.com/google/or-tools/workflows/Docker%20CMake/badge.svg?branch=master
 [docker_link]: https://github.com/google/or-tools/actions?query=workflow%3A"Docker+CMake"
 
 
@@ -62,9 +62,6 @@ the compiler environment of your choice.<br>You can either build OR-Tools with
 CMake as a standalone project or it can be incorporated into an existing CMake
  project.
 
-**warning: Currently OR-Tools CMake doesn't support Java nor .Net, please use
-the Makefile based build instead.**
-
 ## [Dependencies](#deps)
 
 OR-Tools depends on severals mandatory libraries. You can compile them all at
@@ -73,24 +70,25 @@ compile few of them using the options below.
 
 * ZLIB (`BUILD_ZLIB`),
 * Google Abseil-cpp (`BUILD_absl`),
-* Google Gflags (`BUILD_gflags`),
-* Google Glog (`BUILD_glog`),
 * Google Protobuf (`BUILD_Protobuf`),
-* COIN-OR CoinUtils (`BUILD_CoinUtils`),
-* COIN-OR Osi (`BUILD_Osi`),
-* COIN-OR Clp (`BUILD_Clp`),
-* COIN-OR Cgl (`BUILD_Cgl`),
-* COIN-OR Cbc (`BUILD_Cbc`),
+* SCIP (`BUILD_SCIP`),<br>
+  note: You can disable the support of SCIP solvers
+  by using `-DUSE_SCIP=OFF` (`ON` by default).
 
-note: You can disable the support of COIN-OR solvers (i.e. Cbc and Clp solver)
-by using `-DUSE_COINOR=OFF`.
+* COIN-OR solvers,
+  * COIN-OR CoinUtils (`BUILD_CoinUtils`),
+  * COIN-OR Osi (`BUILD_Osi`),
+  * COIN-OR Clp (`BUILD_Clp`),
+  * COIN-OR Cgl (`BUILD_Cgl`),
+  * COIN-OR Cbc (`BUILD_Cbc`),<br>
+  note: You can disable the support of COIN-OR solvers (i.e. Cbc and Clp solver)
+  by using `-DUSE_COINOR=OFF` (`ON` by default).
 
 OR-Tools also have few (ed compile time) optional solvers support (disabled by
 default):
 
-*   SCIP (`USE_SCIP`),
-*   CPLEX (`USE_CPLEX`),
-*   XPRESS (`USE_XPRESS`)
+* CPLEX (`USE_CPLEX`),
+* XPRESS (`USE_XPRESS`)
 
 **warning: Since these solvers require license and are proprietary, we can't
 test it on public CI and support can be broken.**
@@ -116,7 +114,7 @@ note: You may need to set
 in order for CMake to find your OR-Tools installation.
 
 ```cmake
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.14)
 project(myproj VERSION 1.0)
 
 find_package(ortools CONFIG REQUIRED)
@@ -143,7 +141,7 @@ Note: The **ortools::ortools** target is in this case an ALIAS library target
 for the **ortools** library target.
 
 ```cmake
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.14)
 project(myproj VERSION 1.0)
 
 add_subdirectory(or-tools)
@@ -163,7 +161,7 @@ instead. Note: The **ortools::ortools** target is in this case an ALIAS library
 target for the **ortools** library target.
 
 ```cmake
-cmake_minimum_required(VERSION 3.11.4)
+cmake_minimum_required(VERSION 3.14)
 project(myproj VERSION 1.0 LANGUAGES CXX)
 
 include(FetchContent)

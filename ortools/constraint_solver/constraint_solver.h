@@ -20,17 +20,22 @@
 ///
 /// Here is a very simple Constraint Programming problem:
 ///
-///   Knowing that we see 56 legs and 20 heads, how many pheasants and rabbits
-///   are we looking at?
+///   If we see 56 legs and 20 heads, how many two-legged pheasants
+///   and four-legged rabbits are we looking at?
 ///
 /// Here is some simple Constraint Programming code to find out:
 ///
 ///   void pheasant() {
 ///     Solver s("pheasant");
+///     // Create integer variables to represent the number of pheasants and
+///     // rabbits, with a minimum of 0 and a maximum of 20.
 ///     IntVar* const p = s.MakeIntVar(0, 20, "pheasant"));
 ///     IntVar* const r = s.MakeIntVar(0, 20, "rabbit"));
-///     IntExpr* const legs = s.MakeSum(s.MakeProd(p, 2), s.MakeProd(r, 4));
+///     // The number of heads is the sum of pheasants and rabbits.
 ///     IntExpr* const heads = s.MakeSum(p, r);
+///     // The number of legs is the sum of pheasants * 2 and rabbits * 4.
+///     IntExpr* const legs = s.MakeSum(s.MakeProd(p, 2), s.MakeProd(r, 4));
+///     // Constraints: the number of legs is 56 and heads is 20.
 ///     Constraint* const ct_legs = s.MakeEquality(legs, 56);
 ///     Constraint* const ct_heads = s.MakeEquality(heads, 20);
 ///     s.AddConstraint(ct_legs);
@@ -71,6 +76,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/random/distributions.h"
@@ -84,13 +90,15 @@
 #include "ortools/base/map_util.h"
 #include "ortools/base/sysinfo.h"
 #include "ortools/base/timer.h"
+#include "ortools/constraint_solver/routing_parameters.pb.h"
+#include "ortools/constraint_solver/search_stats.pb.h"
 #include "ortools/constraint_solver/solver_parameters.pb.h"
 #include "ortools/util/piecewise_linear_function.h"
 #include "ortools/util/sorted_interval_list.h"
 #include "ortools/util/tuple_set.h"
 
 #if !defined(SWIG)
-DECLARE_int64(cp_random_seed);
+ABSL_DECLARE_FLAG(int64, cp_random_seed);
 #endif  // !defined(SWIG)
 
 class File;
@@ -126,6 +134,7 @@ class IntervalVarAssignment;
 class IntervalVarElement;
 class IntVarLocalSearchFilter;
 class LocalSearchFilter;
+class LocalSearchFilterManager;
 class LocalSearchOperator;
 class LocalSearchPhaseParameters;
 class ModelCache;
@@ -141,6 +150,7 @@ class RevBitSet;
 class RegularLimit;
 class RegularLimitParameters;
 class Search;
+class ImprovementSearchLimit;
 class SearchLimit;
 class SearchMonitor;
 class SequenceVar;
@@ -156,9 +166,9 @@ template <class T>
 class SimpleRevFIFO;
 
 inline int64 CpRandomSeed() {
-  return FLAGS_cp_random_seed == -1
+  return absl::GetFlag(FLAGS_cp_random_seed) == -1
              ? absl::Uniform<int64>(absl::BitGen(), 0, kint64max)
-             : FLAGS_cp_random_seed;
+             : absl::GetFlag(FLAGS_cp_random_seed);
 }
 
 /// This struct holds all parameters for the default search.
@@ -257,7 +267,7 @@ class Solver {
   };
 
   /// Number of priorities for demons.
-  static const int kNumPriorities = 3;
+  static constexpr int kNumPriorities = 3;
 
   /// This enum describes the strategy used to select the next branching
   /// variable at each node during the search.
@@ -1665,7 +1675,7 @@ class Solver {
   Constraint* MakePathTransitPrecedenceConstraint(
       std::vector<IntVar*> nexts, std::vector<IntVar*> transits,
       const std::vector<std::pair<int, int>>& precedences);
-#endif
+#endif  // !SWIG
   /// This constraint maps the domain of 'var' onto the array of
   /// variables 'actives'. That is
   /// for all i in [0 .. size - 1]: actives[i] == 1 <=> var->Contains(i);
@@ -1707,7 +1717,7 @@ class Solver {
   /// Compatibility layer for Python API.
   Constraint* MakeAllowedAssignments(
       const std::vector<IntVar*>& vars,
-      const std::vector<std::vector<int64>>& raw_tuples) {
+      const std::vector<std::vector<int64> /*keep for swig*/>& raw_tuples) {
     IntTupleSet tuples(vars.size());
     tuples.InsertAll(raw_tuples);
     return MakeAllowedAssignments(vars, tuples);
@@ -1715,7 +1725,7 @@ class Solver {
 
   Constraint* MakeTransitionConstraint(
       const std::vector<IntVar*>& vars,
-      const std::vector<std::vector<int64>>& raw_transitions,
+      const std::vector<std::vector<int64> /*keep for swig*/>& raw_transitions,
       int64 initial_state, const std::vector<int>& final_states) {
     IntTupleSet transitions(3);
     transitions.InsertAll(raw_transitions);
@@ -2193,9 +2203,16 @@ class Solver {
   /// failures.
   SearchMonitor* MakeConstantRestart(int frequency);
 
-  /// Creates a search limit that constrains the running time given in
-  /// milliseconds.
-  RegularLimit* MakeTimeLimit(int64 time_in_ms);
+  /// Creates a search limit that constrains the running time.
+  RegularLimit* MakeTimeLimit(absl::Duration time);
+#if !defined(SWIG)
+  ABSL_DEPRECATED("Use the version taking absl::Duration() as argument")
+#endif  // !defined(SWIG)
+  RegularLimit* MakeTimeLimit(int64 time_in_ms) {
+    return MakeTimeLimit(time_in_ms == kint64max
+                             ? absl::InfiniteDuration()
+                             : absl::Milliseconds(time_in_ms));
+  }
 
   /// Creates a search limit that constrains the number of branches
   /// explored in the search tree.
@@ -2210,20 +2227,21 @@ class Solver {
   RegularLimit* MakeSolutionsLimit(int64 solutions);
 
   /// Limits the search with the 'time', 'branches', 'failures' and
-  /// 'solutions' limits.
-  RegularLimit* MakeLimit(int64 time, int64 branches, int64 failures,
-                          int64 solutions);
-  /// Version reducing calls to wall timer by estimating number of remaining
-  /// calls.
-  RegularLimit* MakeLimit(int64 time, int64 branches, int64 failures,
-                          int64 solutions, bool smart_time_check);
-  /// Creates a search limit which can either apply cumulatively or
-  /// search-by-search.
-  RegularLimit* MakeLimit(int64 time, int64 branches, int64 failures,
-                          int64 solutions, bool smart_time_check,
-                          bool cumulative);
+  /// 'solutions' limits. 'smart_time_check' reduces the calls to the wall
+  // timer by estimating the number of remaining calls, and 'cumulative' means
+  // that the limit applies cumulatively, instead of search-by-search.
+  RegularLimit* MakeLimit(absl::Duration time, int64 branches, int64 failures,
+                          int64 solutions, bool smart_time_check = false,
+                          bool cumulative = false);
   /// Creates a search limit from its protobuf description
   RegularLimit* MakeLimit(const RegularLimitParameters& proto);
+
+#if !defined(SWIG)
+  ABSL_DEPRECATED("Use other MakeLimit() versions")
+#endif  // !defined(SWIG)
+  RegularLimit* MakeLimit(int64 time, int64 branches, int64 failures,
+                          int64 solutions, bool smart_time_check = false,
+                          bool cumulative = false);
 
   /// Creates a regular limit proto containing default values.
   RegularLimitParameters MakeDefaultRegularLimitParameters() const;
@@ -2233,6 +2251,15 @@ class Solver {
   /// argument limits.
   SearchLimit* MakeLimit(SearchLimit* const limit_1,
                          SearchLimit* const limit_2);
+
+  /// Limits the search based on the improvements of 'objective_var'. Stops the
+  /// search when the improvement rate gets lower than a threshold value. This
+  /// threshold value is computed based on the improvement rate during the first
+  /// phase of the search.
+  ImprovementSearchLimit* MakeImprovementLimit(
+      IntVar* objective_var, bool maximize, double objective_scaling_factor,
+      double objective_offset, double improvement_rate_coefficient,
+      int improvement_rate_solutions_distance);
 
   /// Callback-based search limit. Search stops when limiter returns true; if
   /// this happens at a leaf the corresponding solution will be rejected.
@@ -2281,8 +2308,12 @@ class Solver {
     double scaling_factor = 1.0;
     double offset = 0;
     /// SearchMonitors will display the result of display_callback at each new
-    /// solution found.
+    /// solution found and when the search finishes if
+    /// display_on_new_solutions_only is false.
     std::function<std::string()> display_callback;
+    /// To be used to protect from cases where display_callback assumes
+    /// variables are instantiated, which only happens in AtSolution().
+    bool display_on_new_solutions_only = true;
   };
   SearchMonitor* MakeSearchLog(SearchLogParameters parameters);
 
@@ -2640,6 +2671,17 @@ class Solver {
   LocalSearchOperator* RandomConcatenateOperators(
       const std::vector<LocalSearchOperator*>& ops, int32 seed);
 
+  /// Creates a local search operator which concatenates a vector of operators.
+  /// Uses Multi-Armed Bandit approach for choosing the next operator to use.
+  /// Sorts operators based on Upper Confidence Bound Algorithm which evaluates
+  /// each operator as sum of average improvement and exploration function.
+  ///
+  /// Updates the order of operators when accepts a neighbor with objective
+  /// improvement.
+  LocalSearchOperator* MultiArmedBanditConcatenateOperators(
+      const std::vector<LocalSearchOperator*>& ops, double memory_coefficient,
+      double exploration_coefficient, bool maximize);
+
   /// Creates a local search operator that wraps another local search
   /// operator and limits the number of neighbors explored (i.e., calls
   /// to MakeNextNeighbor from the current solution (between two calls
@@ -2704,7 +2746,7 @@ class Solver {
   LocalSearchPhaseParameters* MakeLocalSearchPhaseParameters(
       IntVar* objective, LocalSearchOperator* const ls_operator,
       DecisionBuilder* const sub_decision_builder, RegularLimit* const limit,
-      const std::vector<LocalSearchFilter*>& filters);
+      LocalSearchFilterManager* filter_manager);
 
   LocalSearchPhaseParameters* MakeLocalSearchPhaseParameters(
       IntVar* objective, SolutionPool* const pool,
@@ -2718,7 +2760,7 @@ class Solver {
       IntVar* objective, SolutionPool* const pool,
       LocalSearchOperator* const ls_operator,
       DecisionBuilder* const sub_decision_builder, RegularLimit* const limit,
-      const std::vector<LocalSearchFilter*>& filters);
+      LocalSearchFilterManager* filter_manager);
 
   /// Local Search Filters
   LocalSearchFilter* MakeAcceptFilter();
@@ -2803,9 +2845,15 @@ class Solver {
   void ExportProfilingOverview(const std::string& filename);
 
   /// Returns local search profiling information in a human readable format.
-  // TODO(user): Add a profiling protocol buffer and merge demon and local
-  /// search profiles.
+  // TODO(user): Merge demon and local search profiles.
   std::string LocalSearchProfile() const;
+
+#if !defined(SWIG)
+  /// Returns detailed cp search statistics.
+  ConstraintSolverStatistics GetConstraintSolverStatistics() const;
+  /// Returns detailed local search statistics.
+  LocalSearchStatistics GetLocalSearchStatistics() const;
+#endif  // !defined(SWIG)
 
   /// Returns true whether the current search has been
   /// created using a Solve() call instead of a NewSearch one. It
@@ -3254,7 +3302,7 @@ class Demon : public BaseObject {
  public:
   /// This indicates the priority of a demon. Immediate demons are treated
   /// separately and corresponds to variables.
-  Demon() : stamp_(GG_ULONGLONG(0)) {}
+  Demon() : stamp_(uint64_t{0}) {}
   ~Demon() override {}
 
   /// This is the main callback of the demon.
@@ -3586,7 +3634,7 @@ class CastConstraint : public Constraint {
 /// A search monitor is a simple set of callbacks to monitor all search events
 class SearchMonitor : public BaseObject {
  public:
-  static const int kNoProgress = -1;
+  static constexpr int kNoProgress = -1;
 
   explicit SearchMonitor(Solver* const s) : solver_(s) {}
   ~SearchMonitor() override {}
@@ -4242,7 +4290,7 @@ class RegularLimit : public SearchLimit {
   bool Check() override;
   void Init() override;
   void ExitSearch() override;
-  void UpdateLimits(int64 time, int64 branches, int64 failures,
+  void UpdateLimits(absl::Duration time, int64 branches, int64 failures,
                     int64 solutions);
   absl::Duration duration_limit() const { return duration_limit_; }
   int64 wall_time() const {
@@ -4291,6 +4339,46 @@ class RegularLimit : public SearchLimit {
   /// - within a search, it's an offset to be subtracted from the current value
   /// - outside of search, it's the amount consumed in previous searches
   bool cumulative_;
+};
+
+// Limit based on the improvement rate of 'objective_var'.
+// This limit proceeds in two stages:
+// 1) During the phase of the search in which the objective_var is strictly
+// improving, a threshold value is computed as the minimum improvement rate of
+// the objective, based on the 'improvement_rate_coefficient' and
+// 'improvement_rate_solutions_distance' parameters.
+// 2) Then, if the search continues beyond this phase of strict improvement, the
+// limit stops the search when the improvement rate of the objective gets below
+// this threshold value.
+class ImprovementSearchLimit : public SearchLimit {
+ public:
+  ImprovementSearchLimit(Solver* const s, IntVar* objective_var, bool maximize,
+                         double objective_scaling_factor,
+                         double objective_offset,
+                         double improvement_rate_coefficient,
+                         int improvement_rate_solutions_distance);
+  ~ImprovementSearchLimit() override;
+  void Copy(const SearchLimit* const limit) override;
+  SearchLimit* MakeClone() const override;
+  bool Check() override;
+  bool AtSolution() override;
+  void Init() override;
+
+ private:
+  IntVar* objective_var_;
+  bool maximize_;
+  double objective_scaling_factor_;
+  double objective_offset_;
+  double improvement_rate_coefficient_;
+  int improvement_rate_solutions_distance_;
+
+  double best_objective_;
+  // clang-format off
+  std::deque<std::pair<double, int64> > improvements_;
+  // clang-format on
+  double threshold_;
+  bool objective_updated_;
+  bool gradient_stage_;
 };
 
 /// Interval variables are often used in scheduling. The main characteristics
@@ -4794,7 +4882,7 @@ class AssignmentContainer {
   }
   void Clear() {
     elements_.clear();
-    if (!elements_map_.empty()) {  /// 2x speedup on OR-tools.
+    if (!elements_map_.empty()) {  /// 2x speedup on OR-Tools.
       elements_map_.clear();
     }
   }

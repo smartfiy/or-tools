@@ -13,7 +13,8 @@
 
 #include <string>
 
-#include "ortools/base/commandlineflags.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "ortools/base/logging.h"
 #include "ortools/linear_solver/linear_solver.h"
 #include "ortools/linear_solver/linear_solver.pb.h"
@@ -99,7 +100,8 @@ void RunAllExamples() {
 }  // namespace operations_research
 
 int main(int argc, char** argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
+  absl::ParseCommandLine(argc, argv);
   operations_research::RunAllExamples();
   return EXIT_SUCCESS;
 }

@@ -23,6 +23,7 @@
 
 #include <memory>
 
+#include "ortools/base/strong_vector.h"
 #include "ortools/glop/parameters.pb.h"
 #include "ortools/glop/revised_simplex.h"
 #include "ortools/lp_data/lp_data.h"
@@ -421,6 +422,11 @@ class SingletonPreprocessor : public Preprocessor {
   void UpdateConstraintBoundsWithVariableBounds(MatrixEntry e,
                                                 LinearProgram* lp);
 
+  // Checks if all other variables in the constraint are integer and the
+  // coefficients are divisible by the coefficient of the singleton variable.
+  bool IntegerSingletonColumnIsRemovable(const MatrixEntry& matrix_entry,
+                                         const LinearProgram& lp) const;
+
   // A singleton column with a cost of zero can always be removed by changing
   // the corresponding constraint bounds to take into acount the bound of this
   // singleton column.
@@ -459,9 +465,11 @@ class SingletonPreprocessor : public Preprocessor {
 
   // This is used as a "cache" by MakeConstraintAnEqualityIfPossible() to avoid
   // scanning more than once each row. See the code to see how this is used.
-  gtl::ITIVector<RowIndex, bool> row_sum_is_cached_;
-  gtl::ITIVector<RowIndex, SumWithNegativeInfiniteAndOneMissing> row_lb_sum_;
-  gtl::ITIVector<RowIndex, SumWithPositiveInfiniteAndOneMissing> row_ub_sum_;
+  absl::StrongVector<RowIndex, bool> row_sum_is_cached_;
+  absl::StrongVector<RowIndex, SumWithNegativeInfiniteAndOneMissing>
+      row_lb_sum_;
+  absl::StrongVector<RowIndex, SumWithPositiveInfiniteAndOneMissing>
+      row_ub_sum_;
 
   // The columns that are deleted by this preprocessor.
   SparseMatrix deleted_columns_;

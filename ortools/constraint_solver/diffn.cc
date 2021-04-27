@@ -18,7 +18,6 @@
 #include "absl/strings/str_format.h"
 #include "ortools/base/hash.h"
 #include "ortools/base/int_type.h"
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/constraint_solver/constraint_solver.h"

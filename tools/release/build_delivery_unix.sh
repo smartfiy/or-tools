@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-set -x
-set -e
+set -euxo pipefail
 
-if [ ! -f "$DOTNET_SNK" ]; then
+if [[ -z "${DOTNET_SNK}" ]]; then
   echo "DOTNET_SNK: not found !" | tee build.log
   exit 1
 fi
@@ -20,17 +19,42 @@ command -v gcc | xargs echo "gcc: " | tee -a build.log
 command -v cmake | xargs echo "cmake: " | tee -a build.log
 command -v make | xargs echo "make: " | tee -a build.log
 command -v swig | xargs echo "swig: " | tee -a build.log
+
 # python
 command -v python3 | xargs echo "python3: " | tee -a build.log
+
 # java
-echo "JAVA_HOME: ${JAVA_HOME}" | tee -a build.log
-command -v java | xargs echo "java: " | tee -a build.log
-command -v javac | xargs echo "javac: " | tee -a build.log
-command -v jar | xargs echo "jar: " | tee -a build.log
+# maven require JAVA_HOME
+if [[ -z "${JAVA_HOME}" ]]; then
+  echo "JAVA_HOME: not found !" | tee build.log
+  exit 1
+else
+  echo "JAVA_HOME: ${JAVA_HOME}" | tee -a build.log
+  command -v java | xargs echo "java: " | tee -a build.log
+  command -v javac | xargs echo "javac: " | tee -a build.log
+  command -v jar | xargs echo "jar: " | tee -a build.log
+  command -v mvn | xargs echo "mvn: " | tee -a build.log
+fi
+
 # dotnet
 command -v dotnet | xargs echo "dotnet: " | tee -a build.log
 # dotnet
 command -v go | xargs echo "go: " | tee -a build.log
+
+###############################
+##  Build Examples Archives  ##
+###############################
+rm -rf temp ./*.tar.gz
+echo -n "Build examples archives..." | tee -a build.log
+echo -n "  C++ examples archive..." | tee -a build.log
+make cc_examples_archive UNIX_PYTHON_VER=3
+echo -n "  Python examples archive..." | tee -a build.log
+make python_examples_archive UNIX_PYTHON_VER=3
+echo -n "  Java examples archive..." | tee -a build.log
+make java_examples_archive UNIX_PYTHON_VER=3
+echo -n "  .Net examples archive..." | tee -a build.log
+make dotnet_examples_archive UNIX_PYTHON_VER=3
+echo "DONE" | tee -a build.log
 
 #########################
 ##  Build Third Party  ##
@@ -71,7 +95,6 @@ echo "DONE" | tee -a build.log
 #echo "make test_go: DONE" | tee -a build.log
 
 # Create Archive
-rm -rf temp ./*.tar.gz
 echo -n "Make archive..." | tee -a build.log
 make archive UNIX_PYTHON_VER=3
 echo "DONE" | tee -a build.log
@@ -84,10 +107,6 @@ make fz_archive UNIX_PYTHON_VER=3
 echo "DONE" | tee -a build.log
 echo -n "Test flatzinc archive..." | tee -a build.log
 make test_fz_archive UNIX_PYTHON_VER=3
-echo "DONE" | tee -a build.log
-
-echo -n "Make Python examples archive..." | tee -a build.log
-make python_examples_archive UNIX_PYTHON_VER=3
 echo "DONE" | tee -a build.log
 
 ################

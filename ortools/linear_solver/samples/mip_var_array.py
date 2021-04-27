@@ -13,9 +13,7 @@
 """MIP example that uses a variable array."""
 # [START program]
 # [START import]
-from __future__ import print_function
 from ortools.linear_solver import pywraplp
-
 # [END import]
 
 
@@ -36,7 +34,6 @@ def create_data_model():
     data['num_constraints'] = 4
     return data
 
-
 # [END data_model]
 
 
@@ -46,10 +43,8 @@ def main():
     # [END data]
     # [END program_part1]
     # [START solver]
-    # Create the mip solver with the CBC backend.
-    solver = pywraplp.Solver('simple_mip_program',
-                             pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
-    # [END solver]
+    # Create the mip solver with the SCIP backend.
+    solver = pywraplp.Solver.CreateSolver('SCIP')
 
     # [START program_part2]
     # [START variables]

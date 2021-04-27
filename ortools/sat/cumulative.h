@@ -37,7 +37,7 @@ namespace sat {
 // the sum of the demands of all the tasks that overlap any time point cannot
 // exceed the capacity of the resource.
 //
-// This constraint assumes that an interval can be optional or have a duration
+// This constraint assumes that an interval can be optional or have a size
 // of zero. The demands and the capacity can be any non-negative number.
 //
 // Optimization: If one already have an helper constructed from the interval
@@ -53,6 +53,12 @@ std::function<void(Model*)> Cumulative(
 // This constraint assumes that task demands and the resource capacity are fixed
 // to non-negative number.
 std::function<void(Model*)> CumulativeTimeDecomposition(
+    const std::vector<IntervalVariable>& vars,
+    const std::vector<AffineExpression>& demands, AffineExpression capacity,
+    SchedulingConstraintHelper* helper = nullptr);
+
+// Another testing code, same assumptions as the CumulativeTimeDecomposition().
+std::function<void(Model*)> CumulativeUsingReservoir(
     const std::vector<IntervalVariable>& vars,
     const std::vector<AffineExpression>& demands, AffineExpression capacity,
     SchedulingConstraintHelper* helper = nullptr);

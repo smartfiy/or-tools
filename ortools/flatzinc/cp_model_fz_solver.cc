@@ -33,6 +33,7 @@
 #include "ortools/flatzinc/model.h"
 #include "ortools/sat/cp_constraints.h"
 #include "ortools/sat/cp_model.pb.h"
+#include "ortools/sat/cp_model_checker.h"
 #include "ortools/sat/cp_model_search.h"
 #include "ortools/sat/cp_model_solver.h"
 #include "ortools/sat/cp_model_utils.h"
@@ -46,7 +47,9 @@
 #include "ortools/sat/sat_solver.h"
 #include "ortools/sat/table.h"
 
-DEFINE_bool(use_flatzinc_format, true, "Output uses the flatzinc format");
+ABSL_FLAG(bool, use_flatzinc_format, true, "Output uses the flatzinc format");
+ABSL_FLAG(int64, fz_int_max, int64{1} << 50,
+          "Default max value for unbounded integer variables.");
 
 namespace operations_research {
 namespace sat {
@@ -139,7 +142,6 @@ std::vector<int> CpModelProtoWithMapping::LookupVars(
     for (int64 value : argument.values) {
       result.push_back(LookupConstant(value));
     }
-
   } else if (argument.type == fz::Argument::INT_VALUE) {
     result.push_back(LookupConstant(argument.Value()));
   } else {
@@ -461,8 +463,8 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
       arg->set_target(LookupVar(fz_ct.arguments[2]));
 
       if (!absl::EndsWith(fz_ct.type, "_nonshifted")) {
-        // Add a dummy variable at position zero because flatzinc index start at
-        // 1.
+        // Add a dummy variable at position zero because flatzinc index start
+        // at 1.
         // TODO(user): Make sure that zero is not in the index domain...
         arg->add_vars(arg->target());
       }
@@ -494,11 +496,11 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
         }
       }
     }
-  } else if (fz_ct.type == "table_int") {
+  } else if (fz_ct.type == "ortools_table_int") {
     auto* arg = ct->mutable_table();
     for (const int var : LookupVars(fz_ct.arguments[0])) arg->add_vars(var);
     for (const int64 value : fz_ct.arguments[1].values) arg->add_values(value);
-  } else if (fz_ct.type == "regular") {
+  } else if (fz_ct.type == "ortools_regular") {
     auto* arg = ct->mutable_automaton();
     for (const int var : LookupVars(fz_ct.arguments[0])) arg->add_vars(var);
 
@@ -539,29 +541,40 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
         LOG(FATAL) << "Wrong constraint " << fz_ct.DebugString();
       }
     }
-  } else if (fz_ct.type == "all_different_int") {
+  } else if (fz_ct.type == "fzn_all_different_int") {
     auto* arg = ct->mutable_all_diff();
     for (const int var : LookupVars(fz_ct.arguments[0])) arg->add_vars(var);
-  } else if (fz_ct.type == "circuit" || fz_ct.type == "subcircuit") {
+  } else if (fz_ct.type == "fzn_circuit" || fz_ct.type == "fzn_subcircuit") {
     // Try to auto-detect if it is zero or one based.
     bool found_zero = false;
     bool found_size = false;
-    const int size = fz_ct.arguments[0].variables.size();
-    for (fz::IntegerVariable* const var : fz_ct.arguments[0].variables) {
-      if (var->domain.Min() == 0) found_zero = true;
-      if (var->domain.Max() == size) found_size = true;
+    int64 size = 0;
+    if (fz_ct.arguments[0].variables.empty() &&
+        !fz_ct.arguments[0].values.empty()) {
+      // Fully instantiated (sub)circuit constraints.
+      size = fz_ct.arguments[0].values.size();
+      for (const int64 value : fz_ct.arguments[0].values) {
+        if (value == 0) found_zero = true;
+        if (value == size) found_size = true;
+      }
+    } else {
+      size = fz_ct.arguments[0].variables.size();
+      for (fz::IntegerVariable* const var : fz_ct.arguments[0].variables) {
+        if (var->domain.Min() == 0) found_zero = true;
+        if (var->domain.Max() == size) found_size = true;
+      }
     }
-    const bool is_one_based = !found_zero || found_size;
-    const int min_index = is_one_based ? 1 : 0;
-    const int max_index = min_index + fz_ct.arguments[0].variables.size() - 1;
 
+    const bool is_one_based = !found_zero || found_size;
+    const int64 min_index = is_one_based ? 1 : 0;
+    const int64 max_index = min_index + size - 1;
     // The arc-based mutable circuit.
     auto* circuit_arg = ct->mutable_circuit();
 
     // We fully encode all variables so we can use the literal based circuit.
     // TODO(user): avoid fully encoding more than once?
-    int index = min_index;
-    const bool is_circuit = (fz_ct.type == "circuit");
+    int64 index = min_index;
+    const bool is_circuit = (fz_ct.type == "fzn_circuit");
     for (const int var : LookupVars(fz_ct.arguments[0])) {
       Domain domain = ReadDomainFromProto(proto.variables(var));
 
@@ -615,7 +628,7 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
 
       ++index;
     }
-  } else if (fz_ct.type == "inverse") {
+  } else if (fz_ct.type == "fzn_inverse") {
     auto* arg = ct->mutable_inverse();
 
     const auto direct_variables = LookupVars(fz_ct.arguments[0]);
@@ -659,7 +672,7 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
               .IntersectionWith(Domain(offset, num_variables - 1 + offset)),
           proto.mutable_variables(var));
     }
-  } else if (fz_ct.type == "cumulative") {
+  } else if (fz_ct.type == "fzn_cumulative") {
     const std::vector<int> starts = LookupVars(fz_ct.arguments[0]);
     const std::vector<int> durations = LookupVars(fz_ct.arguments[1]);
     const std::vector<int> demands = LookupVars(fz_ct.arguments[2]);
@@ -668,8 +681,8 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
     auto* arg = ct->mutable_cumulative();
     arg->set_capacity(capacity);
     for (int i = 0; i < starts.size(); ++i) {
-      // Special case for a 0-1 demand, we mark the interval as optional instead
-      // and fix the demand to 1.
+      // Special case for a 0-1 demand, we mark the interval as optional
+      // instead and fix the demand to 1.
       if (proto.variables(demands[i]).domain().size() == 2 &&
           proto.variables(demands[i]).domain(0) == 0 &&
           proto.variables(demands[i]).domain(1) == 1 &&
@@ -682,7 +695,7 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
         arg->add_demands(demands[i]);
       }
     }
-  } else if (fz_ct.type == "diffn" || fz_ct.type == "diffn_nonstrict") {
+  } else if (fz_ct.type == "fzn_diffn" || fz_ct.type == "fzn_diffn_nonstrict") {
     const std::vector<int> x = LookupVars(fz_ct.arguments[0]);
     const std::vector<int> y = LookupVars(fz_ct.arguments[1]);
     const std::vector<int> dx = LookupVars(fz_ct.arguments[2]);
@@ -694,12 +707,13 @@ void CpModelProtoWithMapping::FillConstraint(const fz::Constraint& fz_ct,
       arg->add_x_intervals(x_intervals[i]);
       arg->add_y_intervals(y_intervals[i]);
     }
-    arg->set_boxes_with_null_area_can_overlap(fz_ct.type == "diffn_nonstrict");
-  } else if (fz_ct.type == "network_flow" ||
-             fz_ct.type == "network_flow_cost") {
+    arg->set_boxes_with_null_area_can_overlap(fz_ct.type ==
+                                              "fzn_diffn_nonstrict");
+  } else if (fz_ct.type == "ortools_network_flow" ||
+             fz_ct.type == "ortools_network_flow_cost") {
     // Note that we leave ct empty here (with just the name set).
     // We simply do a linear encoding of this constraint.
-    const bool has_cost = fz_ct.type == "network_flow_cost";
+    const bool has_cost = fz_ct.type == "ortools_network_flow_cost";
     const std::vector<int> flow = LookupVars(fz_ct.arguments[has_cost ? 3 : 2]);
 
     // Flow conservation constraints.
@@ -913,7 +927,7 @@ std::string SolutionString(
     std::string result =
         absl::StrCat(output.name, " = array", bound_size, "d(");
     for (int i = 0; i < bound_size; ++i) {
-      if (output.bounds[i].max_value != 0) {
+      if (output.bounds[i].max_value >= output.bounds[i].min_value) {
         absl::StrAppend(&result, output.bounds[i].min_value, "..",
                         output.bounds[i].max_value, ", ");
       } else {
@@ -978,7 +992,7 @@ void OutputFlatzincStats(const CpSolverResponse& response) {
 void SolveFzWithCpModelProto(const fz::Model& fz_model,
                              const fz::FlatzincSatParameters& p,
                              const std::string& sat_params) {
-  if (!FLAGS_use_flatzinc_format) {
+  if (!absl::GetFlag(FLAGS_use_flatzinc_format)) {
     LOG(INFO) << "*** Starting translation to CP-SAT";
   } else if (p.verbose_logging) {
     FZLOG << "*** Starting translation to CP-SAT" << FZENDL;
@@ -987,8 +1001,9 @@ void SolveFzWithCpModelProto(const fz::Model& fz_model,
   CpModelProtoWithMapping m;
   m.proto.set_name(fz_model.name());
 
-  // The translation is easy, we create one variable per flatzinc variable, plus
-  // eventually a bunch of constant variables that will be created lazily.
+  // The translation is easy, we create one variable per flatzinc variable,
+  // plus eventually a bunch of constant variables that will be created
+  // lazily.
   int num_variables = 0;
   for (fz::IntegerVariable* fz_var : fz_model.variables()) {
     if (!fz_var->active) continue;
@@ -997,8 +1012,16 @@ void SolveFzWithCpModelProto(const fz::Model& fz_model,
     var->set_name(fz_var->name);
     if (fz_var->domain.is_interval) {
       if (fz_var->domain.values.empty()) {
-        var->add_domain(kint64min);
-        var->add_domain(kint64max);
+        // The CP-SAT solver checks that constraints cannot overflow during
+        // their propagation. Because of that, we trim undefined variable
+        // domains (i.e. int in minizinc) to something hopefully large enough.
+        LOG_FIRST_N(WARNING, 1)
+            << "Using flag --fz_int_max for unbounded integer variables.";
+        LOG_FIRST_N(WARNING, 1)
+            << "    actual domain is [" << -absl::GetFlag(FLAGS_fz_int_max)
+            << ".." << absl::GetFlag(FLAGS_fz_int_max) << "]";
+        var->add_domain(-absl::GetFlag(FLAGS_fz_int_max));
+        var->add_domain(absl::GetFlag(FLAGS_fz_int_max));
       } else {
         var->add_domain(fz_var->domain.values[0]);
         var->add_domain(fz_var->domain.values[1]);
@@ -1006,16 +1029,6 @@ void SolveFzWithCpModelProto(const fz::Model& fz_model,
     } else {
       FillDomainInProto(Domain::FromValues(fz_var->domain.values), var);
     }
-
-    // Some variables in flatzinc have large domain and we don't really support
-    // that in cp_model (where all the constraint checks that they cannot
-    // overflow during their propagation). Because of that, we intersect the
-    // variable domains with [kint32min, kint32max].
-    //
-    // TODO(user): Warn when we reduce the domain.
-    FillDomainInProto(ReadDomainFromProto(*var).IntersectionWith(
-                          Domain(kint32min, kint32max)),
-                      var);
   }
 
   // Translate the constraints.
@@ -1049,7 +1062,7 @@ void SolveFzWithCpModelProto(const fz::Model& fz_model,
   m.TranslateSearchAnnotations(fz_model.search_annotations());
 
   // Print model statistics.
-  if (FLAGS_use_flatzinc_format && p.verbose_logging) {
+  if (absl::GetFlag(FLAGS_use_flatzinc_format) && p.verbose_logging) {
     LogInFlatzincFormat(CpModelStats(m.proto));
   }
 
@@ -1089,14 +1102,14 @@ void SolveFzWithCpModelProto(const fz::Model& fz_model,
 
   // We only need an observer if 'p.all_solutions' is true.
   std::function<void(const CpSolverResponse&)> solution_observer = nullptr;
-  if (p.display_all_solutions && FLAGS_use_flatzinc_format) {
+  if (p.display_all_solutions && absl::GetFlag(FLAGS_use_flatzinc_format)) {
     solution_observer = [&fz_model, &m, &p](const CpSolverResponse& r) {
       const std::string solution_string =
           SolutionString(fz_model, [&m, &r](fz::IntegerVariable* v) {
             return r.solution(gtl::FindOrDie(m.fz_var_to_index, v));
           });
       std::cout << solution_string << std::endl;
-      if (p.display_statistics && FLAGS_use_flatzinc_format) {
+      if (p.display_statistics && absl::GetFlag(FLAGS_use_flatzinc_format)) {
         OutputFlatzincStats(r);
       }
       std::cout << "----------" << std::endl;
@@ -1119,7 +1132,7 @@ void SolveFzWithCpModelProto(const fz::Model& fz_model,
   }
 
   // Output the solution in the flatzinc official format.
-  if (FLAGS_use_flatzinc_format) {
+  if (absl::GetFlag(FLAGS_use_flatzinc_format)) {
     if (response.status() == CpSolverStatus::FEASIBLE ||
         response.status() == CpSolverStatus::OPTIMAL) {
       if (!p.display_all_solutions) {  // Already printed otherwise.
@@ -1135,10 +1148,18 @@ void SolveFzWithCpModelProto(const fz::Model& fz_model,
       }
     } else if (response.status() == CpSolverStatus::INFEASIBLE) {
       std::cout << "=====UNSATISFIABLE=====" << std::endl;
+    } else if (response.status() == CpSolverStatus::MODEL_INVALID) {
+      const std::string error_message = ValidateCpModel(m.proto);
+      VLOG(1) << "%% Error message = '" << error_message << "'";
+      if (absl::StrContains(error_message, "overflow")) {
+        std::cout << "=====OVERFLOW=====" << std::endl;
+      } else {
+        std::cout << "=====MODEL INVALID=====" << std::endl;
+      }
     } else {
       std::cout << "%% TIMEOUT" << std::endl;
     }
-    if (p.display_statistics && FLAGS_use_flatzinc_format) {
+    if (p.display_statistics && absl::GetFlag(FLAGS_use_flatzinc_format)) {
       OutputFlatzincStats(response);
     }
   }

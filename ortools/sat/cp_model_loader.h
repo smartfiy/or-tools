@@ -19,10 +19,10 @@
 
 #include "absl/container/flat_hash_set.h"
 #include "ortools/base/int_type.h"
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/map_util.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_utils.h"
 #include "ortools/sat/integer.h"
@@ -80,6 +80,13 @@ class CpModelMapping {
   // Automatically detect optional variables.
   void DetectOptionalVariables(const CpModelProto& model_proto, Model* m);
 
+  // Experimental. Loads the symmetry form the proto symmetry field, as long as
+  // they only involve Booleans.
+  //
+  // TODO(user): We currently only have the code for Booleans, it is why we
+  // currently ignore symmetries involving integer variables.
+  void LoadBooleanSymmetries(const CpModelProto& model_proto, Model* m);
+
   // Extract the encodings (IntegerVariable <-> Booleans) present in the model.
   // This effectively load some linear constraints of size 1 that will be marked
   // as already loaded.
@@ -116,6 +123,18 @@ class CpModelMapping {
     DCHECK(IsInteger(ref));
     const IntegerVariable var = integers_[PositiveRef(ref)];
     return RefIsPositive(ref) ? var : NegationOf(var);
+  }
+
+  // TODO(user): We could "easily" create an intermediate variable for more
+  // complex linear expression. We could also identify duplicate expressions to
+  // not create two identical integer variable.
+  AffineExpression LoadAffineView(const LinearExpressionProto& exp) const {
+    CHECK_LE(exp.vars().size(), 1);
+    if (exp.vars().empty()) {
+      return AffineExpression(IntegerValue(exp.offset()));
+    }
+    return AffineExpression(Integer(exp.vars(0)), IntegerValue(exp.coeffs(0)),
+                            IntegerValue(exp.offset()));
   }
 
   IntervalVariable Interval(int i) const {
@@ -215,8 +234,8 @@ class CpModelMapping {
   // Recover from a IntervalVariable/BooleanVariable its associated CpModelProto
   // index. The value of -1 is used to indicate that there is no correspondence
   // (i.e. this variable is only used internally).
-  gtl::ITIVector<BooleanVariable, int> reverse_boolean_map_;
-  gtl::ITIVector<IntegerVariable, int> reverse_integer_map_;
+  absl::StrongVector<BooleanVariable, int> reverse_boolean_map_;
+  absl::StrongVector<IntegerVariable, int> reverse_integer_map_;
 
   // Set of constraints to ignore because they were already dealt with by
   // ExtractEncoding().
@@ -245,6 +264,7 @@ bool LoadConstraint(const ConstraintProto& ct, Model* m);
 void LoadBoolOrConstraint(const ConstraintProto& ct, Model* m);
 void LoadBoolAndConstraint(const ConstraintProto& ct, Model* m);
 void LoadAtMostOneConstraint(const ConstraintProto& ct, Model* m);
+void LoadExactlyOneConstraint(const ConstraintProto& ct, Model* m);
 void LoadBoolXorConstraint(const ConstraintProto& ct, Model* m);
 void LoadLinearConstraint(const ConstraintProto& ct, Model* m);
 void LoadAllDiffConstraint(const ConstraintProto& ct, Model* m);
@@ -256,6 +276,7 @@ void LoadIntMaxConstraint(const ConstraintProto& ct, Model* m);
 void LoadNoOverlapConstraint(const ConstraintProto& ct, Model* m);
 void LoadNoOverlap2dConstraint(const ConstraintProto& ct, Model* m);
 void LoadCumulativeConstraint(const ConstraintProto& ct, Model* m);
+void LoadReservoirConstraint(const ConstraintProto& ct, Model* m);
 void LoadElementConstraintBounds(const ConstraintProto& ct, Model* m);
 void LoadElementConstraintAC(const ConstraintProto& ct, Model* m);
 void LoadElementConstraint(const ConstraintProto& ct, Model* m);

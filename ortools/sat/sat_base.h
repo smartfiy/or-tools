@@ -25,10 +25,10 @@
 #include "absl/strings/str_format.h"
 #include "absl/types/span.h"
 #include "ortools/base/int_type.h"
-#include "ortools/base/int_type_indexed_vector.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/macros.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/model.h"
 #include "ortools/util/bitset.h"
 
@@ -193,11 +193,10 @@ struct AssignmentInfo {
   // LBD computation, the literal of the conflict are already ordered by level,
   // so we could do it fairly efficiently.
   //
-  // TODO(user): We currently don't support more than 134M decision levels. That
+  // TODO(user): We currently don't support more than 2^28 decision levels. That
   // should be enough for most practical problem, but we should fail properly if
   // this limit is reached.
-  bool last_polarity : 1;
-  uint32 level : 27;
+  uint32 level : 28;
 
   // The type of assignment (see AssignmentType below).
   //
@@ -213,19 +212,19 @@ struct AssignmentInfo {
                            trail_index);
   }
 };
-COMPILE_ASSERT(sizeof(AssignmentInfo) == 8,
-               ERROR_AssignmentInfo_is_not_well_compacted);
+static_assert(sizeof(AssignmentInfo) == 8,
+              "ERROR_AssignmentInfo_is_not_well_compacted");
 
 // Each literal on the trail will have an associated propagation "type" which is
 // either one of these special types or the id of a propagator.
 struct AssignmentType {
-  static const int kCachedReason = 0;
-  static const int kUnitReason = 1;
-  static const int kSearchDecision = 2;
-  static const int kSameReasonAs = 3;
+  static constexpr int kCachedReason = 0;
+  static constexpr int kUnitReason = 1;
+  static constexpr int kSearchDecision = 2;
+  static constexpr int kSameReasonAs = 3;
 
   // Propagator ids starts from there and are created dynamically.
-  static const int kFirstFreePropagationId = 4;
+  static constexpr int kFirstFreePropagationId = 4;
 };
 
 // The solver trail stores the assignment made by the solver in order.
@@ -251,7 +250,6 @@ class Trail {
   void Enqueue(Literal true_literal, int propagator_id) {
     DCHECK(!assignment_.VariableIsAssigned(true_literal.Variable()));
     trail_[current_info_.trail_index] = true_literal;
-    current_info_.last_polarity = true_literal.IsPositive();
     current_info_.type = propagator_id;
     info_[true_literal.Variable()] = current_info_;
     assignment_.AssignFromTrueLiteral(true_literal);
@@ -332,6 +330,14 @@ class Trail {
     return GetEmptyVectorToStoreReason(Index());
   }
 
+  // Explicitly overwrite the reason so that the given propagator will be
+  // asked for it. This is currently only used by the BinaryImplicationGraph.
+  void ChangeReason(int trail_index, int propagator_id) {
+    const BooleanVariable var = trail_[trail_index].Variable();
+    info_[var].type = propagator_id;
+    old_type_[var] = propagator_id;
+  }
+
   // Reverts the trail and underlying assignment to the given target trail
   // index. Note that we do not touch the assignment info.
   void Untrail(int target_trail_index) {
@@ -370,7 +376,7 @@ class Trail {
   int NumVariables() const { return trail_.size(); }
   int64 NumberOfEnqueues() const { return num_untrailed_enqueues_ + Index(); }
   int Index() const { return current_info_.trail_index; }
-  const Literal operator[](int index) const { return trail_[index]; }
+  const Literal& operator[](int index) const { return trail_[index]; }
   const VariablesAssignment& Assignment() const { return assignment_; }
   const AssignmentInfo& Info(BooleanVariable var) const {
     DCHECK_GE(var, 0);
@@ -388,21 +394,17 @@ class Trail {
     return result;
   }
 
-  void SetLastPolarity(BooleanVariable var, bool polarity) {
-    info_[var].last_polarity = polarity;
-  }
-
  private:
   int64 num_untrailed_enqueues_ = 0;
   AssignmentInfo current_info_;
   VariablesAssignment assignment_;
   std::vector<Literal> trail_;
   std::vector<Literal> conflict_;
-  gtl::ITIVector<BooleanVariable, AssignmentInfo> info_;
+  absl::StrongVector<BooleanVariable, AssignmentInfo> info_;
   SatClause* failing_sat_clause_;
 
   // Data used by EnqueueWithSameReasonAs().
-  gtl::ITIVector<BooleanVariable, BooleanVariable>
+  absl::StrongVector<BooleanVariable, BooleanVariable>
       reference_var_with_same_reason_as_;
 
   // Reason cache. Mutable since we want the API to be the same whether the
@@ -429,8 +431,9 @@ class Trail {
   // variables, the memory address of the vectors (kept in reasons_) are still
   // valid.
   mutable std::deque<std::vector<Literal>> reasons_repository_;
-  mutable gtl::ITIVector<BooleanVariable, absl::Span<const Literal>> reasons_;
-  mutable gtl::ITIVector<BooleanVariable, int> old_type_;
+  mutable absl::StrongVector<BooleanVariable, absl::Span<const Literal>>
+      reasons_;
+  mutable absl::StrongVector<BooleanVariable, int> old_type_;
 
   // This is used by RegisterPropagator() and Reason().
   std::vector<SatPropagator*> propagators_;

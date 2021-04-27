@@ -11,7 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ortools/base/commandlineflags.h"
+#include <cstdlib>
+
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
 #include "ortools/base/logging.h"
 #include "ortools/graph/ebert_graph.h"
 #include "ortools/graph/linear_assignment.h"
@@ -66,7 +69,8 @@ void AnotherAssignment() {
 }  // namespace operations_research
 
 int main(int argc, char** argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
+  absl::ParseCommandLine(argc, argv);
   operations_research::AssignmentOn4x4Matrix();
   operations_research::AnotherAssignment();
   return EXIT_SUCCESS;

@@ -3,39 +3,36 @@ FROM centos:8 AS env
 #############
 ##  SETUP  ##
 #############
-RUN yum -y update \
-&& yum -y groupinstall 'Development Tools' \
-&& yum -y install wget redhat-lsb-core pkgconfig autoconf libtool cmake zlib-devel which \
-&& yum clean all \
-&& rm -rf /var/cache/yum
-#pkgconfig
+RUN dnf -y update \
+&& dnf -y groupinstall 'Development Tools' \
+&& dnf -y install wget redhat-lsb-core pkgconfig autoconf libtool zlib-devel which \
+&& dnf clean all \
+&& rm -rf /var/cache/dnf
+
+# Install CMake 3.18.5
+RUN wget "https://cmake.org/files/v3.18/cmake-3.18.5-Linux-x86_64.sh" \
+&& chmod a+x cmake-3.18.5-Linux-x86_64.sh \
+&& ./cmake-3.18.5-Linux-x86_64.sh --prefix=/usr/local/ --skip-license \
+&& rm cmake-3.18.5-Linux-x86_64.sh
 
 # Install Swig
-RUN yum -y update \
-&& yum -y install swig \
-&& yum clean all \
-&& rm -rf /var/cache/yum
+RUN dnf -y update \
+&& dnf -y install swig \
+&& dnf clean all \
+&& rm -rf /var/cache/dnf
 
 # Install Java 8 SDK
-RUN yum -y update \
-&& yum -y install java-1.8.0-openjdk  java-1.8.0-openjdk-devel \
-&& yum clean all \
-&& rm -rf /var/cache/yum
+RUN dnf -y update \
+&& dnf -y install java-1.8.0-openjdk  java-1.8.0-openjdk-devel maven \
+&& dnf clean all \
+&& rm -rf /var/cache/dnf
 
 # Install dotnet
-# Currently centos package is broken
-# see: https://developercommunity.visualstudio.com/content/problem/990297/centos-8-dotnet-sdk-dont-provide-the-sdk.html
-## see https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-centos7
-#RUN rpm -Uvh "https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm" \
-#&& yum -y update \
-#&& yum -y install dotnet-sdk-3.1 \
-#&& yum clean all \
-#&& rm -rf /var/cache/yum
-RUN wget "https://dotnet.microsoft.com/download/dotnet-core/scripts/v1/dotnet-install.sh" \
-&& chmod a+x dotnet-install.sh \
-&& ./dotnet-install.sh \
-&& rm dotnet-install.sh
-ENV PATH=/root/.dotnet:$PATH
+# see https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-centos8
+RUN dnf -y update \
+&& dnf -y install dotnet-sdk-3.1 \
+&& dnf clean all \
+&& rm -rf /var/cache/dnf
 # Trigger first run experience by running arbitrary cmd
 RUN dotnet --info
 

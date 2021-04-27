@@ -13,11 +13,9 @@
 """Generate SVG for a Routing problem."""
 
 # [START import]
-from __future__ import print_function
 import argparse
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
-
 # [END import]
 
 
@@ -907,6 +905,10 @@ def main():  # pylint: disable=too-many-locals,too-many-branches
     else:
         search_parameters.first_solution_strategy = (
             routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION)
+
+    search_parameters.local_search_metaheuristic = (
+        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
+    search_parameters.time_limit.FromSeconds(2)
 
     # Solve the problem.
     assignment = routing.SolveWithParameters(search_parameters)

@@ -36,7 +36,7 @@ solver calls each time it finds a new solution.
 Additional methods for solving CP-SAT models:
 
 * [`Constraint`](#cp_model.Constraint): A few utility methods for modifying
-  contraints created by `CpModel`.
+  constraints created by `CpModel`.
 * [`LinearExpr`](#lineacp_model.LinearExpr): Methods for creating constraints
   and the objective from large arrays of coefficients.
 
@@ -51,7 +51,6 @@ from __future__ import print_function
 import collections
 import numbers
 import time
-from six import iteritems
 
 from ortools.sat import cp_model_pb2
 from ortools.sat import sat_parameters_pb2
@@ -284,8 +283,7 @@ class LinearExpr(object):
             cp_model_helper.AssertIsInt64(arg)
             if arg == INT_MIN:
                 raise ArithmeticError('< INT_MIN is not supported')
-            return BoundedLinearExpression(
-                self, [INT_MIN, cp_model_helper.CapInt64(arg - 1)])
+            return BoundedLinearExpression(self, [INT_MIN, arg - 1])
         else:
             return BoundedLinearExpression(self - arg, [INT_MIN, -1])
 
@@ -294,8 +292,7 @@ class LinearExpr(object):
             cp_model_helper.AssertIsInt64(arg)
             if arg == INT_MAX:
                 raise ArithmeticError('> INT_MAX is not supported')
-            return BoundedLinearExpression(
-                self, [cp_model_helper.CapInt64(arg + 1), INT_MAX])
+            return BoundedLinearExpression(self, [arg + 1, INT_MAX])
         else:
             return BoundedLinearExpression(self - arg, [1, INT_MAX])
 
@@ -309,11 +306,8 @@ class LinearExpr(object):
             elif arg == INT_MIN:
                 return BoundedLinearExpression(self, [INT_MIN + 1, INT_MAX])
             else:
-                return BoundedLinearExpression(self, [
-                    INT_MIN,
-                    cp_model_helper.CapInt64(arg - 1),
-                    cp_model_helper.CapInt64(arg + 1), INT_MAX
-                ])
+                return BoundedLinearExpression(
+                    self, [INT_MIN, arg - 1, arg + 1, INT_MAX])
         else:
             return BoundedLinearExpression(self - arg,
                                            [INT_MIN, -1, 1, INT_MAX])
@@ -460,11 +454,22 @@ class IntVar(LinearExpr):
     def __init__(self, model, domain, name):
         """See CpModel.NewIntVar below."""
         self.__model = model
-        self.__index = len(model.variables)
-        self.__var = model.variables.add()
-        self.__var.domain.extend(domain.FlattenedIntervals())
-        self.__var.name = name
         self.__negation = None
+        # Python do not support multiple __init__ methods.
+        # This method is only called from the CpModel class.
+        # We hack the parameter to support the two cases:
+        # case 1:
+        #     model is a CpModelProto, domain is a Domain, and name is a string.
+        # case 2:
+        #     model is a CpModelProto, domain is an index (int), and name is None.
+        if isinstance(domain, numbers.Integral) and name is None:
+            self.__index = domain
+            self.__var = model.variables[domain]
+        else:
+            self.__index = len(model.variables)
+            self.__var = model.variables.add()
+            self.__var.domain.extend(domain.FlattenedIntervals())
+            self.__var.name = name
 
     def Index(self):
         """Returns the index of the variable in the model."""
@@ -572,9 +577,9 @@ class Constraint(object):
   The purpose of this class is to allow specification of enforcement literals
   for this constraint.
 
-      b = model.BoolVar('b')
-      x = model.IntVar(0, 10, 'x')
-      y = model.IntVar(0, 10, 'y')
+      b = model.NewBoolVar('b')
+      x = model.NewIntVar(0, 10, 'x')
+      y = model.NewIntVar(0, 10, 'y')
 
       model.Add(x + 2 * y == 5).OnlyEnforceIf(b.Not())
   """
@@ -644,15 +649,28 @@ class IntervalVar(object):
     def __init__(self, model, start_index, size_index, end_index,
                  is_present_index, name):
         self.__model = model
-        self.__index = len(model.constraints)
-        self.__ct = self.__model.constraints.add()
-        self.__ct.interval.start = start_index
-        self.__ct.interval.size = size_index
-        self.__ct.interval.end = end_index
-        if is_present_index is not None:
-            self.__ct.enforcement_literal.append(is_present_index)
-        if name:
-            self.__ct.name = name
+        # As with the IntVar::__init__ method, we hack the __init__ method to
+        # support two use cases:
+        #   case 1: called when creating a new interval variable.
+        #      {start|size|end}_index are indices of integer variables
+        #      is_present_index is either None or the index of a Boolean literal.
+        #      name is a string
+        #   case 2: called when querying an existing interval variable.
+        #      start_index is an int, all parameters after are None.
+        if (size_index is None and end_index is None and
+                is_present_index is None and name is None):
+            self.__index = start_index
+            self.__ct = model.constraints[start_index]
+        else:
+            self.__index = len(model.constraints)
+            self.__ct = self.__model.constraints.add()
+            self.__ct.interval.start = start_index
+            self.__ct.interval.size = size_index
+            self.__ct.interval.end = end_index
+            if is_present_index is not None:
+                self.__ct.enforcement_literal.append(is_present_index)
+            if name:
+                self.__ct.name = name
 
     def Index(self):
         """Returns the index of the interval constraint in the model."""
@@ -695,7 +713,6 @@ class CpModel(object):
     def __init__(self):
         self.__model = cp_model_pb2.CpModelProto()
         self.__constant_map = {}
-        self.__optional_constant_map = {}
 
     # Integer variable.
 
@@ -739,7 +756,8 @@ class CpModel(object):
 
     def NewConstant(self, value):
         """Declares a constant integer."""
-        return IntVar(self.__model, Domain(value, value), '')
+        return IntVar(self.__model, self.GetOrMakeIndexFromConstant(value),
+                      None)
 
     # Linear constraints.
 
@@ -753,7 +771,7 @@ class CpModel(object):
             ct = Constraint(self.__model.constraints)
             model_ct = self.__model.constraints[ct.Index()]
             coeffs_map, constant = linear_expr.GetVarValueMap()
-            for t in iteritems(coeffs_map):
+            for t in coeffs_map.items():
                 if not isinstance(t[0], IntVar):
                     raise TypeError('Wrong argument' + str(t))
                 cp_model_helper.AssertIsInt64(t[1])
@@ -983,7 +1001,7 @@ class CpModel(object):
             raise ValueError('AddAutomaton expects some final states')
 
         if not transition_triples:
-            raise ValueError('AddAutomaton expects some transtion triples')
+            raise ValueError('AddAutomaton expects some transition triples')
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -1043,37 +1061,47 @@ class CpModel(object):
         """Adds Reservoir(times, demands, min_level, max_level).
 
     Maintains a reservoir level within bounds. The water level starts at 0, and
-    at any time >= 0, it must be between min_level and max_level. Furthermore,
-    this constraint expects all times variables to be >= 0.
+    at any time, it must be between min_level and max_level.
+
     If the variable `times[i]` is assigned a value t, then the current level
     changes by `demands[i]`, which is constant, at time t.
 
-    Note that level min can be > 0, or level max can be < 0. It just forces
-    some demands to be executed at time 0 to make sure that we are within those
-    bounds with the executed demands. Therefore, at any time t >= 0:
+     Note that min level must be <= 0, and the max level must be >= 0. Please
+     use fixed demands to simulate initial state.
 
-        sum(demands[i] if times[i] <= t) in [min_level, max_level]
+     Therefore, at any time:
+         sum(demands[i] if times[i] <= t) in [min_level, max_level]
 
     Args:
-      times: A list of positive integer variables which specify the time of the
+      times: A list of integer variables which specify the time of the
         filling or emptying the reservoir.
       demands: A list of integer values that specifies the amount of the
         emptying or filling.
-      min_level: At any time >= 0, the level of the reservoir must be greater of
+      min_level: At any time, the level of the reservoir must be greater or
         equal than the min level.
-      max_level: At any time >= 0, the level of the reservoir must be less or
-        equal than the max level.
+      max_level: At any time, the level of the reservoir must be less or equal
+        than the max level.
 
     Returns:
       An instance of the `Constraint` class.
 
     Raises:
       ValueError: if max_level < min_level.
+
+      ValueError: if max_level < 0.
+
+      ValueError: if min_level > 0
     """
 
         if max_level < min_level:
             return ValueError(
                 'Reservoir constraint must have a max_level >= min_level')
+
+        if max_level < 0:
+            return ValueError('Reservoir constraint must have a max_level >= 0')
+
+        if min_level > 0:
+            return ValueError('Reservoir constraint must have a min_level <= 0')
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -1087,45 +1115,55 @@ class CpModel(object):
                                          min_level, max_level):
         """Adds Reservoir(times, demands, actives, min_level, max_level).
 
-    Maintain a reservoir level within bounds. The water level starts at 0, and
-    at
-    any time >= 0, it must be within min_level, and max_level. Furthermore, this
-    constraints expect all times variables to be >= 0.
-    If `actives[i]` is true, and if `times[i]` is assigned a value t, then the
-    level of the reservoir changes by `demands[i]`, which is constant, at
-    time t.
+    Maintains a reservoir level within bounds. The water level starts at 0, and
+    at any time, it must be between min_level and max_level.
 
-    Note that level_min can be > 0, or level_max can be < 0. It just forces
-    some demands to be executed at time 0 to make sure that we are within those
-    bounds with the executed demands. Therefore, at any time t >= 0:
+    If the variable `times[i]` is assigned a value t, and `actives[i]` is
+    `True`, then the current level changes by `demands[i]`, which is constant,
+    at time t.
 
-        sum(demands[i] * actives[i] if times[i] <= t) in [min_level, max_level]
+     Note that min level must be <= 0, and the max level must be >= 0. Please
+     use fixed demands to simulate initial state.
+
+     Therefore, at any time:
+         sum(demands[i] * actives[i] if times[i] <= t) in [min_level, max_level]
+
 
     The array of boolean variables 'actives', if defined, indicates which
     actions are actually performed.
 
     Args:
-      times: A list of positive integer variables which specify the time of the
+      times: A list of integer variables which specify the time of the
         filling or emptying the reservoir.
       demands: A list of integer values that specifies the amount of the
         emptying or filling.
       actives: a list of boolean variables. They indicates if the
         emptying/refilling events actually take place.
-      min_level: At any time >= 0, the level of the reservoir must be greater of
+      min_level: At any time, the level of the reservoir must be greater or
         equal than the min level.
-      max_level: At any time >= 0, the level of the reservoir must be less or
-        equal than the max level.
+      max_level: At any time, the level of the reservoir must be less or equal
+        than the max level.
 
     Returns:
       An instance of the `Constraint` class.
 
     Raises:
       ValueError: if max_level < min_level.
+
+      ValueError: if max_level < 0.
+
+      ValueError: if min_level > 0
     """
 
         if max_level < min_level:
             return ValueError(
                 'Reservoir constraint must have a max_level >= min_level')
+
+        if max_level < 0:
+            return ValueError('Reservoir constraint must have a max_level >= 0')
+
+        if min_level > 0:
+            return ValueError('Reservoir constraint must have a min_level <= 0')
 
         ct = Constraint(self.__model.constraints)
         model_ct = self.__model.constraints[ct.Index()]
@@ -1378,6 +1416,50 @@ class CpModel(object):
         model_ct.cumulative.capacity = self.GetOrMakeIndex(capacity)
         return ct
 
+    # Support for deep copy.
+    def CopyFrom(self, other_model):
+        """Reset the model, and creates a new one from a CpModelProto instance."""
+        self.__model.CopyFrom(other_model.Proto())
+
+        # Rebuild constant map.
+        self.__constant_map.clear()
+        for i, var in enumerate(self.__model.variables):
+            if len(var.domain) == 2 and var.domain[0] == var.domain[1]:
+                self.__constant_map[var.domain[0]] = i
+
+    def GetBoolVarFromProtoIndex(self, index):
+        """Returns an already created Boolean variable from its index."""
+        if index < 0 or index >= len(self.__model.variables):
+            raise ValueError(
+                f'GetBoolVarFromProtoIndex: out of bound index {index}')
+        var = self.__model.variables[index]
+        if len(var.domain) != 2 or var.domain[0] < 0 or var.domain[1] > 1:
+            raise ValueError(
+                f'GetBoolVarFromProtoIndex: index {index} does not reference' +
+                ' a Boolean variable')
+
+        return IntVar(self.__model, index, None)
+
+    def GetIntVarFromProtoIndex(self, index):
+        """Returns an already created integer variable from its index."""
+        if index < 0 or index >= len(self.__model.variables):
+            raise ValueError(
+                f'GetIntVarFromProtoIndex: out of bound index {index}')
+        return IntVar(self.__model, index, None)
+
+    def GetIntervalVarFromProtoIndex(self, index):
+        """Returns an already created interval variable from its index."""
+        if index < 0 or index >= len(self.__model.constraints):
+            raise ValueError(
+                f'GetIntervalVarFromProtoIndex: out of bound index {index}')
+        ct = self.__model.constraints[index]
+        if not ct.HasField('interval'):
+            raise ValueError(
+                f'GetIntervalVarFromProtoIndex: index {index} does not reference an'
+                + ' interval variable')
+
+        return IntervalVar(self.__model, index, None, None, None, None)
+
     # Helpers.
 
     def __str__(self):
@@ -1460,7 +1542,7 @@ class CpModel(object):
             else:
                 self.__model.objective.scaling_factor = -1
                 self.__model.objective.offset = -constant
-            for v, c, in iteritems(coeffs_map):
+            for v, c, in coeffs_map.items():
                 self.__model.objective.coeffs.append(c)
                 if minimize:
                     self.__model.objective.vars.append(v.Index())
@@ -1510,6 +1592,10 @@ class CpModel(object):
         """Returns a string indicating that the model is invalid."""
         return pywrapsat.SatHelper.ValidateModel(self.__model)
 
+    def ExportToFile(self, file):
+        """Write the model as a ascii protocol buffer to 'file'."""
+        return pywrapsat.SatHelper.WriteModelToFile(self.__model, file)
+
     def AssertIsBooleanVariable(self, x):
         if isinstance(x, IntVar):
             var = self.__model.variables[x.Index()]
@@ -1521,8 +1607,26 @@ class CpModel(object):
                             ' is not a boolean variable')
 
     def AddHint(self, var, value):
+        """Adds 'var == value' as a hint to the solver."""
         self.__model.solution_hint.vars.append(self.GetOrMakeIndex(var))
         self.__model.solution_hint.values.append(value)
+
+    def ClearHints(self):
+        """Remove any solution hint from the model."""
+        self.__model.ClearField('solution_hint')
+
+    def AddAssumption(self, lit):
+        """Add the literal 'lit' to the model as assumptions."""
+        self.__model.assumptions.append(self.GetOrMakeBooleanIndex(lit))
+
+    def AddAssumptions(self, literals):
+        """Add the literals to the model as assumptions."""
+        for lit in literals:
+            self.AddAssumption(lit)
+
+    def ClearAssumptions(self):
+        """Remove all assumptions from the model."""
+        self.__model.ClearField('assumptions')
 
 
 def EvaluateLinearExpr(expression, solution):
@@ -1583,7 +1687,7 @@ class CpSolver(object):
 
     def __init__(self):
         self.__model = None
-        self.__solution = None
+        self.__solution: cp_model_pb2.CpSolverResponse = None
         self.parameters = sat_parameters_pb2.SatParameters()
 
     def Solve(self, model):
@@ -1684,6 +1788,10 @@ class CpSolver(object):
     def ResponseProto(self):
         """Returns the response object."""
         return self.__solution
+
+    def SufficientAssumptionsForInfeasibility(self):
+        """Returns the indices of the infeasible assumptions."""
+        return self.__solution.sufficient_assumptions_for_infeasibility
 
 
 class CpSolverSolutionCallback(pywrapsat.SolutionCallback):

@@ -24,21 +24,6 @@
 namespace operations_research {
 namespace sat {
 
-// var * coeff + constant >= bound.
-IntegerLiteral AffineExpression::GreaterOrEqual(IntegerValue bound) const {
-  CHECK_NE(var, kNoIntegerVariable);
-  CHECK_GT(coeff, 0);
-  return IntegerLiteral::GreaterOrEqual(var,
-                                        CeilRatio(bound - constant, coeff));
-}
-
-// var * coeff + constant <= bound.
-IntegerLiteral AffineExpression::LowerOrEqual(IntegerValue bound) const {
-  CHECK_NE(var, kNoIntegerVariable);
-  CHECK_GT(coeff, 0);
-  return IntegerLiteral::LowerOrEqual(var, FloorRatio(bound - constant, coeff));
-}
-
 std::vector<IntegerVariable> NegationOf(
     const std::vector<IntegerVariable>& vars) {
   std::vector<IntegerVariable> result(vars.size());
@@ -167,24 +152,16 @@ void IntegerEncoder::AddImplications(
   auto after_it = it;
   ++after_it;
   if (after_it != map.end()) {
-    if (sat_solver_->CurrentDecisionLevel() == 0) {
-      sat_solver_->AddBinaryClause(after_it->second.Negated(), associated_lit);
-    } else {
-      sat_solver_->AddBinaryClauseDuringSearch(after_it->second.Negated(),
-                                               associated_lit);
-    }
+    sat_solver_->AddClauseDuringSearch(
+        {after_it->second.Negated(), associated_lit});
   }
 
   // associated_lit => Literal(before)
   if (it != map.begin()) {
     auto before_it = it;
     --before_it;
-    if (sat_solver_->CurrentDecisionLevel() == 0) {
-      sat_solver_->AddBinaryClause(associated_lit.Negated(), before_it->second);
-    } else {
-      sat_solver_->AddBinaryClauseDuringSearch(associated_lit.Negated(),
-                                               before_it->second);
-    }
+    sat_solver_->AddClauseDuringSearch(
+        {associated_lit.Negated(), before_it->second});
   }
 }
 
@@ -361,8 +338,8 @@ void IntegerEncoder::AssociateToIntegerEqualValue(Literal literal,
     const Literal representative = insert_result.first->second;
     if (representative != literal) {
       DCHECK_EQ(sat_solver_->CurrentDecisionLevel(), 0);
-      sat_solver_->AddBinaryClause(literal, representative.Negated());
-      sat_solver_->AddBinaryClause(literal.Negated(), representative);
+      sat_solver_->AddClauseDuringSearch({literal, representative.Negated()});
+      sat_solver_->AddClauseDuringSearch({literal.Negated(), representative});
     }
     return;
   }
@@ -411,9 +388,9 @@ void IntegerEncoder::AssociateToIntegerEqualValue(Literal literal,
   // (var == value)  <=>  (var >= value) and (var <= value).
   const Literal a(GetOrCreateAssociatedLiteral(ge));
   const Literal b(GetOrCreateAssociatedLiteral(le));
-  sat_solver_->AddBinaryClause(a, literal.Negated());
-  sat_solver_->AddBinaryClause(b, literal.Negated());
-  sat_solver_->AddProblemClause({a.Negated(), b.Negated(), literal});
+  sat_solver_->AddClauseDuringSearch({a, literal.Negated()});
+  sat_solver_->AddClauseDuringSearch({b, literal.Negated()});
+  sat_solver_->AddClauseDuringSearch({a.Negated(), b.Negated(), literal});
 
   // Update reverse encoding.
   const int new_size = 1 + literal.Index().value();
@@ -448,8 +425,9 @@ void IntegerEncoder::HalfAssociateGivenLiteral(IntegerLiteral i_lit,
   if (insert_result.second) {  // New item.
     AddImplications(var_encoding, insert_result.first, literal);
     if (sat_solver_->Assignment().LiteralIsTrue(literal)) {
-      CHECK_EQ(sat_solver_->CurrentDecisionLevel(), 0);
-      newly_fixed_integer_literals_.push_back(i_lit);
+      if (sat_solver_->CurrentDecisionLevel() == 0) {
+        newly_fixed_integer_literals_.push_back(i_lit);
+      }
     }
 
     // TODO(user): do that for the other branch too?
@@ -459,8 +437,8 @@ void IntegerEncoder::HalfAssociateGivenLiteral(IntegerLiteral i_lit,
     const Literal associated(insert_result.first->second);
     if (associated != literal) {
       DCHECK_EQ(sat_solver_->CurrentDecisionLevel(), 0);
-      sat_solver_->AddBinaryClause(literal, associated.Negated());
-      sat_solver_->AddBinaryClause(literal.Negated(), associated);
+      sat_solver_->AddClauseDuringSearch({literal, associated.Negated()});
+      sat_solver_->AddClauseDuringSearch({literal.Negated(), associated});
     }
   }
 }
@@ -490,6 +468,13 @@ LiteralIndex IntegerEncoder::SearchForLiteralAtOrBefore(
   --after_it;
   *bound = after_it->first;
   return after_it->second.Index();
+}
+
+IntegerTrail::~IntegerTrail() {
+  if (parameters_.log_search_progress() && num_decisions_to_break_loop_ > 0) {
+    LOG(INFO) << "Num decisions to break propagation loop: "
+              << num_decisions_to_break_loop_;
+  }
 }
 
 bool IntegerTrail::Propagate(Trail* trail) {
@@ -523,6 +508,19 @@ bool IntegerTrail::Propagate(Trail* trail) {
       if (!Enqueue(i_lit, {}, {})) return false;
     }
     encoder_->ClearNewlyFixedIntegerLiterals();
+
+    for (const IntegerLiteral i_lit : integer_literal_to_fix_) {
+      if (IsCurrentlyIgnored(i_lit.var)) continue;
+      if (!Enqueue(i_lit, {}, {})) return false;
+    }
+    integer_literal_to_fix_.clear();
+
+    for (const Literal lit : literal_to_fix_) {
+      if (trail_->Assignment().LiteralIsFalse(lit)) return false;
+      if (trail_->Assignment().LiteralIsTrue(lit)) continue;
+      trail_->EnqueueWithUnitReason(lit);
+    }
+    literal_to_fix_.clear();
   }
 
   // Process all the "associated" literals and Enqueue() the corresponding
@@ -545,10 +543,13 @@ bool IntegerTrail::Propagate(Trail* trail) {
 void IntegerTrail::Untrail(const Trail& trail, int literal_trail_index) {
   ++num_untrails_;
   const int level = trail.CurrentDecisionLevel();
-  for (ReversibleInterface* rev : reversible_classes_) rev->SetLevel(level);
   var_to_current_lb_interval_index_.SetLevel(level);
   propagation_trail_index_ =
       std::min(propagation_trail_index_, literal_trail_index);
+
+  if (level < first_level_without_full_propagation_) {
+    first_level_without_full_propagation_ = -1;
+  }
 
   // Note that if a conflict was detected before Propagate() of this class was
   // even called, it is possible that there is nothing to backtrack.
@@ -582,6 +583,10 @@ void IntegerTrail::Untrail(const Trail& trail, int literal_trail_index) {
     literals_reason_starts_.resize(old_size);
     bounds_reason_starts_.resize(old_size);
   }
+
+  // We notify the new level once all variables have been restored to their
+  // old value.
+  for (ReversibleInterface* rev : reversible_classes_) rev->SetLevel(level);
 }
 
 void IntegerTrail::ReserveSpaceForNumVariables(int num_vars) {
@@ -598,9 +603,9 @@ void IntegerTrail::ReserveSpaceForNumVariables(int num_vars) {
 IntegerVariable IntegerTrail::AddIntegerVariable(IntegerValue lower_bound,
                                                  IntegerValue upper_bound) {
   DCHECK_GE(lower_bound, kMinIntegerValue);
-  DCHECK_LE(lower_bound, kMaxIntegerValue);
-  DCHECK_GE(upper_bound, kMinIntegerValue);
+  DCHECK_LE(lower_bound, upper_bound);
   DCHECK_LE(upper_bound, kMaxIntegerValue);
+  DCHECK(lower_bound >= 0 || lower_bound + kint64max >= upper_bound);
   DCHECK(integer_search_levels_.empty());
   DCHECK_EQ(vars_.size(), integer_trail_.size());
 
@@ -814,9 +819,6 @@ void IntegerTrail::AppendRelaxedLinearReason(
   }
 }
 
-// TODO(user): When this is called during a reason computation, we can use
-// the term already part of the reason we are constructed to optimize this
-// further.
 void IntegerTrail::RelaxLinearReason(IntegerValue slack,
                                      absl::Span<const IntegerValue> coeffs,
                                      std::vector<int>* trail_indices) const {
@@ -843,8 +845,17 @@ void IntegerTrail::RelaxLinearReason(IntegerValue slack,
       continue;
     }
 
-    // Note that both terms of the product are positive.
+    // This is a bit hacky, but when it is used from MergeReasonIntoInternal(),
+    // we never relax a reason that will not be expanded because it is already
+    // part of the current conflict.
     const TrailEntry& entry = integer_trail_[index];
+    if (entry.var != kNoIntegerVariable &&
+        index <= tmp_var_to_trail_index_in_queue_[entry.var]) {
+      (*trail_indices)[new_size++] = index;
+      continue;
+    }
+
+    // Note that both terms of the product are positive.
     const TrailEntry& previous_entry = integer_trail_[entry.prev_trail_index];
     const int64 diff =
         CapProd(coeff.value(), (entry.bound - previous_entry.bound).value());
@@ -880,6 +891,12 @@ void IntegerTrail::RelaxLinearReason(IntegerValue slack,
       continue;
     }
     const TrailEntry& entry = integer_trail_[index];
+    if (entry.var != kNoIntegerVariable &&
+        index <= tmp_var_to_trail_index_in_queue_[entry.var]) {
+      trail_indices->push_back(index);
+      continue;
+    }
+
     const TrailEntry& previous_entry = integer_trail_[entry.prev_trail_index];
     const int64 diff = CapProd(heap_entry.coeff.value(),
                                (entry.bound - previous_entry.bound).value());
@@ -976,6 +993,35 @@ bool IntegerTrail::Enqueue(IntegerLiteral i_lit,
                          integer_trail_.size());
 }
 
+bool IntegerTrail::ConditionalEnqueue(
+    Literal lit, IntegerLiteral i_lit, std::vector<Literal>* literal_reason,
+    std::vector<IntegerLiteral>* integer_reason) {
+  const VariablesAssignment& assignment = trail_->Assignment();
+  if (assignment.LiteralIsFalse(lit)) return true;
+
+  // We can always push var if the optional literal is the same.
+  //
+  // TODO(user): we can also push lit.var if its presence implies lit.
+  if (lit.Index() == OptionalLiteralIndex(i_lit.var)) {
+    return Enqueue(i_lit, *literal_reason, *integer_reason);
+  }
+
+  if (assignment.LiteralIsTrue(lit)) {
+    literal_reason->push_back(lit.Negated());
+    return Enqueue(i_lit, *literal_reason, *integer_reason);
+  }
+
+  if (IntegerLiteralIsFalse(i_lit)) {
+    integer_reason->push_back(
+        IntegerLiteral::LowerOrEqual(i_lit.var, i_lit.bound - 1));
+    EnqueueLiteral(lit.Negated(), *literal_reason, *integer_reason);
+    return true;
+  }
+
+  // We can't push anything in this case.
+  return true;
+}
+
 bool IntegerTrail::Enqueue(IntegerLiteral i_lit,
                            absl::Span<const Literal> literal_reason,
                            absl::Span<const IntegerLiteral> integer_reason,
@@ -1057,6 +1103,12 @@ void IntegerTrail::EnqueueLiteralInternal(
     return;
   }
 
+  // If we are fixing something at a positive level, remember it.
+  if (!integer_search_levels_.empty() && integer_reason.empty() &&
+      literal_reason.empty() && lazy_reason == nullptr) {
+    literal_to_fix_.push_back(literal);
+  }
+
   const int trail_index = trail_->Index();
   if (trail_index >= boolean_trail_index_to_integer_one_.size()) {
     boolean_trail_index_to_integer_one_.resize(trail_index + 1);
@@ -1087,6 +1139,60 @@ void IntegerTrail::EnqueueLiteralInternal(
                             /*reason_index=*/reason_index});
 
   trail_->Enqueue(literal, propagator_id_);
+}
+
+// We count the number of propagation at the current level, and returns true
+// if it seems really large. Note that we disable this if we are in fixed
+// search.
+bool IntegerTrail::InPropagationLoop() const {
+  const int num_vars = vars_.size();
+  return (!integer_search_levels_.empty() &&
+          integer_trail_.size() - integer_search_levels_.back() >
+              std::max(10000, num_vars) &&
+          parameters_.search_branching() != SatParameters::FIXED_SEARCH);
+}
+
+// We try to select a variable with a large domain that was propagated a lot
+// already.
+IntegerVariable IntegerTrail::NextVariableToBranchOnInPropagationLoop() const {
+  CHECK(InPropagationLoop());
+  ++num_decisions_to_break_loop_;
+  std::vector<IntegerVariable> vars;
+  for (int i = integer_search_levels_.back(); i < integer_trail_.size(); ++i) {
+    const IntegerVariable var = integer_trail_[i].var;
+    if (var == kNoIntegerVariable) continue;
+    if (UpperBound(var) - LowerBound(var) <= 100) continue;
+    vars.push_back(var);
+  }
+  if (vars.empty()) return kNoIntegerVariable;
+  std::sort(vars.begin(), vars.end());
+  IntegerVariable best_var = vars[0];
+  int best_count = 1;
+  int count = 1;
+  for (int i = 1; i < vars.size(); ++i) {
+    if (vars[i] != vars[i - 1]) {
+      count = 1;
+    } else {
+      ++count;
+      if (count > best_count) {
+        best_count = count;
+        best_var = vars[i];
+      }
+    }
+  }
+  return best_var;
+}
+
+bool IntegerTrail::CurrentBranchHadAnIncompletePropagation() {
+  return first_level_without_full_propagation_ != -1;
+}
+
+IntegerVariable IntegerTrail::FirstUnassignedVariable() const {
+  for (IntegerVariable var(0); var < vars_.size(); var += 2) {
+    if (IsCurrentlyIgnored(var)) continue;
+    if (!IsFixed(var)) return var;
+  }
+  return kNoIntegerVariable;
 }
 
 bool IntegerTrail::EnqueueInternal(
@@ -1183,9 +1289,37 @@ bool IntegerTrail::EnqueueInternal(
     }
   }
 
+  // Stop propagating if we detect a propagation loop. The search heuristic will
+  // then take an appropriate next decision. Note that we do that after checking
+  // for a potential conflict if the two bounds of a variable cross. This is
+  // important, so that in the corner case where all variables are actually
+  // fixed, we still make sure no propagator detect a conflict.
+  //
+  // TODO(user): Some propagation code have CHECKS in place and not like when
+  // something they just pushed is not reflected right away. They must be aware
+  // of that, which is a bit tricky.
+  if (InPropagationLoop()) {
+    // Note that we still propagate "big" push as it seems better to do that
+    // now rather than to delay to the next decision.
+    const IntegerValue lb = LowerBound(i_lit.var);
+    const IntegerValue ub = UpperBound(i_lit.var);
+    if (i_lit.bound - lb < (ub - lb) / 2) {
+      if (first_level_without_full_propagation_ == -1) {
+        first_level_without_full_propagation_ = trail_->CurrentDecisionLevel();
+      }
+      return true;
+    }
+  }
+
   // Notify the watchers.
   for (SparseBitset<IntegerVariable>* bitset : watchers_) {
     bitset->Set(i_lit.var);
+  }
+
+  if (!integer_search_levels_.empty() && integer_reason.empty() &&
+      literal_reason.empty() && lazy_reason == nullptr &&
+      trail_index_with_same_reason >= integer_trail_.size()) {
+    integer_literal_to_fix_.push_back(i_lit);
   }
 
   // Enqueue the strongest associated Boolean literal implied by this one.

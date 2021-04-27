@@ -11,6 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package com.google.ortools.sat.samples;
+
+import com.google.ortools.Loader;
 import com.google.ortools.sat.CpModel;
 import com.google.ortools.sat.CpSolver;
 import com.google.ortools.sat.CpSolverStatus;
@@ -22,11 +25,8 @@ import com.google.ortools.sat.LinearExpr;
  * pheasants are there?
  */
 public class RabbitsAndPheasantsSat {
-  static {
-    System.loadLibrary("jniortools");
-  }
-
   public static void main(String[] args) throws Exception {
+    Loader.loadNativeLibraries();
     // Creates the model.
     CpModel model = new CpModel();
     // Creates the variables.
@@ -41,7 +41,7 @@ public class RabbitsAndPheasantsSat {
     CpSolver solver = new CpSolver();
     CpSolverStatus status = solver.solve(model);
 
-    if (status == CpSolverStatus.FEASIBLE) {
+    if (status == CpSolverStatus.OPTIMAL) {
       System.out.println(solver.value(r) + " rabbits, and " + solver.value(p) + " pheasants");
     }
   }

@@ -32,9 +32,9 @@
 #include "ortools/sat/boolean_problem.pb.h"
 #include "ortools/sat/cp_model.pb.h"
 
-DEFINE_bool(wcnf_use_strong_slack, true,
-            "If true, when we add a slack variable to reify a soft clause, we "
-            "enforce the fact that when it is true, the clause must be false.");
+ABSL_FLAG(bool, wcnf_use_strong_slack, true,
+          "If true, when we add a slack variable to reify a soft clause, we "
+          "enforce the fact that when it is true, the clause must be false.");
 
 namespace operations_research {
 namespace sat {
@@ -186,7 +186,7 @@ class SatCnfReader {
   // Since the problem name is not stored in the cnf format, we infer it from
   // the file name.
   static std::string ExtractProblemName(const std::string& filename) {
-    const int found = filename.find_last_of("/");
+    const int found = filename.find_last_of('/');
     const std::string problem_name =
         found != std::string::npos ? filename.substr(found + 1) : filename;
     return problem_name;
@@ -294,7 +294,7 @@ class SatCnfReader {
           objective_offset_ += weight;
         }
 
-        if (FLAGS_wcnf_use_strong_slack) {
+        if (absl::GetFlag(FLAGS_wcnf_use_strong_slack)) {
           // Add the binary implications slack_literal true => all the other
           // clause literals are false.
           for (int i = 0; i + 1 < tmp_clause_.size(); ++i) {
