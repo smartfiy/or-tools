@@ -5,9 +5,9 @@ It has Go bindings and binaries for use with Go projects.
 
 ## Mac Setup for Local Go Development
  1. Download binaries for Mac:
-    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v7.6-go1.14.1/or-tools_MacOsX-10.15.4_v7.6.7700.tar.gz`
+    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v8.2-go1.16.3/or-tools_MacOsX-11.2.3_v8.2.8730.tar.gz`
  1. Install/extract to rpath:
-    `tar -xf or-tools_MacOsX-10.15.4_v7.6.7700.tar.gz --strip 1 -C /usr/local`
+    `tar -xf or-tools_MacOsX-11.2.3_v8.2.8730.tar.gz --strip 1 -C /usr/local`
  1. Export `DYLD_LIBRARY_PATH` if necessary:
     `export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/lib`
 
