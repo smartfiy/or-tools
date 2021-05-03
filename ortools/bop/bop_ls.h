@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -608,7 +608,7 @@ class LocalSearchAssignmentIterator {
 
   // For each set of explored decisions, we store it in this table so that we
   // don't explore decisions (a, b) and later (b, a) for instance. The decisions
-  // are converted to int32, sorted and padded with 0 before beeing inserted
+  // are converted to int32_t, sorted and padded with 0 before beeing inserted
   // here.
   //
   // TODO(user): We may still miss some equivalent states because it is possible

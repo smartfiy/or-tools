@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,6 +13,7 @@
 
 #include "ortools/flatzinc/presolve.h"
 
+#include <cstdint>
 #include <map>
 #include <set>
 
@@ -21,7 +22,6 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "ortools/base/map_util.h"
-#include "ortools/flatzinc/logging.h"
 #include "ortools/flatzinc/model.h"
 #include "ortools/graph/cliques.h"
 #include "ortools/util/saturated_arithmetic.h"
@@ -34,13 +34,6 @@ namespace operations_research {
 namespace fz {
 namespace {
 enum PresolveState { ALWAYS_FALSE, ALWAYS_TRUE, UNDECIDED };
-
-// TODO(user): accept variables fixed to 0 or 1.
-bool Has01Values(IntegerVariable* var) {
-  return var->domain.Min() == 0 && var->domain.Max() == 1;
-}
-
-bool Is0Or1(int64 value) { return !(value & ~1LL); }
 
 template <class T>
 bool IsArrayBoolean(const std::vector<T>& values) {
@@ -68,82 +61,6 @@ bool AtMostOne0OrAtMostOne1(const std::vector<T>& values) {
     }
   }
   return true;
-}
-
-absl::flat_hash_set<int64> GetValueSet(const Argument& arg) {
-  absl::flat_hash_set<int64> result;
-  if (arg.HasOneValue()) {
-    result.insert(arg.Value());
-  } else {
-    const Domain& domain = arg.Var()->domain;
-    if (domain.is_interval && !domain.values.empty()) {
-      for (int64 v = domain.values[0]; v <= domain.values[1]; ++v) {
-        result.insert(v);
-      }
-    } else {
-      result.insert(domain.values.begin(), domain.values.end());
-    }
-  }
-  return result;
-}
-
-void SetConstraintAsIntEq(Constraint* ct, IntegerVariable* var, int64 value) {
-  CHECK(var != nullptr);
-  ct->type = "int_eq";
-  ct->arguments.clear();
-  ct->arguments.push_back(Argument::IntVarRef(var));
-  ct->arguments.push_back(Argument::IntegerValue(value));
-}
-
-bool OverlapsAt(const Argument& array, int pos, const Argument& other) {
-  if (array.type == Argument::INT_VAR_REF_ARRAY) {
-    const Domain& domain = array.variables[pos]->domain;
-    if (domain.IsAllInt64()) {
-      return true;
-    }
-    switch (other.type) {
-      case Argument::INT_VALUE: {
-        return domain.Contains(other.Value());
-      }
-      case Argument::INT_INTERVAL: {
-        return domain.OverlapsIntInterval(other.values[0], other.values[1]);
-      }
-      case Argument::INT_LIST: {
-        return domain.OverlapsIntList(other.values);
-      }
-      case Argument::INT_VAR_REF: {
-        return domain.OverlapsDomain(other.variables[0]->domain);
-      }
-      default: {
-        LOG(FATAL) << "Case not supported in OverlapsAt";
-        return false;
-      }
-    }
-  } else if (array.type == Argument::INT_LIST) {
-    const int64 value = array.values[pos];
-    switch (other.type) {
-      case Argument::INT_VALUE: {
-        return value == other.values[0];
-      }
-      case Argument::INT_INTERVAL: {
-        return other.values[0] <= value && value <= other.values[1];
-      }
-      case Argument::INT_LIST: {
-        return std::find(other.values.begin(), other.values.end(), value) !=
-               other.values.end();
-      }
-      case Argument::INT_VAR_REF: {
-        return other.variables[0]->domain.Contains(value);
-      }
-      default: {
-        LOG(FATAL) << "Case not supported in OverlapsAt";
-        return false;
-      }
-    }
-  } else {
-    LOG(FATAL) << "First argument not supported in OverlapsAt";
-    return false;
-  }
 }
 
 template <class T>
@@ -194,15 +111,15 @@ void Presolver::PresolveBool2Int(Constraint* ct) {
 // Minizinc flattens 2d element constraints (x = A[y][z]) into 1d element
 // constraint with an affine mapping between y, z and the new index.
 // This rule stores the mapping to reconstruct the 2d element constraint.
-// This mapping can involve 1 or 2 variables dependening if y or z in A[y][z]
+// This mapping can involve 1 or 2 variables depending if y or z in A[y][z]
 // is a constant in the model).
 void Presolver::PresolveStoreAffineMapping(Constraint* ct) {
   CHECK_EQ(2, ct->arguments[1].variables.size());
   IntegerVariable* const var0 = ct->arguments[1].variables[0];
   IntegerVariable* const var1 = ct->arguments[1].variables[1];
-  const int64 coeff0 = ct->arguments[0].values[0];
-  const int64 coeff1 = ct->arguments[0].values[1];
-  const int64 rhs = ct->arguments[2].Value();
+  const int64_t coeff0 = ct->arguments[0].values[0];
+  const int64_t coeff1 = ct->arguments[0].values[1];
+  const int64_t rhs = ct->arguments[2].Value();
   if (coeff0 == -1 && !gtl::ContainsKey(affine_map_, var0)) {
     affine_map_[var0] = AffineMapping(var1, coeff0, -rhs, ct);
     UpdateRuleStats("int_lin_eq: store affine mapping");
@@ -217,10 +134,10 @@ void Presolver::PresolveStoreFlatteningMapping(Constraint* ct) {
   IntegerVariable* const var0 = ct->arguments[1].variables[0];
   IntegerVariable* const var1 = ct->arguments[1].variables[1];
   IntegerVariable* const var2 = ct->arguments[1].variables[2];
-  const int64 coeff0 = ct->arguments[0].values[0];
-  const int64 coeff1 = ct->arguments[0].values[1];
-  const int64 coeff2 = ct->arguments[0].values[2];
-  const int64 rhs = ct->arguments[2].Value();
+  const int64_t coeff0 = ct->arguments[0].values[0];
+  const int64_t coeff1 = ct->arguments[0].values[1];
+  const int64_t coeff2 = ct->arguments[0].values[2];
+  const int64_t rhs = ct->arguments[2].Value();
   if (coeff0 == -1 && coeff2 == 1 &&
       !gtl::ContainsKey(array2d_index_map_, var0)) {
     array2d_index_map_[var0] =
@@ -245,7 +162,7 @@ void Presolver::PresolveStoreFlatteningMapping(Constraint* ct) {
 }
 
 namespace {
-bool IsIncreasingAndContiguous(const std::vector<int64>& values) {
+bool IsIncreasingAndContiguous(const std::vector<int64_t>& values) {
   for (int i = 0; i < values.size() - 1; ++i) {
     if (values[i + 1] != values[i] + 1) {
       return false;
@@ -254,7 +171,7 @@ bool IsIncreasingAndContiguous(const std::vector<int64>& values) {
   return true;
 }
 
-bool AreOnesFollowedByMinusOne(const std::vector<int64>& coeffs) {
+bool AreOnesFollowedByMinusOne(const std::vector<int64_t>& coeffs) {
   CHECK(!coeffs.empty());
   for (int i = 0; i < coeffs.size() - 1; ++i) {
     if (coeffs[i] != 1) {
@@ -325,10 +242,10 @@ void Presolver::PresolveSimplifyElement(Constraint* ct) {
       return;
     } else if (mapping.offset + mapping.coefficient > 0 &&
                domain.values[0] > 0) {
-      const std::vector<int64>& values = ct->arguments[1].values;
-      std::vector<int64> new_values;
-      for (int64 i = 1; i <= domain.values.back(); ++i) {
-        const int64 index = i * mapping.coefficient + mapping.offset - 1;
+      const std::vector<int64_t>& values = ct->arguments[1].values;
+      std::vector<int64_t> new_values;
+      for (int64_t i = 1; i <= domain.values.back(); ++i) {
+        const int64_t index = i * mapping.coefficient + mapping.offset - 1;
         if (index < 0) {
           return;
         }
@@ -363,7 +280,7 @@ void Presolver::PresolveSimplifyElement(Constraint* ct) {
     // Rewrite constraint.
     ct->arguments[0] =
         Argument::IntVarRefArray({mapping.variable1, mapping.variable2});
-    std::vector<int64> coefs;
+    std::vector<int64_t> coefs;
     coefs.push_back(mapping.coefficient);
     coefs.push_back(1);
     ct->arguments.push_back(Argument::IntegerList(coefs));
@@ -385,7 +302,7 @@ void Presolver::PresolveSimplifyElement(Constraint* ct) {
   // Rule 4.
   if (IsIncreasingAndContiguous(ct->arguments[1].values) &&
       ct->arguments[2].type == Argument::INT_VAR_REF) {
-    const int64 start = ct->arguments[1].values.front();
+    const int64_t start = ct->arguments[1].values.front();
     IntegerVariable* const index = ct->arguments[0].Var();
     IntegerVariable* const target = ct->arguments[2].Var();
     UpdateRuleStats("array_int_element: rewrite as a linear constraint");
@@ -421,8 +338,8 @@ void Presolver::PresolveSimplifyExprElement(Constraint* ct) {
     }
     const std::vector<IntegerVariable*>& vars = ct->arguments[1].variables;
     std::vector<IntegerVariable*> new_vars;
-    for (int64 i = domain.values.front(); i <= domain.values.back(); ++i) {
-      const int64 index = i * mapping.coefficient + mapping.offset - 1;
+    for (int64_t i = domain.values.front(); i <= domain.values.back(); ++i) {
+      const int64_t index = i * mapping.coefficient + mapping.offset - 1;
       if (index < 0) {
         return;
       }
@@ -474,7 +391,6 @@ void Presolver::Run(Model* model) {
       if (ct->type == "int_lin_eq" && ct->arguments[0].values.size() == 3 &&
           AreOnesFollowedByMinusOne(ct->arguments[0].values) &&
           ct->arguments[1].values.empty() && ct->arguments[2].Value() == 0) {
-        FZVLOG << "Recognize assignment " << ct->DebugString() << FZENDL;
         current_variables = ct->arguments[1].variables;
         target_variable = current_variables.back();
         current_variables.pop_back();
@@ -485,7 +401,6 @@ void Presolver::Run(Model* model) {
           AreOnesFollowedByMinusOne(ct->arguments[0].values) &&
           ct->arguments[0].values.size() == current_variables.size() + 2 &&
           IsStrictPrefix(current_variables, ct->arguments[1].variables)) {
-        FZVLOG << "Recognize hidden int_plus " << ct->DebugString() << FZENDL;
         current_variables = ct->arguments[1].variables;
         // Rewrite ct into int_plus.
         ct->type = "int_plus";
@@ -496,7 +411,7 @@ void Presolver::Run(Model* model) {
         ct->arguments.push_back(Argument::IntVarRef(current_variables.back()));
         target_variable = current_variables.back();
         current_variables.pop_back();
-        FZVLOG << "  -> " << ct->DebugString() << FZENDL;
+
         // We clean the first constraint too.
         if (first_constraint != nullptr) {
           first_constraint = nullptr;
@@ -544,10 +459,10 @@ void Presolver::Run(Model* model) {
   if (!successful_rules_.empty()) {
     for (const auto& rule : successful_rules_) {
       if (rule.second == 1) {
-        FZLOG << "  - rule '" << rule.first << "' was applied 1 time" << FZENDL;
+        SOLVER_LOG(logger_, "  - rule '", rule.first, "' was applied 1 time");
       } else {
-        FZLOG << "  - rule '" << rule.first << "' was applied " << rule.second
-              << " times" << FZENDL;
+        SOLVER_LOG(logger_, "  - rule '", rule.first, "' was applied ",
+                   rule.second, " times");
       }
     }
   }
@@ -569,8 +484,6 @@ void Presolver::AddVariableSubstitution(IntegerVariable* from,
     from = tmp;
   }
   if (from != to) {
-    FZVLOG << "Mark " << from->DebugString() << " as equivalent to "
-           << to->DebugString() << FZENDL;
     CHECK(to->Merge(from->name, from->domain, from->temporary));
     from->active = false;
     var_representative_map_[from] = to;

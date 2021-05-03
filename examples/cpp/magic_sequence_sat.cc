@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,8 @@
 // Compute a sequence of numbers such that the number of occurrences of i
 // in the sequence is equal to the value of the ith number.
 
-#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -50,7 +51,7 @@ void MagicSequence(int size) {
   }
 
   // The number of variables equal to j shall be the value of vars[j].
-  std::vector<int64> values(size);
+  std::vector<int64_t> values(size);
   std::iota(values.begin(), values.end(), 0);  // [0, 1, 2, .., size - 1]
   std::vector<BoolVar> vars_equal_to_j;
 

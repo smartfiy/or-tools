@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -91,15 +91,18 @@
 #ifndef OR_TOOLS_GLOP_REVISED_SIMPLEX_H_
 #define OR_TOOLS_GLOP_REVISED_SIMPLEX_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
+#include "absl/random/bit_gen_ref.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/macros.h"
 #include "ortools/glop/basis_representation.h"
 #include "ortools/glop/dual_edge_norms.h"
 #include "ortools/glop/entering_variable.h"
 #include "ortools/glop/parameters.pb.h"
+#include "ortools/glop/pricing.h"
 #include "ortools/glop/primal_edge_norms.h"
 #include "ortools/glop/reduced_costs.h"
 #include "ortools/glop/status.h"
@@ -116,32 +119,6 @@
 
 namespace operations_research {
 namespace glop {
-
-// Holds the statuses of all the variables, including slack variables. There
-// is no point storing constraint statuses since internally all constraints are
-// always fixed to zero.
-//
-// Note that this is the minimal amount of information needed to perform a "warm
-// start". Using this information and the original linear program, the basis can
-// be refactorized and all the needed quantities derived.
-//
-// TODO(user): Introduce another state class to store a complete state of the
-// solver. Using this state and the original linear program, the solver can be
-// restarted with as little time overhead as possible. This is especially useful
-// for strong branching in a MIP context.
-struct BasisState {
-  // TODO(user): A MIP solver will potentially store a lot of BasicStates so
-  // memory usage is important. It is possible to use only 2 bits for one
-  // VariableStatus enum. To achieve this, the FIXED_VALUE status can be
-  // converted to either AT_LOWER_BOUND or AT_UPPER_BOUND and decoded properly
-  // later since this will be used with a given linear program. This way we can
-  // even encode more information by using the reduced cost sign to choose to
-  // which bound the fixed status correspond.
-  VariableStatusRow statuses;
-
-  // Returns true if this state is empty.
-  bool IsEmpty() const { return statuses.empty(); }
-};
 
 // Entry point of the revised simplex algorithm implementation.
 class RevisedSimplex {
@@ -187,7 +164,7 @@ class RevisedSimplex {
   ColIndex GetProblemNumCols() const;
   ProblemStatus GetProblemStatus() const;
   Fractional GetObjectiveValue() const;
-  int64 GetNumberOfIterations() const;
+  int64_t GetNumberOfIterations() const;
   Fractional GetVariableValue(ColIndex col) const;
   Fractional GetReducedCost(ColIndex col) const;
   const DenseRow& GetReducedCosts() const;
@@ -320,10 +297,6 @@ class RevisedSimplex {
   // x1..., slack variables will be s1... .
   void SetVariableNames();
 
-  // Computes the initial variable status from its type. A constrained variable
-  // is set to the lowest of its 2 bounds in absolute value.
-  VariableStatus ComputeDefaultVariableStatus(ColIndex col) const;
-
   // Sets the variable status and derives the variable value according to the
   // exact status definition. This can only be called for non-basic variables
   // because the value of a basic variable is computed from the values of the
@@ -354,9 +327,6 @@ class RevisedSimplex {
                                           bool* only_change_is_new_cols,
                                           ColIndex* num_new_cols);
 
-  // Initializes bound-related internal data. Returns true if unchanged.
-  bool InitializeBoundsAndTestIfUnchanged(const LinearProgram& lp);
-
   // Checks if the only change to the bounds is the addition of new columns,
   // and that the new columns have at least one bound equal to zero.
   bool OldBoundsAreUnchangedAndNewVariablesHaveOneBoundAtZero(
@@ -367,10 +337,6 @@ class RevisedSimplex {
 
   // Computes the stopping criterion on the problem objective value.
   void InitializeObjectiveLimit(const LinearProgram& lp);
-
-  // Initializes the variable statuses using a warm-start basis.
-  void InitializeVariableStatusesForWarmStart(const BasisState& state,
-                                              ColIndex num_new_cols);
 
   // Initializes the starting basis. In most cases it starts by the all slack
   // basis and tries to apply some heuristics to replace fixed variables.
@@ -432,7 +398,8 @@ class RevisedSimplex {
   // that adding 'ratio * d_[row]' to the variable value changes it to its
   // target bound.
   template <bool is_entering_reduced_cost_positive>
-  Fractional GetRatio(RowIndex row) const;
+  Fractional GetRatio(const DenseRow& lower_bounds,
+                      const DenseRow& upper_bounds, RowIndex row) const;
 
   // First pass of the Harris ratio test. Returns the harris ratio value which
   // is an upper bound on the ratio value that the leaving variable can take.
@@ -483,6 +450,12 @@ class RevisedSimplex {
   // entering and leaving column dual feasibility status change and that other
   // changes will be dealt with by DualPhaseIUpdatePriceOnReducedCostsChange().
   void DualPhaseIUpdatePrice(RowIndex leaving_row, ColIndex entering_col);
+
+  // This must be called each time the dual_pricing_vector_ is changed at
+  // position row.
+  template <bool use_dense_update = false>
+  void OnDualPriceChange(const DenseColumn& squared_norms, RowIndex row,
+                         VariableType type, Fractional threshold);
 
   // Updates the prices used by DualChooseLeavingVariableRow() when the reduced
   // costs of the given columns have changed.
@@ -554,7 +527,8 @@ class RevisedSimplex {
 
   // Same as Minimize() for the dual simplex algorithm.
   // TODO(user): remove duplicate code between the two functions.
-  ABSL_MUST_USE_RESULT Status DualMinimize(TimeLimit* time_limit);
+  ABSL_MUST_USE_RESULT Status DualMinimize(bool feasibility_phase,
+                                           TimeLimit* time_limit);
 
   // Experimental. This is useful in a MIP context. It performs a few degenerate
   // pivot to try to mimize the fractionality of the optimal basis.
@@ -623,19 +597,10 @@ class RevisedSimplex {
   Fractional objective_offset_;
   Fractional objective_scaling_factor_;
 
-  // Array of values representing variable bounds. Indexed by column number.
-  DenseRow lower_bound_;
-  DenseRow upper_bound_;
-
   // Used in dual phase I to keep track of the non-basic dual infeasible
   // columns and their sign of infeasibility (+1 or -1).
   DenseRow dual_infeasibility_improvement_direction_;
   int num_dual_infeasible_positions_;
-
-  // Used in dual phase I to hold the price of each possible leaving choices
-  // and the bitset of the possible leaving candidates.
-  DenseColumn dual_pricing_vector_;
-  DenseBitColumn is_dual_entering_candidate_;
 
   // A temporary scattered column that is always reset to all zero after use.
   ScatteredColumn initially_all_zero_scratchpad_;
@@ -672,33 +637,46 @@ class RevisedSimplex {
   // Used to compute the error 'b - A.x' or 'a - B.d'.
   DenseColumn error_;
 
+  // A random number generator. In test we use absl_random_ to have a
+  // non-deterministic behavior and avoid client depending on a golden optimal
+  // solution which prevent us from easily changing the solver.
+  random_engine_t deterministic_random_;
+#ifndef NDEBUG
+  absl::BitGen absl_random_;
+#endif
+  absl::BitGenRef random_;
+
   // Representation of matrix B using eta matrices and LU decomposition.
   BasisFactorization basis_factorization_;
 
   // Classes responsible for maintaining the data of the corresponding names.
   VariablesInfo variables_info_;
-  VariableValues variable_values_;
-  DualEdgeNorms dual_edge_norms_;
   PrimalEdgeNorms primal_edge_norms_;
+  DualEdgeNorms dual_edge_norms_;
+  DynamicMaximum<RowIndex> dual_prices_;
+  VariableValues variable_values_;
   UpdateRow update_row_;
   ReducedCosts reduced_costs_;
-
-  // Class holding the algorithms to choose the entering column during a simplex
-  // pivot.
   EnteringVariable entering_variable_;
+  PrimalPrices primal_prices_;
+
+  // Used in dual phase I to hold the price of each possible leaving choices.
+  DenseColumn dual_pricing_vector_;
 
   // Temporary memory used by DualMinimize().
   std::vector<ColIndex> bound_flip_candidates_;
-  std::vector<std::pair<RowIndex, ColIndex>> pair_to_ignore_;
 
   // Total number of iterations performed.
-  uint64 num_iterations_;
+  uint64_t num_iterations_;
 
   // Number of iterations performed during the first (feasibility) phase.
-  uint64 num_feasibility_iterations_;
+  uint64_t num_feasibility_iterations_;
 
   // Number of iterations performed during the second (optimization) phase.
-  uint64 num_optimization_iterations_;
+  uint64_t num_optimization_iterations_;
+
+  // Deterministic time for DualPhaseIUpdatePriceOnReducedCostChange().
+  int64_t num_update_price_operations_ = 0;
 
   // Total time spent in Solve().
   double total_time_;
@@ -720,12 +698,16 @@ class RevisedSimplex {
           total("total", this),
           normal("normal", this),
           bound_flip("bound_flip", this),
+          refactorize("refactorize", this),
           degenerate("degenerate", this),
+          num_dual_flips("num_dual_flips", this),
           degenerate_run_size("degenerate_run_size", this) {}
     TimeDistribution total;
     TimeDistribution normal;
     TimeDistribution bound_flip;
+    TimeDistribution refactorize;
     TimeDistribution degenerate;
+    IntegerDistribution num_dual_flips;
     IntegerDistribution degenerate_run_size;
   };
   IterationStats iteration_stats_;
@@ -788,9 +770,6 @@ class RevisedSimplex {
   // candidate #2, #3, ...; because the first tied candidate is remembered
   // anyway.
   std::vector<RowIndex> equivalent_leaving_choices_;
-
-  // A random number generator.
-  random_engine_t random_;
 
   // This is used by Polish().
   DenseRow integrality_scale_;

@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #ifndef OR_TOOLS_SAT_CP_MODEL_PRESOLVE_H_
 #define OR_TOOLS_SAT_CP_MODEL_PRESOLVE_H_
 
+#include <cstdint>
 #include <vector>
 
 #include "ortools/sat/cp_model.pb.h"
@@ -126,7 +127,7 @@ class CpModelPresolver {
   template <typename ProtoWithVarsAndCoeffs>
   bool CanonicalizeLinearExpressionInternal(const ConstraintProto& ct,
                                             ProtoWithVarsAndCoeffs* proto,
-                                            int64* offset);
+                                            int64_t* offset);
   bool CanonicalizeLinearExpression(const ConstraintProto& ct,
                                     LinearExpressionProto* exp);
 
@@ -139,10 +140,10 @@ class CpModelPresolver {
   void PresolveLinearEqualityModuloTwo(ConstraintProto* ct);
 
   // To simplify dealing with the two kind of intervals.
-  int64 StartMin(const IntervalConstraintProto& interval) const;
-  int64 EndMax(const IntervalConstraintProto& interval) const;
-  int64 SizeMin(const IntervalConstraintProto& interval) const;
-  int64 SizeMax(const IntervalConstraintProto& interval) const;
+  int64_t StartMin(const IntervalConstraintProto& interval) const;
+  int64_t EndMax(const IntervalConstraintProto& interval) const;
+  int64_t SizeMin(const IntervalConstraintProto& interval) const;
+  int64_t SizeMax(const IntervalConstraintProto& interval) const;
 
   // SetPPC is short for set packing, partitioning and covering constraints.
   // These are sum of booleans <=, = and >= 1 respectively.
@@ -190,10 +191,73 @@ class CpModelPresolver {
 
   std::vector<int>* postsolve_mapping_;
   PresolveContext* context_;
+  SolverLogger* logger_;
 
   // Used by CanonicalizeLinearExpressionInternal().
-  std::vector<std::pair<int, int64>> tmp_terms_;
+  std::vector<std::pair<int, int64_t>> tmp_terms_;
 };
+
+// This helper class perform copy with simplification from a model and a
+// partial assignment to another model. The purpose is to miminize the size of
+// the copied model, as well as to reduce the pressure on the memory sub-system.
+//
+// It is currently used by the LNS part, but could be used with any other scheme
+// that generates partial assignments.
+class ModelCopy {
+ public:
+  explicit ModelCopy(PresolveContext* context);
+
+  // Copies all constraints from in_model to working model of the context.
+  //
+  // During the process, it will read variable domains from the context, and
+  // simplify constraints to minimize the size of the copied model.
+  // Thus it is important that the context->working_model already have the
+  // variables part copied.
+  //
+  // It returns false iff the model is proven infeasible.
+  //
+  // It does not clear the constraints part of the working model of the context.
+  bool ImportAndSimplifyConstraints(
+      const CpModelProto& in_model,
+      const std::vector<int>& ignored_constraints);
+
+ private:
+  // Overwrites the out_model to be unsat. Returns false.
+  bool CreateUnsatModel();
+
+  void CopyEnforcementLiterals(const ConstraintProto& orig,
+                               ConstraintProto* dest);
+  bool OneEnforcementLiteralIsFalse(const ConstraintProto& ct) const;
+
+  // All these functions return false if the constraint is found infeasible.
+  bool CopyBoolOr(const ConstraintProto& ct);
+  bool CopyBoolAnd(const ConstraintProto& ct);
+  bool CopyLinear(const ConstraintProto& ct);
+  bool CopyAtMostOne(const ConstraintProto& ct);
+  bool CopyExactlyOne(const ConstraintProto& ct);
+  bool CopyInterval(const ConstraintProto& ct, int c);
+
+  PresolveContext* context_;
+  int64_t skipped_non_zero_ = 0;
+
+  // Temp vectors.
+  std::vector<int> non_fixed_variables_;
+  std::vector<int64_t> non_fixed_coefficients_;
+  absl::flat_hash_map<int, int> interval_mapping_;
+  int starting_constraint_index_ = 0;
+  std::vector<int> temp_enforcement_literals_;
+  std::vector<int> temp_literals_;
+};
+
+// Import the constraints from the in_model to the presolve context.
+// It performs on the fly simplification, and returns false if the
+// model is proved infeasible.
+bool ImportConstraintsWithBasicPresolveIntoContext(const CpModelProto& in_model,
+                                                   PresolveContext* context);
+
+// Copies the non constraint, non variables part of the model.
+void CopyEverythingExceptVariablesAndConstraintsFieldsIntoContext(
+    const CpModelProto& in_model, PresolveContext* context);
 
 // Convenient wrapper to call the full presolve.
 bool PresolveCpModel(PresolveContext* context,

@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -134,6 +134,7 @@
 #ifndef OR_TOOLS_LINEAR_SOLVER_LINEAR_SOLVER_H_
 #define OR_TOOLS_LINEAR_SOLVER_LINEAR_SOLVER_H_
 
+#include <cstdint>
 #include <functional>
 #include <limits>
 #include <map>
@@ -303,6 +304,11 @@ class MPSolver {
   const std::vector<MPVariable*>& variables() const { return variables_; }
 
   /**
+   * Returns the variable at position index.
+   */
+  MPVariable* variable(int index) const { return variables_[index]; }
+
+  /**
    * Looks up a variable by name, and returns nullptr if it does not exist. The
    * first call has a O(n) complexity, as the variable name index is lazily
    * created upon first use. Will crash if variable names are not unique.
@@ -367,6 +373,9 @@ class MPSolver {
    * They are listed in the order in which they were created.
    */
   const std::vector<MPConstraint*>& constraints() const { return constraints_; }
+
+  /** Returns the constraint at the given index. */
+  MPConstraint* constraint(int index) const { return constraints_[index]; }
 
   /**
    *  Looks up a constraint by name, and returns nullptr if it does not exist.
@@ -570,6 +579,8 @@ class MPSolver {
    *     like it should be):
    * - loading a solution whose variables don't correspond to the solver's
    *   current variables
+   * - loading a dual solution whose constraints don't correspond to the
+   *   solver's current constraints
    * - loading a solution with a status other than OPTIMAL / FEASIBLE.
    *
    * Note: the objective value isn't checked. You can use VerifySolution() for
@@ -697,14 +708,14 @@ class MPSolver {
   }
 
   /// Returns the number of simplex iterations.
-  int64 iterations() const;
+  int64_t iterations() const;
 
   /**
    * Returns the number of branch-and-bound nodes evaluated during the solve.
    *
    * Only available for discrete problems.
    */
-  int64 nodes() const;
+  int64_t nodes() const;
 
   /// Returns a string describing the underlying solver and its version.
   std::string SolverVersion() const;
@@ -777,12 +788,12 @@ class MPSolver {
   // DEPRECATED: Use TimeLimit() and SetTimeLimit(absl::Duration) instead.
   // NOTE: These deprecated functions used the convention time_limit = 0 to mean
   // "no limit", which now corresponds to time_limit_ = InfiniteDuration().
-  int64 time_limit() const {
+  int64_t time_limit() const {
     return time_limit_ == absl::InfiniteDuration()
                ? 0
                : absl::ToInt64Milliseconds(time_limit_);
   }
-  void set_time_limit(int64 time_limit_milliseconds) {
+  void set_time_limit(int64_t time_limit_milliseconds) {
     SetTimeLimit(time_limit_milliseconds == 0
                      ? absl::InfiniteDuration()
                      : absl::Milliseconds(time_limit_milliseconds));
@@ -792,13 +803,9 @@ class MPSolver {
   }
 
   // DEPRECATED: Use DurationSinceConstruction() instead.
-  int64 wall_time() const {
+  int64_t wall_time() const {
     return absl::ToInt64Milliseconds(DurationSinceConstruction());
   }
-
-  // Supports search and loading Gurobi shared library.
-  static bool LoadGurobiSharedLibrary();
-  static void SetGurobiLibraryPath(const std::string& full_library_path);
 
   friend class GLPKInterface;
   friend class CLPInterface;
@@ -835,10 +842,6 @@ class MPSolver {
 
   // Generates the map from constraint names to their indices.
   void GenerateConstraintNameIndex() const;
-
-  // Checks licenses for commercial solver, and checks shared library loading
-  // for or-tools.
-  static bool GurobiIsCorrectlyInstalled();
 
   // The name of the linear programming problem.
   const std::string name_;
@@ -1531,10 +1534,10 @@ class MPSolverInterface {
 
   // When the underlying solver does not provide the number of simplex
   // iterations.
-  static constexpr int64 kUnknownNumberOfIterations = -1;
+  static constexpr int64_t kUnknownNumberOfIterations = -1;
   // When the underlying solver does not provide the number of
   // branch-and-bound nodes.
-  static constexpr int64 kUnknownNumberOfNodes = -1;
+  static constexpr int64_t kUnknownNumberOfNodes = -1;
 
   // Constructor. The user will access the MPSolverInterface through the
   // MPSolver passed as argument.
@@ -1609,10 +1612,10 @@ class MPSolverInterface {
   // ------ Query statistics on the solution and the solve ------
   // Returns the number of simplex iterations. The problem must be discrete,
   // otherwise it crashes, or returns kUnknownNumberOfIterations in NDEBUG mode.
-  virtual int64 iterations() const = 0;
+  virtual int64_t iterations() const = 0;
   // Returns the number of branch-and-bound nodes. The problem must be discrete,
   // otherwise it crashes, or returns kUnknownNumberOfNodes in NDEBUG mode.
-  virtual int64 nodes() const = 0;
+  virtual int64_t nodes() const = 0;
   // Returns the best objective bound. The problem must be discrete, otherwise
   // it crashes, or returns trivial bound (+/- inf) in NDEBUG mode.
   double best_objective_bound() const;

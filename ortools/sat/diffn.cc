@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,8 @@
 #include "ortools/sat/diffn.h"
 
 #include <algorithm>
+#include <cstdint>
+#include <limits>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_join.h"
@@ -77,8 +79,8 @@ void AddIsEqualToMaxOf(IntegerVariable max_var,
 void AddCumulativeRelaxation(const std::vector<IntervalVariable>& x_intervals,
                              SchedulingConstraintHelper* x,
                              SchedulingConstraintHelper* y, Model* model) {
-  int64 min_starts = kint64max;
-  int64 max_ends = kint64min;
+  int64_t min_starts = std::numeric_limits<int64_t>::max();
+  int64_t max_ends = std::numeric_limits<int64_t>::min();
   std::vector<AffineExpression> sizes;
   for (int box = 0; box < y->NumTasks(); ++box) {
     min_starts = std::min(min_starts, y->StartMin(box).value());
@@ -97,7 +99,7 @@ void AddCumulativeRelaxation(const std::vector<IntervalVariable>& x_intervals,
   // (max_end - min_start) >= capacity.
   const AffineExpression capacity(
       model->Add(NewIntegerVariable(0, CapSub(max_ends, min_starts))));
-  const std::vector<int64> coeffs = {-capacity.coeff.value(), -1, 1};
+  const std::vector<int64_t> coeffs = {-capacity.coeff.value(), -1, 1};
   model->Add(
       WeightedSumGreaterOrEqual({capacity.var, min_start_var, max_end_var},
                                 coeffs, capacity.constant.value()));
@@ -118,7 +120,7 @@ IntegerValue FindCanonicalValue(IntegerValue lb, IntegerValue ub) {
     return -FindCanonicalValue(-ub, -lb);
   }
 
-  int64 mask = 0;
+  int64_t mask = 0;
   IntegerValue candidate = ub;
   for (int o = 0; o < 62; ++o) {
     mask = 2 * mask + 1;
@@ -320,6 +322,10 @@ void NonOverlappingRectanglesDisjunctivePropagator::Register(
   global_x_.WatchAllTasks(fast_id_, watcher_);
   global_y_.WatchAllTasks(fast_id_, watcher_);
 
+  // This propagator is the one making sure our propagation is complete, so
+  // we do need to make sure it is called again if it modified some bounds.
+  watcher_->NotifyThatPropagatorMayNotReachFixedPointInOnePass(fast_id_);
+
   const int slow_id = watcher_->Register(this);
   watcher_->SetPropagatorPriority(slow_id, slow_priority);
   global_x_.WatchAllTasks(slow_id, watcher_);
@@ -424,8 +430,8 @@ bool NonOverlappingRectanglesDisjunctivePropagator::
     y_.ResetFromSubset(y, boxes);
 
     // Collect the common overlapping coordinates of all boxes.
-    IntegerValue lb(kint64min);
-    IntegerValue ub(kint64max);
+    IntegerValue lb(std::numeric_limits<int64_t>::min());
+    IntegerValue ub(std::numeric_limits<int64_t>::max());
     for (int i = 0; i < y_.NumTasks(); ++i) {
       lb = std::max(lb, y_.StartMax(i));
       ub = std::min(ub, y_.EndMin(i) - 1);
@@ -487,6 +493,39 @@ bool NonOverlappingRectanglesDisjunctivePropagator::Propagate() {
   // We can actually swap dimensions to propagate vertically.
   RETURN_IF_FALSE(FindBoxesThatMustOverlapAHorizontalLineAndPropagate(
       global_y_, global_x_, inner_propagate));
+
+  // If two boxes must overlap but do not have a mandatory line/column that
+  // crosses both of them, then the code above do not see it. So we manually
+  // propagate this case.
+  //
+  // TODO(user): Since we are at it, do more propagation even if no conflict?
+  // This rarely propagate, so disabled for now. Investigate if it is worth
+  // it.
+  if (/*DISABLES CODE*/ (false) && watcher_->GetCurrentId() == fast_id_) {
+    const int num_boxes = global_x_.NumTasks();
+    for (int box1 = 0; box1 < num_boxes; ++box1) {
+      if (!global_x_.IsPresent(box1)) continue;
+      for (int box2 = box1 + 1; box2 < num_boxes; ++box2) {
+        if (!global_x_.IsPresent(box2)) continue;
+        if (global_x_.EndMin(box1) <= global_x_.StartMax(box2)) continue;
+        if (global_x_.EndMin(box2) <= global_x_.StartMax(box1)) continue;
+        if (global_y_.EndMin(box1) <= global_y_.StartMax(box2)) continue;
+        if (global_y_.EndMin(box2) <= global_y_.StartMax(box1)) continue;
+
+        // X and Y must overlap. This is a conflict.
+        global_x_.ClearReason();
+        global_x_.AddPresenceReason(box1);
+        global_x_.AddPresenceReason(box2);
+        global_x_.AddReasonForBeingBefore(box1, box2);
+        global_x_.AddReasonForBeingBefore(box2, box1);
+        global_y_.ClearReason();
+        global_y_.AddReasonForBeingBefore(box1, box2);
+        global_y_.AddReasonForBeingBefore(box2, box1);
+        global_x_.ImportOtherReasons(global_y_);
+        return global_x_.ReportConflict();
+      }
+    }
+  }
 
   return true;
 }

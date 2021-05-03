@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -eo pipefail
 
 function extract() {
@@ -21,7 +20,7 @@ function unpack() {
   local -r DESTINATION="${ARCHIVE_DIR}/${RELATIVE_DIR}"
   if [[  ! -d "${DESTINATION}" ]] ; then
     local -r ARCHIVE_NAME=$(basename "${URL}")
-    test -f "${ARCHIVE_NAME}" || wget "${URL}"
+    [[ -f "${ARCHIVE_NAME}" ]] || wget "${URL}"
     extract "${ARCHIVE_NAME}"
     rm -f "${ARCHIVE_NAME}"
   fi
@@ -53,8 +52,8 @@ function install_qemu() {
 
   # Qemu (meson based build) depends on: pkgconf, libglib2.0, python3, ninja
   ./configure \
-    --prefix=${QEMU_INSTALL} \
-    --target-list=${QEMU_TARGET} \
+    --prefix="${QEMU_INSTALL}" \
+    --target-list="${QEMU_TARGET}" \
     --audio-drv-list= \
     --disable-brlapi \
     --disable-curl \

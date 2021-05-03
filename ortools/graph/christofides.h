@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,8 +36,8 @@ namespace operations_research {
 
 using ::util::CompleteGraph;
 
-template <typename CostType, typename ArcIndex = int64,
-          typename NodeIndex = int32,
+template <typename CostType, typename ArcIndex = int64_t,
+          typename NodeIndex = int32_t,
           typename CostFunction = std::function<CostType(NodeIndex, NodeIndex)>>
 class ChristofidesPathSolver {
  public:
@@ -79,7 +79,7 @@ class ChristofidesPathSolver {
   //  return a + b;
   //}
   //template <>
-  int64 SafeAdd(int64 a, int64 b) {
+  int64_t SafeAdd(int64_t a, int64_t b) {
     return CapAdd(a, b);
   }
 

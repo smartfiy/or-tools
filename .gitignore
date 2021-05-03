@@ -16,12 +16,13 @@ or-tools*.zip
 *.lib
 *.exp
 *.pdb
+*.pbtxt
 *.ass
 *.swp
 
-build.log
+build*.log
 test.log
-publish.log
+publish*.log
 ortools/gen/*
 !ortools/gen/ortools
 ortools/gen/ortools/*
@@ -43,6 +44,13 @@ bin/
 install/
 examples/notebook/.ipynb_checkpoints
 
+# Release stuff
+or-tools.snk
+private-key.gpg
+settings.xml
+export
+
+
 ortools/bazel-*
 examples/bazel-*
 bazel-*
@@ -51,6 +59,7 @@ bazel-*
 
 tools/docker/export
 
+# IDE stuff
 CMakeLists.txt.user
 *.userprefs
 *build*/*
@@ -64,6 +73,7 @@ cache/
 
 ortools/linear_solver/lpi_glop.cc
 
+# .Net code gen
 ortools/dotnet/*.props
 ortools/dotnet/*.png
 ortools/dotnet/*/*.csproj
@@ -80,5 +90,3 @@ examples/contrib/obj
 examples/dotnet/bin
 examples/dotnet/obj
 
-# Release key
-tools/docker/or-tools.snk

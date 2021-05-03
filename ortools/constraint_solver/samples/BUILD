@@ -20,6 +20,8 @@ code_sample_cc(name = "tsp_cities")
 
 code_sample_cc(name = "tsp_distance_matrix")
 
+code_sample_cc(name = "vrp_breaks")
+
 code_sample_cc(name = "vrp_capacity")
 
 code_sample_cc(name = "vrp")

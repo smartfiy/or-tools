@@ -32,10 +32,14 @@ JAVA_ORTOOLS_NATIVE_LIBS := $(LIB_DIR)/$(LIB_PREFIX)jniortools.$(JNI_LIB_EXT)
 JAVAFLAGS := -Djava.library.path=$(LIB_DIR)
 
 # Main target
+.PHONY: java_runtime # Build Java OR-Tools runtime.
 .PHONY: java # Build Java OR-Tools.
 .PHONY: test_java # Test Java OR-Tools using various examples.
 .PHONY: package_java # Create Java OR-Tools maven package.
+.PHONY: publish_java_runtime # Publish Java OR-Tools runtime maven package to oss.sonatype.org.
+.PHONY: publish_java # Publish Java OR-Tools maven package to oss.sonatype.org.
 ifndef HAS_JAVA
+java_runtime: java
 java:
 	@echo JAVA_HOME = $(JAVA_HOME)
 	@echo JAVAC_BIN = $(JAVAC_BIN)
@@ -47,14 +51,18 @@ java:
  Check Makefile.local for more information.)
 check_java: java
 test_java: java
-package_java: java
+publish_java_runtime: java
+publish_java: java
 else
-java: java_package
+java_runtime: java_runtime_pimpl
+java: java_pimpl
 check_java: check_java_pimpl
 test_java: test_java_pimpl
-package_java: java
+publish_java_runtime: publish_java_runtime_pimpl
+publish_java: publish_java_pimpl
 BUILT_LANGUAGES +=, Java
 endif
+package_java: java
 
 # Detect RuntimeIDentifier
 ifeq ($(OS),Windows)
@@ -64,7 +72,7 @@ else
   JAVA_NATIVE_IDENTIFIER=linux-x86-64
   else
     ifeq ($(OS),Darwin)
-    JAVA_NATIVE_IDENTIFIER=darwin
+    JAVA_NATIVE_IDENTIFIER=darwin-x86-64
     else
     $(error OS unknown !)
     endif
@@ -91,6 +99,9 @@ $(GEN_DIR)/java/com/google/ortools/linearsolver:
 
 $(GEN_DIR)/java/com/google/ortools/flatzinc:
 	-$(MKDIR_P) $(GEN_PATH)$Sjava$Scom$Sgoogle$Sortools$Sflatzinc
+
+$(GEN_DIR)/java/com/google/ortools/init:
+	$(MKDIR_P) $(GEN_PATH)$Sjava$Scom$Sgoogle$Sortools$Sinit
 
 $(GEN_DIR)/java/com/google/ortools/sat:
 	-$(MKDIR_P) $(GEN_PATH)$Sjava$Scom$Sgoogle$Sortools$Ssat
@@ -220,6 +231,26 @@ $(OBJ_DIR)/swig/sat_java_wrap.$O: \
  -c $(GEN_PATH)$Sortools$Ssat$Ssat_java_wrap.cc \
  $(OBJ_OUT)$(OBJ_DIR)$Sswig$Ssat_java_wrap.$O
 
+$(GEN_DIR)/ortools/init/init_java_wrap.cc: \
+ $(SRC_DIR)/ortools/init/java/init.i \
+ $(SRC_DIR)/ortools/base/base.i \
+ $(INIT_DEPS) \
+ | $(GEN_DIR)/ortools/init $(GEN_DIR)/java/com/google/ortools/init
+	$(SWIG_BINARY) $(SWIG_INC) -I$(INC_DIR) -c++ -java $(SWIG_DOXYGEN) \
+ -o $(GEN_PATH)$Sortools$Sinit$Sinit_java_wrap.cc \
+ -package com.google.ortools.init \
+ -module main \
+ -outdir $(GEN_PATH)$Sjava$Scom$Sgoogle$Sortools$Sinit \
+ $(SRC_DIR)$Sortools$Sinit$Sjava$Sinit.i
+
+$(OBJ_DIR)/swig/init_java_wrap.$O: \
+ $(GEN_DIR)/ortools/init/init_java_wrap.cc \
+ $(INIT_DEPS) \
+ | $(OBJ_DIR)/swig
+	$(CCC) $(JNIFLAGS) $(JAVA_INC) \
+ -c $(GEN_PATH)$Sortools$Sinit$Sinit_java_wrap.cc \
+ $(OBJ_OUT)$(OBJ_DIR)$Sswig$Sinit_java_wrap.$O
+
 $(GEN_DIR)/ortools/util/util_java_wrap.cc: \
  $(SRC_DIR)/ortools/util/java/sorted_interval_list.i \
  $(SRC_DIR)/ortools/base/base.i \
@@ -246,6 +277,7 @@ $(JAVA_ORTOOLS_NATIVE_LIBS): \
  $(OBJ_DIR)/swig/knapsack_solver_java_wrap.$O \
  $(OBJ_DIR)/swig/graph_java_wrap.$O \
  $(OBJ_DIR)/swig/linear_solver_java_wrap.$O \
+ $(OBJ_DIR)/swig/init_java_wrap.$O \
  $(OBJ_DIR)/swig/sat_java_wrap.$O \
  $(OBJ_DIR)/swig/util_java_wrap.$O
 	$(DYNAMIC_LD) $(LD_OUT)$(LIB_DIR)$S$(LIB_PREFIX)jniortools.$(JNI_LIB_EXT) \
@@ -253,6 +285,7 @@ $(JAVA_ORTOOLS_NATIVE_LIBS): \
  $(OBJ_DIR)$Sswig$Sknapsack_solver_java_wrap.$O \
  $(OBJ_DIR)$Sswig$Sgraph_java_wrap.$O \
  $(OBJ_DIR)$Sswig$Slinear_solver_java_wrap.$O \
+ $(OBJ_DIR)$Sswig$Sinit_java_wrap.$O \
  $(OBJ_DIR)$Sswig$Ssat_java_wrap.$O \
  $(OBJ_DIR)$Sswig$Sutil_java_wrap.$O \
  $(OR_TOOLS_LNK) \
@@ -359,12 +392,20 @@ SOURCE_PROJECT_PATH = $(subst /,$S,$(SOURCE_PROJECT_DIR))
 
 .PHONY: build # Build a Maven java program.
 build: $(SOURCE_PROJECT_DIR)/pom.xml $(SOURCE)
-	cd $(SOURCE_PROJECT_PATH) && "$(MVN_BIN)" compile
+	cd $(SOURCE_PROJECT_PATH) && "$(MVN_BIN)" compile -B
 
 .PHONY: run # Run a Maven Java program.
 run: build
 	cd $(SOURCE_PROJECT_PATH) && "$(MVN_BIN)" exec:java $(ARGS)
 endif
+
+ifneq ($(ORTOOLS_TOKEN),)
+GPG_SIGN=
+else
+GPG_SIGN= -Dgpg.skip=true
+endif
+
+GPG_ARGS ?= <arg>--pinentry-mode</arg><arg>loopback</arg>
 
 ###################
 ## Maven package ##
@@ -372,9 +413,7 @@ endif
 $(TEMP_JAVA_DIR):
 	$(MKDIR) $(TEMP_JAVA_DIR)
 
-$(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT): | $(TEMP_JAVA_DIR)
-	$(MKDIR) $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)
-
+# ortools-native
 $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT): | $(TEMP_JAVA_DIR)
 	$(MKDIR) $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT)
 
@@ -388,9 +427,11 @@ $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/pom.xml: \
  $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT)$Spom.xml
 	$(SED) -i -e 's/@JAVA_NATIVE_PROJECT@/$(JAVA_ORTOOLS_NATIVE_PROJECT)/' \
  $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT)$Spom.xml
+	$(SED) -i -e 's;@GPG_ARGS@;$(GPG_ARGS);' \
+ $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT)$Spom.xml
 
-.PHONY: java_runtime
-java_runtime: $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/timestamp
+.PHONY: java_runtime_pimpl
+java_runtime_pimpl: $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/timestamp
 
 $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/timestamp: \
  $(JAVA_ORTOOLS_NATIVE_LIBS) \
@@ -400,17 +441,26 @@ $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/timestamp: \
 ifeq ($(SYSTEM),unix)
 	$(COPY) $(OR_TOOLS_LIBS) $(JAVA_NATIVE_PATH)$Sresources$S$(JAVA_NATIVE_IDENTIFIER)
 endif
-	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" compile
-	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" package
-	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" install
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" compile -B
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" package -B
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" install -B $(GPG_SIGN)
 	$(TOUCH) $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT)$Stimestamp
 
+# ortools-java
+ifeq ($(UNIVERSAL_JAVA_PACKAGE),1)
+JAVA_ORTOOLS_POM=pom-full.xml.in
+else
+JAVA_ORTOOLS_POM=pom-local.xml.in
+endif
+
+$(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT): | $(TEMP_JAVA_DIR)
+	$(MKDIR) $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)
 
 $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT)/pom.xml: \
- ${SRC_DIR}/ortools/java/pom-local.xml.in \
+ ${SRC_DIR}/ortools/java/$(JAVA_ORTOOLS_POM) \
  | $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT)
 	$(SED) -e "s/@PROJECT_VERSION@/$(OR_TOOLS_VERSION)/" \
- ortools$Sjava$Spom-local.xml.in \
+ ortools$Sjava$S$(JAVA_ORTOOLS_POM) \
  > $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)$Spom.xml
 	$(SED) -i -e 's/@JAVA_PACKAGE@/$(JAVA_ORTOOLS_PACKAGE)/' \
  $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)$Spom.xml
@@ -418,9 +468,11 @@ $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT)/pom.xml: \
  $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)$Spom.xml
 	$(SED) -i -e 's/@JAVA_PROJECT@/$(JAVA_ORTOOLS_PROJECT)/' \
  $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)$Spom.xml
+	$(SED) -i -e 's;@GPG_ARGS@;$(GPG_ARGS);' \
+ $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)$Spom.xml
 
-.PHONY: java_package
-java_package: $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT)/timestamp
+.PHONY: java_pimpl
+java_pimpl: $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT)/timestamp
 
 $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT)/timestamp: \
  $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/timestamp \
@@ -457,9 +509,9 @@ else
 	$(COPYREC) /E /I $(SRC_DIR)$Sortools$Sjava$Scom $(JAVA_PATH)$Sjava$Scom
 	$(COPYREC) /E /I $(GEN_PATH)$Sjava$Scom $(JAVA_PATH)$Sjava$Scom
 endif
-	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT) && "$(MVN_BIN)" compile
-	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT) && "$(MVN_BIN)" package
-	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT) && "$(MVN_BIN)" install
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT) && "$(MVN_BIN)" compile -B
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT) && "$(MVN_BIN)" package -B
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT) && "$(MVN_BIN)" install -B $(GPG_SIGN)
 	$(TOUCH) $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT)$Stimestamp
 
 #############################
@@ -498,6 +550,8 @@ $$(TEMP_JAVA_DIR)/$1/%/pom.xml: \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
 	$$(SED) -i -e 's/@PROJECT_VERSION_MINOR@/$$(OR_TOOLS_MINOR)/' \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
+	$$(SED) -i -e 's/@PROJECT_VERSION_PATCH@/$$(GIT_REVISION)/' \
+ $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
 	$$(SED) -i -e 's/@JAVA_PROJECT@/$$(JAVA_ORTOOLS_PROJECT)/' \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
 
@@ -509,12 +563,12 @@ $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java: \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$S$$(JAVA_SRC_PATH)
 
 rjava_%: \
- java_package \
+ java \
  $$(SRC_DIR)/ortools/$1/samples/%.java \
  $$(TEMP_JAVA_DIR)/$1/%/pom.xml \
  $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java \
  FORCE
-	cd $$(TEMP_JAVA_DIR)$$S$1$$S$$* && "$$(MVN_BIN)" compile
+	cd $$(TEMP_JAVA_DIR)$$S$1$$S$$* && "$$(MVN_BIN)" compile -B
 	cd $$(TEMP_JAVA_DIR)$$S$1$$S$$* && "$$(MVN_BIN)" exec:java $$(ARGS)
 endef
 
@@ -547,6 +601,8 @@ $$(TEMP_JAVA_DIR)/$1/%/pom.xml: \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
 	$$(SED) -i -e 's/@PROJECT_VERSION_MINOR@/$$(OR_TOOLS_MINOR)/' \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
+	$$(SED) -i -e 's/@PROJECT_VERSION_PATCH@/$$(GIT_REVISION)/' \
+ $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
 	$$(SED) -i -e 's/@JAVA_PROJECT@/$$(JAVA_ORTOOLS_PROJECT)/' \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$Spom.xml
 
@@ -558,12 +614,12 @@ $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java: \
  $$(TEMP_JAVA_DIR)$$S$1$$S$$*$$S$$(JAVA_SRC_PATH)
 
 rjava_%: \
- java_package \
+ java \
  $$(SRC_DIR)/examples/$1/%.java \
  $$(TEMP_JAVA_DIR)/$1/%/pom.xml \
  $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java \
  FORCE
-	cd $$(TEMP_JAVA_DIR)$$S$1$$S$$* && "$$(MVN_BIN)" compile
+	cd $$(TEMP_JAVA_DIR)$$S$1$$S$$* && "$$(MVN_BIN)" compile -B
 	cd $$(TEMP_JAVA_DIR)$$S$1$$S$$* && "$$(MVN_BIN)" exec:java $$(ARGS)
 endef
 
@@ -593,6 +649,8 @@ $(TEMP_JAVA_DIR)/tests/%/pom.xml: \
  $(TEMP_JAVA_DIR)$Stests$S$*$Spom.xml
 	$(SED) -i -e 's/@PROJECT_VERSION_MINOR@/$(OR_TOOLS_MINOR)/' \
  $(TEMP_JAVA_DIR)$Stests$S$*$Spom.xml
+	$(SED) -i -e 's/@PROJECT_VERSION_PATCH@/$(GIT_REVISION)/' \
+ $(TEMP_JAVA_DIR)$Stests$S$*$Spom.xml
 	$(SED) -i -e 's/@JAVA_PROJECT@/$(JAVA_ORTOOLS_PROJECT)/' \
  $(TEMP_JAVA_DIR)$Stests$S$*$Spom.xml
 
@@ -604,12 +662,12 @@ $(TEMP_JAVA_DIR)/tests/%/$(JAVA_TEST_DIR)/%.java: \
  $(TEMP_JAVA_DIR)$Stests$S$*$S$(JAVA_TEST_PATH)
 
 rjava_%: \
- java_package \
+ java \
  $(SRC_DIR)/examples/tests/%.java \
  $(TEMP_JAVA_DIR)/tests/%/pom.xml \
  $(TEMP_JAVA_DIR)/tests/%/$(JAVA_TEST_DIR)/%.java \
  FORCE
-	cd $(TEMP_JAVA_DIR)$Stests$S$* && "$(MVN_BIN)" compile
+	cd $(TEMP_JAVA_DIR)$Stests$S$* && "$(MVN_BIN)" compile -B
 	cd $(TEMP_JAVA_DIR)$Stests$S$* && "$(MVN_BIN)" test $(ARGS)
 
 #############################
@@ -628,6 +686,7 @@ test_java_constraint_solver_samples: \
  rjava_TspCircuitBoard \
  rjava_TspDistanceMatrix \
  rjava_Vrp \
+ rjava_VrpBreaks \
  rjava_VrpCapacity \
  rjava_VrpDropNodes \
  rjava_VrpGlobalSpan \
@@ -758,6 +817,14 @@ test_java_pimpl: \
  test_java_contrib \
  test_java_java
 
+.PHONY: publish_java_runtime_pimpl
+publish_java_runtime_pimpl: java_runtime
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" deploy
+
+.PHONY: publish_java_pimpl
+publish_java_pimpl: java
+	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_PROJECT) && "$(MVN_BIN)" deploy
+
 #######################
 ##  EXAMPLE ARCHIVE  ##
 #######################
@@ -845,6 +912,7 @@ clean_java:
 	-$(DEL) $(GEN_PATH)$Sortools$Slinear_solver$S*java_wrap*
 	-$(DEL) $(GEN_PATH)$Sortools$Ssat$S*java_wrap*
 	-$(DEL) $(GEN_PATH)$Sortools$Sutil$S*java_wrap*
+	-$(DEL) $(GEN_PATH)$Sortools$Sinit$S*java_wrap*
 	-$(DEL) $(OBJ_DIR)$Sswig$S*_java_wrap.$O
 	-$(DEL) $(LIB_DIR)$S$(LIB_PREFIX)jni*.$(JNI_LIB_EXT)
 	-$(DEL) $(LIB_DIR)$S*.jar

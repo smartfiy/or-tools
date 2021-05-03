@@ -213,6 +213,8 @@ foreach(SUBPROJECT IN ITEMS
  ${GSCIP_DIR}
  glop
  graph
+ gurobi
+ init
  linear_solver
  lp_data
  port

@@ -20,11 +20,13 @@ PYTHON_EXECUTABLE := $(WINDOWS_PATH_TO_PYTHON)\$(PYTHON_COMPILER)
 else
 PYTHON_EXECUTABLE := $(shell $(WHICH) $(PYTHON_COMPILER) 2>nul)
 endif
+TWINE_EXECUTABLE := $(shell $(WHICH) twine.exe 2>nul)
 SET_PYTHONPATH = set PYTHONPATH=$(OR_TOOLS_PYTHONPATH) &&
 GEN_MYPY := $(shell $(WHICH) protoc-gen-mypy 2> NUL)
 else # UNIX
 PYTHON_COMPILER ?= python$(UNIX_PYTHON_VER)
 PYTHON_EXECUTABLE := $(shell which $(PYTHON_COMPILER))
+TWINE_EXECUTABLE := $(shell command -v twine 2> /dev/null)
 SET_PYTHONPATH = PYTHONPATH=$(OR_TOOLS_PYTHONPATH)
 GEN_MYPY := $(shell command -v protoc-gen-mypy 2> /dev/null)
 endif
@@ -39,6 +41,7 @@ SWIG_PYTHON3_FLAG := -py3 -DPY3
 PYTHON3_CFLAGS := -DPY3
 
 # All libraries and dependecies
+PYINIT_LIBS = $(LIB_DIR)/_pywrapinit.$(SWIG_PYTHON_LIB_SUFFIX)
 PYALGORITHMS_LIBS = $(LIB_DIR)/_pywrapknapsack_solver.$(SWIG_PYTHON_LIB_SUFFIX)
 PYGRAPH_LIBS = $(LIB_DIR)/_pywrapgraph.$(SWIG_PYTHON_LIB_SUFFIX)
 PYCP_LIBS = $(LIB_DIR)/_pywrapcp.$(SWIG_PYTHON_LIB_SUFFIX)
@@ -48,6 +51,7 @@ PYDATA_LIBS = $(LIB_DIR)/_pywraprcpsp.$(SWIG_PYTHON_LIB_SUFFIX)
 PYSORTED_INTERVAL_LIST_LIBS = $(LIB_DIR)/_sorted_interval_list.$(SWIG_PYTHON_LIB_SUFFIX)
 PYTHON_OR_TOOLS_LIBS = \
  $(GEN_DIR)/ortools/__init__.py \
+ $(PYINIT_LIBS) \
  $(PYALGORITHMS_LIBS) \
  $(PYGRAPH_LIBS) \
  $(PYCP_LIBS) \
@@ -61,10 +65,12 @@ PYTHON_OR_TOOLS_LIBS = \
 .PHONY: check_python # Quick check only running Python OR-Tools samples.
 .PHONY: test_python # Run all Python OR-Tools test targets.
 .PHONY: package_python # Create Python ortools wheel package.
+.PHONY: publish_python # Publish Python OR-Tools wheel package to Pypi.org.
 ifneq ($(PYTHON_EXECUTABLE),)
 python: $(PYTHON_OR_TOOLS_LIBS)
 check_python: check_python_pimpl
 test_python: test_python_pimpl
+publish_python: publish_python_pimpl
 BUILT_LANGUAGES +=, Python$(PYTHON_VERSION)
 else
 python:
@@ -73,6 +79,7 @@ python:
 check_python: python
 test_python: python
 package_python: python
+publish_python: python
 endif
 
 PROTOBUF_PYTHON_DESC = dependencies/sources/protobuf-$(PROTOBUF_TAG)/python/google/protobuf/descriptor_pb2.py
@@ -102,6 +109,49 @@ $(GEN_DIR)/ortools/__init__.py: | $(GEN_DIR)/ortools
 #######################
 ##  Python Wrappers  ##
 #######################
+# init
+ifeq ($(PLATFORM),MACOSX)
+PYINIT_LDFLAGS = -install_name @rpath/_pywrapinit.$(SWIG_PYTHON_LIB_SUFFIX) #
+endif
+
+$(GEN_DIR)/ortools/init/pywrapinit.py: \
+ $(SRC_DIR)/ortools/init/init.h \
+ $(SRC_DIR)/ortools/base/base.i \
+ $(SRC_DIR)/ortools/util/python/vector.i \
+ $(SRC_DIR)/ortools/init/python/init.i \
+ $(INIT_DEPS) \
+ | $(GEN_DIR)/ortools/init
+	$(SWIG_BINARY) $(SWIG_INC) -I$(INC_DIR) -c++ -python $(SWIG_DOXYGEN) $(SWIG_PYTHON3_FLAG) \
+ -o $(GEN_PATH)$Sortools$Sinit$Sinit_python_wrap.cc \
+ -module pywrapinit \
+ ortools$Sinit$Spython$Sinit.i
+
+$(GEN_DIR)/ortools/init/init_python_wrap.cc: \
+ $(GEN_DIR)/ortools/init/pywrapinit.py
+
+$(OBJ_DIR)/swig/init_python_wrap.$O: \
+ $(GEN_DIR)/ortools/init/init_python_wrap.cc \
+ $(INIT_DEPS) \
+ | $(OBJ_DIR)/swig
+	$(CCC) $(CFLAGS) $(PYTHON_INC) $(PYTHON3_CFLAGS) \
+ -c $(GEN_PATH)$Sortools$Sinit$Sinit_python_wrap.cc \
+ $(OBJ_OUT)$(OBJ_DIR)$Sswig$Sinit_python_wrap.$O
+
+$(PYINIT_LIBS): $(OBJ_DIR)/swig/init_python_wrap.$O $(OR_TOOLS_LIBS)
+	$(DYNAMIC_LD) \
+ $(PYINIT_LDFLAGS) \
+ $(LD_OUT)$(LIB_DIR)$S_pywrapinit.$(SWIG_PYTHON_LIB_SUFFIX) \
+ $(OBJ_DIR)$Sswig$Sinit_python_wrap.$O \
+ $(OR_TOOLS_LNK) \
+ $(SYS_LNK) \
+ $(PYTHON_LNK) \
+ $(PYTHON_LDFLAGS)
+ifeq ($(SYSTEM),win)
+	copy $(LIB_DIR)$S_pywrapinit.$(SWIG_PYTHON_LIB_SUFFIX) $(GEN_PATH)\\ortools\\init\\_pywrapinit.pyd
+else
+	cp $(PYINIT_LIBS) $(GEN_PATH)/ortools/init
+endif
+
 # pywrapknapsack_solver
 ifeq ($(PLATFORM),MACOSX)
 PYALGORITHMS_LDFLAGS = -install_name @rpath/_pywrapknapsack_solver.$(SWIG_PYTHON_LIB_SUFFIX) #
@@ -547,6 +597,7 @@ test_python_constraint_solver_samples: \
  rpy_tsp_circuit_board \
  rpy_tsp_distance_matrix \
  rpy_vrp \
+ rpy_vrp_breaks \
  rpy_vrp_capacity \
  rpy_vrp_drop_nodes \
  rpy_vrp_global_span \
@@ -831,6 +882,7 @@ MISSING_PYPI_FILES = \
  $(PYPI_ARCHIVE_TEMP_DIR)/ortools/README.txt \
  $(PYPI_ARCHIVE_TEMP_DIR)/ortools/LICENSE-2.0.txt \
  $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools/__init__.py \
+ $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools/init \
  $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools/algorithms \
  $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools/graph \
  $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools/constraint_solver \
@@ -889,6 +941,13 @@ else
 	echo "__version__ = \"$(OR_TOOLS_PYTHON_VERSION)\"" >> \
  $(PYPI_ARCHIVE_TEMP_DIR)$Sortools$Sortools$S__init__.py
 endif
+
+$(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools/init: $(PYINIT_LIBS) | $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools
+	-$(DELREC) $(PYPI_ARCHIVE_TEMP_DIR)$Sortools$Sortools$Sinit
+	-$(MKDIR) $(PYPI_ARCHIVE_TEMP_DIR)$Sortools$Sortools$Sinit
+	$(TOUCH) $(PYPI_ARCHIVE_TEMP_DIR)$Sortools$Sortools$Sinit$S__init__.py
+	$(COPY) $(GEN_PATH)$Sortools$Sinit$Spywrapinit.py $(PYPI_ARCHIVE_TEMP_DIR)$Sortools$Sortools$Sinit
+	$(COPY) $(GEN_PATH)$Sortools$Sinit$S_pywrapinit.* $(PYPI_ARCHIVE_TEMP_DIR)$Sortools$Sortools$Sinit
 
 $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools/algorithms: $(PYALGORITHMS_LIBS) | $(PYPI_ARCHIVE_TEMP_DIR)/ortools/ortools
 	-$(DELREC) $(PYPI_ARCHIVE_TEMP_DIR)$Sortools$Sortools$Salgorithms
@@ -969,6 +1028,7 @@ test_package_python: package_python
 	$(COPY) ortools$Ssat$Ssamples$Ssimple_sat_program.py $(PYPI_ARCHIVE_TEMP_DIR)$Svenv
 	$(COPY) ortools$Sconstraint_solver$Ssamples$Stsp.py $(PYPI_ARCHIVE_TEMP_DIR)$Svenv
 	$(COPY) ortools$Sconstraint_solver$Ssamples$Svrp.py $(PYPI_ARCHIVE_TEMP_DIR)$Svenv
+	$(COPY) ortools$Sconstraint_solver$Ssamples$Scvrptw_break.py $(PYPI_ARCHIVE_TEMP_DIR)$Svenv
 ifneq ($(SYSTEM),win)
 	$(PYPI_ARCHIVE_TEMP_DIR)/venv/bin/python -m pip install $(PYPI_ARCHIVE_TEMP_DIR)/ortools/dist/*.whl
 	$(PYPI_ARCHIVE_TEMP_DIR)/venv/bin/python $(PYPI_ARCHIVE_TEMP_DIR)/venv/test.py
@@ -980,6 +1040,7 @@ ifneq ($(SYSTEM),win)
 	$(PYPI_ARCHIVE_TEMP_DIR)/venv/bin/python $(PYPI_ARCHIVE_TEMP_DIR)/venv/simple_sat_program.py
 	$(PYPI_ARCHIVE_TEMP_DIR)/venv/bin/python $(PYPI_ARCHIVE_TEMP_DIR)/venv/tsp.py
 	$(PYPI_ARCHIVE_TEMP_DIR)/venv/bin/python $(PYPI_ARCHIVE_TEMP_DIR)/venv/vrp.py
+	$(PYPI_ARCHIVE_TEMP_DIR)/venv/bin/python $(PYPI_ARCHIVE_TEMP_DIR)/venv/cvrptw_break.py
 else
 # wildcar not working on windows:  i.e. `pip install *.whl`:
 # *.whl is not a valid wheel filename.
@@ -993,8 +1054,13 @@ else
 	$(PYPI_ARCHIVE_TEMP_DIR)\venv\Scripts\python $(PYPI_ARCHIVE_TEMP_DIR)\venv\simple_sat_program.py
 	$(PYPI_ARCHIVE_TEMP_DIR)\venv\Scripts\python $(PYPI_ARCHIVE_TEMP_DIR)\venv\tsp.py
 	$(PYPI_ARCHIVE_TEMP_DIR)\venv\Scripts\python $(PYPI_ARCHIVE_TEMP_DIR)\venv\vrp.py
+	$(PYPI_ARCHIVE_TEMP_DIR)\venv\Scripts\python $(PYPI_ARCHIVE_TEMP_DIR)\venv\cvrptw_break.py
 endif
 endif # ifneq ($(PYTHON_EXECUTABLE),)
+
+.PHONY: publish_python_pimpl
+publish_python_pimpl: package_python
+	cd $(PYPI_ARCHIVE_TEMP_DIR)$Sortools && "$(TWINE_EXECUTABLE)" upload "*.whl"
 
 .PHONY: install_python # Install Python OR-Tools on the host system
 install_python: pypi_archive
@@ -1078,6 +1144,13 @@ clean_python:
 	-$(DEL) $(GEN_PATH)$Sortools$S__init__.py
 	-$(DEL) ortools$S*.pyc
 	-$(DELREC) ortools$S__pycache__
+	-$(DEL) $(GEN_PATH)$Sortools$Sinit$S*.py
+	-$(DEL) $(GEN_PATH)$Sortools$Sinit$S*.pyc
+	-$(DELREC) $(GEN_PATH)$Sortools$Sinit$S__pycache__
+	-$(DEL) ortools$Sinit$S*.pyc
+	-$(DELREC) ortools$Sinit$S__pycache__
+	-$(DEL) $(GEN_PATH)$Sortools$Sinit$S*_python_wrap.*
+	-$(DEL) $(GEN_PATH)$Sortools$Sinit$S_pywrap*
 	-$(DEL) $(GEN_PATH)$Sortools$Salgorithms$S*.py
 	-$(DEL) $(GEN_PATH)$Sortools$Salgorithms$S*.pyc
 	-$(DELREC) $(GEN_PATH)$Sortools$Salgorithms$S__pycache__

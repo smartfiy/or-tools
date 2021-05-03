@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #include "ortools/sat/timetable.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <memory>
 
@@ -26,8 +27,8 @@ namespace sat {
 
 void AddReservoirConstraint(std::vector<AffineExpression> times,
                             std::vector<IntegerValue> deltas,
-                            std::vector<Literal> presences, int64 min_level,
-                            int64 max_level, Model* model) {
+                            std::vector<Literal> presences, int64_t min_level,
+                            int64_t max_level, Model* model) {
   // We only create a side if it can fail.
   IntegerValue min_possible(0);
   IntegerValue max_possible(0);

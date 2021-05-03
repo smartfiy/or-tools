@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -31,7 +31,6 @@
 %include "ortools/base/base.i"
 
 %include "std_string.i"
-%include "stdint.i"
 
 %include "ortools/util/python/proto.i"
 
@@ -211,9 +210,9 @@ __pdoc__['Variable.thisown'] = False
 
 
   static double Infinity() { return operations_research::MPSolver::infinity(); }
-  void SetTimeLimit(int64 x) { $self->set_time_limit(x); }
-  int64 WallTime() const { return $self->wall_time(); }
-  int64 Iterations() const { return $self->iterations(); }
+  void SetTimeLimit(int64_t x) { $self->set_time_limit(x); }
+  int64_t WallTime() const { return $self->wall_time(); }
+  int64_t Iterations() const { return $self->iterations(); }
 }  // extend operations_research::MPSolver
 
 %extend operations_research::MPVariable {
@@ -277,7 +276,6 @@ PY_CONVERT(MPVariable);
 // These aren't unit tested, as they only run on machines with a Gurobi license.
 %unignore operations_research::MPSolver::GUROBI_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::GUROBI_MIXED_INTEGER_PROGRAMMING;
-%unignore operations_research::MPSolver::SetGurobiLibraryPath;
 %unignore operations_research::MPSolver::CPLEX_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::CPLEX_MIXED_INTEGER_PROGRAMMING;
 %unignore operations_research::MPSolver::XPRESS_LINEAR_PROGRAMMING;
@@ -328,7 +326,9 @@ PY_CONVERT(MPVariable);
 %unignore operations_research::MPSolver::SupportsProblemType;  // No unit test
 %unignore operations_research::MPSolver::wall_time;  // No unit test
 %unignore operations_research::MPSolver::Clear;  // No unit test
+%unignore operations_research::MPSolver::constraint;
 %unignore operations_research::MPSolver::constraints;
+%unignore operations_research::MPSolver::variable;
 %unignore operations_research::MPSolver::variables;
 %unignore operations_research::MPSolver::NumConstraints;
 %unignore operations_research::MPSolver::NumVariables;

@@ -88,6 +88,9 @@ $(GEN_DIR)/ortools/sat: | $(GEN_DIR)/ortools
 $(GEN_DIR)/ortools/util: | $(GEN_DIR)/ortools
 	-$(MKDIR) $(GEN_PATH)$Sortools$Sutil
 
+$(GEN_DIR)/ortools/init: | $(GEN_DIR)/ortools
+	-$(MKDIR) $(GEN_PATH)$Sortools$Sinit
+
 $(GEN_DIR)/examples: | $(GEN_DIR)
 	-$(MKDIR) $(GEN_PATH)$Sexamples
 
@@ -130,6 +133,9 @@ $(OBJ_DIR)/graph: | $(OBJ_DIR)
 $(OBJ_DIR)/gscip: | $(OBJ_DIR)
 	-$(MKDIR_P) $(OBJ_DIR)$Sgscip
 
+$(OBJ_DIR)/gurobi: | $(OBJ_DIR)
+	-$(MKDIR_P) $(OBJ_DIR)$Sgurobi
+
 $(OBJ_DIR)/linear_solver: | $(OBJ_DIR)
 	-$(MKDIR_P) $(OBJ_DIR)$Slinear_solver
 
@@ -156,6 +162,7 @@ PROTO_DEPS = \
 $(GEN_DIR)/ortools/util/optional_boolean.pb.h \
 $(GEN_DIR)/ortools/data/jobshop_scheduling.pb.h \
 $(GEN_DIR)/ortools/data/rcpsp.pb.h \
+$(GEN_DIR)/ortools/data/vector_bin_packing.pb.h \
 $(GEN_DIR)/ortools/glop/parameters.pb.h \
 $(GEN_DIR)/ortools/graph/flow_problem.pb.h \
 $(GEN_DIR)/ortools/sat/boolean_problem.pb.h \
@@ -196,7 +203,8 @@ $(OR_TOOLS_LIBS): \
  $(ALGORITHMS_LIB_OBJS) \
  $(SAT_LIB_OBJS) \
  $(CP_LIB_OBJS) \
- $(GSCIP_LIB_OBJS) | $(LIB_DIR)
+ $(GSCIP_LIB_OBJS) \
+ $(GUROBI_LIB_OBJS) | $(LIB_DIR)
 	$(LINK_CMD) \
  $(LD_OUT)$(LIB_DIR)$S$(LIB_PREFIX)ortools.$L \
  $(BASE_LIB_OBJS) \
@@ -212,6 +220,7 @@ $(OR_TOOLS_LIBS): \
  $(LP_LIB_OBJS) \
  $(CP_LIB_OBJS) \
  $(GSCIP_LIB_OBJS) \
+ $(GUROBI_LIB_OBJS) \
  $(DEPENDENCIES_LNK) \
  $(LDFLAGS)
 
@@ -223,7 +232,6 @@ FLATZINC_PATH = $(subst /,$S,$(FLATZINC_LIBS))
 FLATZINC_DEPS = \
 	$(SRC_DIR)/ortools/flatzinc/checker.h \
 	$(SRC_DIR)/ortools/flatzinc/cp_model_fz_solver.h \
-	$(SRC_DIR)/ortools/flatzinc/logging.h \
 	$(SRC_DIR)/ortools/flatzinc/model.h \
 	$(SRC_DIR)/ortools/flatzinc/parser.h \
 	$(SRC_DIR)/ortools/flatzinc/parser.tab.hh \
@@ -238,7 +246,6 @@ endif
 FLATZINC_OBJS=\
 	$(OBJ_DIR)/flatzinc/checker.$O \
 	$(OBJ_DIR)/flatzinc/cp_model_fz_solver.$O \
-	$(OBJ_DIR)/flatzinc/logging.$O \
 	$(OBJ_DIR)/flatzinc/model.$O \
 	$(OBJ_DIR)/flatzinc/parser.$O \
 	$(OBJ_DIR)/flatzinc/parser.tab.$O \
@@ -278,6 +285,12 @@ $(BIN_DIR)/fz$E: $(OBJ_DIR)/flatzinc/fz.$O $(FLATZINC_LIBS) $(OR_TOOLS_LIBS) | $
 
 $(BIN_DIR)/parser_main$E: $(OBJ_DIR)/flatzinc/parser_main.$O $(FLATZINC_LIBS) $(OR_TOOLS_LIBS) | $(BIN_DIR)
 	$(CCC) $(CFLAGS) $(OBJ_DIR)$Sflatzinc$Sparser_main.$O $(FLATZINC_LNK) $(OR_TOOLS_LDFLAGS) $(EXE_OUT)$(BIN_DIR)$Sparser_main$E
+
+.PHONY: clean_fz # Clean Flatzinc output from previous build.
+clean_fz:
+	-$(DEL) $(BIN_DIR)$Sortools.msc
+	-$(DEL) $(BIN_DIR)$Sfz$E
+	-$(DEL) $(BIN_DIR)$Sparser_main$E
 
 ##################
 ##  Sat solver  ##
@@ -421,6 +434,7 @@ test_cc_constraint_solver_samples: \
  rcc_tsp_circuit_board \
  rcc_tsp_distance_matrix \
  rcc_vrp \
+ rcc_vrp_breaks \
  rcc_vrp_capacity \
  rcc_vrp_drop_nodes \
  rcc_vrp_global_span \

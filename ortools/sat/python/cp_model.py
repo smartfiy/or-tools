@@ -1,4 +1,4 @@
-# Copyright 2010-2018 Google LLC
+# Copyright 2010-2021 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -50,6 +50,7 @@ from __future__ import print_function
 
 import collections
 import numbers
+import threading
 import time
 
 from ortools.sat import cp_model_pb2
@@ -252,8 +253,40 @@ class LinearExpr(object):
             'calling %% on a linear expression is not supported, '
             'please use CpModel.AddModuloEquality')
 
+    def __pow__(self, _):
+        raise NotImplementedError(
+            'calling ** on a linear expression is not supported, '
+            'please use CpModel.AddMultiplicationEquality')
+
+    def __lshift__(self, _):
+        raise NotImplementedError(
+            'calling left shift on a linear expression is not supported')
+
+    def __rshift__(self, _):
+        raise NotImplementedError(
+            'calling right shift on a linear expression is not supported')
+
+    def __and__(self, _):
+        raise NotImplementedError(
+            'calling and on a linear expression is not supported, '
+            'please use CpModel.AddBoolAnd')
+
+    def __or__(self, _):
+        raise NotImplementedError(
+            'calling or on a linear expression is not supported, '
+            'please use CpModel.AddBoolOr')
+
+    def __xor__(self, _):
+        raise NotImplementedError(
+            'calling xor on a linear expression is not supported, '
+            'please use CpModel.AddBoolXor')
+
     def __neg__(self):
         return _ProductCst(self, -1)
+
+    def __bool__(self):
+        raise NotImplementedError(
+            'Evaluating a LinearExpr instance as a Boolean is not implemented.')
 
     def __eq__(self, arg):
         if arg is None:
@@ -479,6 +512,12 @@ class IntVar(LinearExpr):
         """Returns the variable protobuf."""
         return self.__var
 
+    def IsEqualTo(self, other):
+        """Returns true if self == other in the python sense."""
+        if not isinstance(other, IntVar):
+            return False
+        return self.Index() == other.Index()
+
     def __str__(self):
         if not self.__var.name:
             if len(self.__var.domain
@@ -508,7 +547,7 @@ class IntVar(LinearExpr):
             if bound < 0 or bound > 1:
                 raise TypeError(
                     'Cannot call Not on a non boolean variable: %s' % self)
-        if not self.__negation:
+        if self.__negation is None:
             self.__negation = _NotBooleanVariable(self)
         return self.__negation
 
@@ -527,6 +566,10 @@ class _NotBooleanVariable(LinearExpr):
 
     def __str__(self):
         return 'not(%s)' % str(self.__boolvar)
+
+    def __bool__(self):
+        raise NotImplementedError(
+            'Evaluating a literal as a Boolean value is not implemented.')
 
 
 class BoundedLinearExpression(object):
@@ -567,6 +610,30 @@ class BoundedLinearExpression(object):
 
     def Bounds(self):
         return self.__bounds
+
+    def __bool__(self):
+        # Check for x == y
+        if self.__bounds == [0, 0]:
+            coeffs_map, constant = self.__expr.GetVarValueMap()
+            if constant != 0:
+                return False
+            for coeff in coeffs_map.values():
+                if coeff != 0:
+                    return False
+            return True
+        elif self.__bounds == [INT_MIN, -1, 1, INT_MAX]:
+            # Check for x != y
+            coeffs_map, constant = self.__expr.GetVarValueMap()
+            if constant != 0:
+                return True
+            for coeff in coeffs_map.values():
+                if coeff != 0:
+                    return True
+            return False
+
+        raise NotImplementedError(
+            'Evaluating a BoundedLinearExpr as a Boolean value is not supported.'
+        )
 
 
 class Constraint(object):
@@ -699,6 +766,36 @@ class IntervalVar(object):
 
     def Name(self):
         return self.__ct.name
+
+
+def ObjectIsATrueLiteral(literal):
+    """Checks if literal is either True, or a Boolean literals fixed to True."""
+    if isinstance(literal, IntVar):
+        proto = literal.Proto()
+        return (len(proto.domain) == 2 and proto.domain[0] == 1 and
+                proto.domain[1] == 1)
+    if isinstance(literal, _NotBooleanVariable):
+        proto = literal.Not().Proto()
+        return (len(proto.domain) == 2 and proto.domain[0] == 0 and
+                proto.domain[1] == 0)
+    if isinstance(literal, numbers.Integral):
+        return literal == 1
+    return False
+
+
+def ObjectIsAFalseLiteral(literal):
+    """Checks if literal is either False, or a Boolean literals fixed to False."""
+    if isinstance(literal, IntVar):
+        proto = literal.Proto()
+        return (len(proto.domain) == 2 and proto.domain[0] == 0 and
+                proto.domain[1] == 0)
+    if isinstance(literal, _NotBooleanVariable):
+        proto = literal.Not().Proto()
+        return (len(proto.domain) == 2 and proto.domain[0] == 1 and
+                proto.domain[1] == 1)
+    if isinstance(literal, numbers.Integral):
+        return literal == 0
+    return False
 
 
 class CpModel(object):
@@ -1516,7 +1613,7 @@ class CpModel(object):
         return index
 
     def VarIndexToVarProto(self, var_index):
-        if var_index > 0:
+        if var_index >= 0:
             return self.__model.variables[var_index]
         else:
             return self.__model.variables[-var_index - 1]
@@ -1586,15 +1683,25 @@ class CpModel(object):
 
     def ModelStats(self):
         """Returns a string containing some model statistics."""
-        return pywrapsat.SatHelper.ModelStats(self.__model)
+        return pywrapsat.CpSatHelper.ModelStats(self.__model)
 
     def Validate(self):
         """Returns a string indicating that the model is invalid."""
-        return pywrapsat.SatHelper.ValidateModel(self.__model)
+        return pywrapsat.CpSatHelper.ValidateModel(self.__model)
 
     def ExportToFile(self, file):
-        """Write the model as a ascii protocol buffer to 'file'."""
-        return pywrapsat.SatHelper.WriteModelToFile(self.__model, file)
+        """Write the model as a protocol buffer to 'file'.
+
+    Args:
+      file: file to write the model to. If the filename ends with 'txt', the
+            model will be written as a text file, otherwise, the binary format
+            will be used.
+
+
+    Returns:
+      True if the model was correctly written.
+    """
+        return pywrapsat.CpSatHelper.WriteModelToFile(self.__model, file)
 
     def AssertIsBooleanVariable(self, x):
         if isinstance(x, IntVar):
@@ -1689,19 +1796,36 @@ class CpSolver(object):
         self.__model = None
         self.__solution: cp_model_pb2.CpSolverResponse = None
         self.parameters = sat_parameters_pb2.SatParameters()
+        self.log_callback = None
+        self.__solve_wrapper: pywrapsat.SolveWrapper = None
+        self.__lock = threading.Lock()
 
-    def Solve(self, model):
-        """Solves the given model and returns the solve status."""
-        self.__solution = pywrapsat.SatHelper.SolveWithParameters(
-            model.Proto(), self.parameters)
+    def Solve(self, model, solution_callback=None):
+        """Solves a problem and passes each solution to the callback if not null."""
+        with self.__lock:
+            solve_wrapper = pywrapsat.SolveWrapper()
+
+        solve_wrapper.SetParameters(self.parameters)
+        if solution_callback is not None:
+            solve_wrapper.AddSolutionCallback(solution_callback)
+
+        if self.log_callback is not None:
+            solve_wrapper.AddLogCallback(self.log_callback)
+
+        self.__solution = solve_wrapper.Solve(model.Proto())
+
+        if solution_callback is not None:
+            solve_wrapper.ClearSolutionCallback(solution_callback)
+
+        with self.__lock:
+            self.__solve_wrapper = None
+
         return self.__solution.status
 
+    # DEPRECATED, just use Solve() with the callback argument.
     def SolveWithSolutionCallback(self, model, callback):
-        """Solves a problem and passes each solution found to the callback."""
-        self.__solution = (
-            pywrapsat.SatHelper.SolveWithParametersAndSolutionCallback(
-                model.Proto(), self.parameters, callback))
-        return self.__solution.status
+        """DEPRECATED Use Solve() with the callback argument."""
+        return self.Solve(model, callback)
 
     def SearchForAllSolutions(self, model, callback):
         """Search for all solutions of a satisfiability problem.
@@ -1725,15 +1849,21 @@ class CpSolver(object):
         if model.HasObjective():
             raise TypeError('Search for all solutions is only defined on '
                             'satisfiability problems')
-        # Store old values.
+        # Store old parameter.
         enumerate_all = self.parameters.enumerate_all_solutions
         self.parameters.enumerate_all_solutions = True
-        self.__solution = (
-            pywrapsat.SatHelper.SolveWithParametersAndSolutionCallback(
-                model.Proto(), self.parameters, callback))
-        # Restore parameters.
+
+        self.Solve(model, callback)
+
+        # Restore parameter.
         self.parameters.enumerate_all_solutions = enumerate_all
         return self.__solution.status
+
+    def StopSearch(self):
+        """Stops the current search asynchronously."""
+        with self.__lock:
+            if self.__solve_wrapper:
+                self.__solve_wrapper.StopSearch()
 
     def Value(self, expression):
         """Returns the value of a linear expression after solve."""
@@ -1783,7 +1913,7 @@ class CpSolver(object):
 
     def ResponseStats(self):
         """Returns some statistics on the solution found as a string."""
-        return pywrapsat.SatHelper.SolverResponseStats(self.__solution)
+        return pywrapsat.CpSatHelper.SolverResponseStats(self.__solution)
 
     def ResponseProto(self):
         """Returns the response object."""

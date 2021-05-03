@@ -89,6 +89,7 @@ cc_library(
     ],
     deps = [
         ":base",
+        ":status_builder",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
     ],
@@ -368,6 +369,16 @@ cc_library(
     ],
     deps = [
         ":base",
+    ],
+)
+
+cc_library(
+    name = "linked_hash_map",
+    hdrs = ["linked_hash_map.h"],
+    deps = [
+        ":base",
+        "@com_google_absl//absl/container:common",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
 

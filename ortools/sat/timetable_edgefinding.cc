@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #include "ortools/sat/timetable_edgefinding.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -55,7 +56,7 @@ void TimeTableEdgeFinding::RegisterWith(GenericLiteralWatcher* watcher) {
 
 bool TimeTableEdgeFinding::Propagate() {
   while (true) {
-    const int64 old_timestamp = integer_trail_->num_enqueues();
+    const int64_t old_timestamp = integer_trail_->num_enqueues();
 
     helper_->SynchronizeAndSetTimeDirection(true);
     if (!TimeTableEdgeFindingPass()) return false;

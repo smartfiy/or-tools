@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,8 @@
 // limitations under the License.
 
 #include "ortools/sat/sat_decision.h"
+
+#include <cstdint>
 
 #include "ortools/sat/util.h"
 
@@ -428,7 +430,7 @@ void SatDecisionPolicy::Untrail(int target_trail_index) {
 
       // TODO(user): This heuristic can make this code quite slow because
       // all the untrailed variable will cause a priority queue update.
-      const int64 num_bumps = num_bumps_[var];
+      const int64_t num_bumps = num_bumps_[var];
       double new_rate = 0.0;
       if (num_bumps > 0) {
         DCHECK_GT(num_conflicts, 0);

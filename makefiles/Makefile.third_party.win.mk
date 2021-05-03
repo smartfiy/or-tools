@@ -35,8 +35,8 @@ SWIG_BINARY = $(WINDOWS_SWIG_BINARY)
 # tags of dependencies to checkout.
 ZLIB_TAG = 1.2.11
 ZLIB_ARCHIVE_TAG = 1211
-PROTOBUF_TAG = v3.15.3
-ABSL_TAG = 20200923.3
+PROTOBUF_TAG = v3.15.8
+ABSL_TAG = 20210324.1
 # We are using a CBC archive containing all coin-or project
 # since Clp 2.17.5+ is broken we need to stick with Cbc 2.10.4
 # which is shipped with Clp 1.17.4
@@ -178,7 +178,10 @@ Makefile.local: makefiles/Makefile.third_party.$(SYSTEM).mk
 	@echo # >> Makefile.local
 	@echo ## OPTIONAL DEPENDENCIES ## >> Makefile.local
 	@echo # Define WINDOWS_CPLEX_DIR to point to a installation directory of the CPLEX Studio >> Makefile.local
-	@echo #   e.g.: WINDOWS_CPLEX_DIR = C:\Progra~1\CPLEX_STUDIO1210 >> Makefile.local
+	@echo #   e.g.: WINDOWS_CPLEX_DIR = C:\Progra~1\CPLEX_STUDIO2010\IBM\ILOG\CPLEX_STUDIO2010 >> Makefile.local
+	@echo # >> Makefile.local
+	@echo # Define WINDOWS_CPLEX_VERSION to specify the suffix of the library >> Makefile.local
+	@echo #   e.g.: WINDOWS_CPLEX_VERSION = 2010 >> Makefile.local
 	@echo # >> Makefile.local
 	@echo # Define WINDOWS_XPRESS_DIR to point to a installation directory of the XPRESS-MP >> Makefile.local
 	@echo #   e.g.: WINDOWS_XPRESS_DIR = C:\xpressmp>> Makefile.local

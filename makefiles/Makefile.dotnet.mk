@@ -271,6 +271,26 @@ $(OBJ_DIR)/swig/sat_csharp_wrap.$O: \
  -c $(GEN_PATH)$Sortools$Ssat$Ssat_csharp_wrap.cc \
  $(OBJ_OUT)$(OBJ_DIR)$Sswig$Ssat_csharp_wrap.$O
 
+$(GEN_DIR)/ortools/init/init_csharp_wrap.cc: \
+ $(SRC_DIR)/ortools/base/base.i \
+ $(SRC_DIR)/ortools/init/csharp/init.i \
+ $(INIT_DEPS) \
+ |  $(GEN_DIR)/ortools/init
+	$(SWIG_BINARY) $(SWIG_INC) -I$(INC_DIR) -c++ -csharp \
+ -o $(GEN_PATH)$Sortools$Sinit$Sinit_csharp_wrap.cc \
+ -module operations_research_init \
+ -namespace $(DOTNET_ORTOOLS_ASSEMBLY_NAME).Init \
+ -dllimport "$(DOTNET_ORTOOLS_NATIVE)" \
+ -outdir $(GEN_PATH)$Sortools$Sinit \
+ $(SRC_DIR)$Sortools$Sinit$Scsharp$Sinit.i
+
+$(OBJ_DIR)/swig/init_csharp_wrap.$O: \
+ $(GEN_DIR)/ortools/init/init_csharp_wrap.cc \
+ | $(OBJ_DIR)/swig
+	$(CCC) $(CFLAGS) \
+ -c $(GEN_PATH)$Sortools$Sinit$Sinit_csharp_wrap.cc \
+ $(OBJ_OUT)$(OBJ_DIR)$Sswig$Sinit_csharp_wrap.$O
+
 $(GEN_DIR)/ortools/util/sorted_interval_list_csharp_wrap.cc: \
  $(SRC_DIR)/ortools/base/base.i \
  $(SRC_DIR)/ortools/util/csharp/sorted_interval_list.i \
@@ -308,6 +328,7 @@ endif
 ##########################################
 $(LIB_DIR)/$(DOTNET_ORTOOLS_NATIVE).$(SWIG_DOTNET_LIB_SUFFIX): \
  $(OR_TOOLS_LIBS) \
+ $(OBJ_DIR)/swig/init_csharp_wrap.$O \
  $(OBJ_DIR)/swig/linear_solver_csharp_wrap.$O \
  $(OBJ_DIR)/swig/sat_csharp_wrap.$O \
  $(OBJ_DIR)/swig/constraint_solver_csharp_wrap.$O \
@@ -317,12 +338,13 @@ $(LIB_DIR)/$(DOTNET_ORTOOLS_NATIVE).$(SWIG_DOTNET_LIB_SUFFIX): \
  | $(LIB_DIR)
 	$(DYNAMIC_LD) \
  $(LD_OUT)$(LIB_DIR)$S$(DOTNET_ORTOOLS_NATIVE).$(SWIG_DOTNET_LIB_SUFFIX) \
+ $(OBJ_DIR)$Sswig$Sinit_csharp_wrap.$O \
+ $(OBJ_DIR)$Sswig$Sknapsack_solver_csharp_wrap.$O \
+ $(OBJ_DIR)$Sswig$Sgraph_csharp_wrap.$O \
  $(OBJ_DIR)$Sswig$Slinear_solver_csharp_wrap.$O \
  $(OBJ_DIR)$Sswig$Ssat_csharp_wrap.$O \
  $(OBJ_DIR)$Sswig$Sconstraint_solver_csharp_wrap.$O \
- $(OBJ_DIR)$Sswig$Sknapsack_solver_csharp_wrap.$O \
- $(OBJ_DIR)$Sswig$Sgraph_csharp_wrap.$O \
- $(OBJ_DIR)/swig/sorted_interval_list_csharp_wrap.$O \
+ $(OBJ_DIR)$Sswig$Ssorted_interval_list_csharp_wrap.$O \
  $(OR_TOOLS_LNK) \
  $(OR_TOOLS_LDFLAGS)
 
@@ -545,6 +567,7 @@ test_dotnet_constraint_solver_samples:
 	$(MAKE) run SOURCE=ortools/constraint_solver/samples/TspCircuitBoard.cs
 	$(MAKE) run SOURCE=ortools/constraint_solver/samples/TspDistanceMatrix.cs
 	$(MAKE) run SOURCE=ortools/constraint_solver/samples/Vrp.cs
+	$(MAKE) run SOURCE=ortools/constraint_solver/samples/VrpBreaks.cs
 	$(MAKE) run SOURCE=ortools/constraint_solver/samples/VrpCapacity.cs
 	$(MAKE) run SOURCE=ortools/constraint_solver/samples/VrpDropNodes.cs
 	$(MAKE) run SOURCE=ortools/constraint_solver/samples/VrpGlobalSpan.cs
@@ -914,6 +937,8 @@ clean_dotnet:
 	-$(DEL) $(GEN_PATH)$Sortools$Ssat$S*csharp_wrap*
 	-$(DEL) $(GEN_PATH)$Sortools$Sutil$S*.cs
 	-$(DEL) $(GEN_PATH)$Sortools$Sutil$S*csharp_wrap*
+	-$(DEL) $(GEN_PATH)$Sortools$Sinit$S*.cs
+	-$(DEL) $(GEN_PATH)$Sortools$Sinit$S*csharp_wrap*
 	-$(DEL) $(OBJ_DIR)$Sswig$S*_csharp_wrap.$O
 	-$(DEL) $(LIB_DIR)$S$(DOTNET_ORTOOLS_NATIVE).*
 	-$(DEL) $(BIN_DIR)$S$(DOTNET_ORTOOLS_ASSEMBLY_NAME).*

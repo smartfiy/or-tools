@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,8 @@
 // limitations under the License.
 
 #include "ortools/sat/linear_constraint.h"
+
+#include <cstdint>
 
 #include "ortools/base/mathutil.h"
 #include "ortools/base/strong_vector.h"
@@ -175,7 +177,7 @@ namespace {
 // TODO(user): Template for any integer type and expose this?
 IntegerValue ComputeGcd(const std::vector<IntegerValue>& values) {
   if (values.empty()) return IntegerValue(1);
-  int64 gcd = 0;
+  int64_t gcd = 0;
   for (const IntegerValue value : values) {
     gcd = MathUtil::GCD64(gcd, std::abs(value.value()));
     if (gcd == 1) break;

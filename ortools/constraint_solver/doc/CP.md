@@ -20,7 +20,7 @@ void SimpleCpProgram() {
   Solver solver("CpSimple");
 
   // Create the variables.
-  const int64 num_vals = 3;
+  const int64_t num_vals = 3;
   IntVar* const x = solver.MakeIntVar(0, num_vals - 1, "x");
   IntVar* const y = solver.MakeIntVar(0, num_vals - 1, "y");
   IntVar* const z = solver.MakeIntVar(0, num_vals - 1, "z");
@@ -103,6 +103,7 @@ def main():
   print('Advanced usage:')
   print('Problem solved in ', solver.WallTime(), 'ms')
   print('Memory usage: ', pywrapcp.Solver.MemoryUsage(), 'bytes')
+
 
 if __name__ == '__main__':
   main()

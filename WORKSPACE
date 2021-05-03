@@ -29,7 +29,7 @@ http_archive(
 # Protobuf
 git_repository(
     name = "com_google_protobuf",
-    commit = "983d115",  # release v3.15.3
+    commit = "436bd78",  # release v3.15.8
     remote = "https://github.com/protocolbuffers/protobuf.git",
 )
 
@@ -40,7 +40,7 @@ protobuf_deps()
 
 git_repository(
     name = "com_google_absl",
-    commit = "6f9d96a", # release 20200923.3
+    commit = "e1d388e", # release 20210324.1
     remote = "https://github.com/abseil/abseil-cpp.git",
 )
 

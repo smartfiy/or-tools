@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 // must visit certain nodes (refueling nodes) before the quantity of fuel
 // reaches zero. Fuel consumption is proportional to the distance traveled.
 
+#include <cstdint>
 #include <vector>
 
 #include "absl/flags/parse.h"
@@ -60,8 +61,8 @@ const char* kCapacity = "Capacity";
 const char* kFuel = "Fuel";
 
 // Returns true if node is a refueling node (based on node / refuel node ratio).
-bool IsRefuelNode(int64 node) {
-  const int64 kRefuelNodeRatio = 10;
+bool IsRefuelNode(int64_t node) {
+  const int64_t kRefuelNodeRatio = 10;
   return (node % kRefuelNodeRatio == 0);
 }
 
@@ -81,9 +82,9 @@ int main(int argc, char** argv) {
   RoutingModel routing(manager);
 
   // Setting up locations.
-  const int64 kXMax = 100000;
-  const int64 kYMax = 100000;
-  const int64 kSpeed = 10;
+  const int64_t kXMax = 100000;
+  const int64_t kYMax = 100000;
+  const int64_t kSpeed = 10;
   LocationContainer locations(
       kSpeed, absl::GetFlag(FLAGS_vrp_use_deterministic_random_seed));
   for (int location = 0; location <= absl::GetFlag(FLAGS_vrp_orders);
@@ -92,29 +93,30 @@ int main(int argc, char** argv) {
   }
 
   // Setting the cost function.
-  const int vehicle_cost =
-      routing.RegisterTransitCallback([&locations, &manager](int64 i, int64 j) {
+  const int vehicle_cost = routing.RegisterTransitCallback(
+      [&locations, &manager](int64_t i, int64_t j) {
         return locations.ManhattanDistance(manager.IndexToNode(i),
                                            manager.IndexToNode(j));
       });
   routing.SetArcCostEvaluatorOfAllVehicles(vehicle_cost);
 
   // Adding capacity dimension constraints.
-  const int64 kVehicleCapacity = 40;
-  const int64 kNullCapacitySlack = 0;
+  const int64_t kVehicleCapacity = 40;
+  const int64_t kNullCapacitySlack = 0;
   RandomDemand demand(manager.num_nodes(), kDepot,
                       absl::GetFlag(FLAGS_vrp_use_deterministic_random_seed));
   demand.Initialize();
-  routing.AddDimension(
-      routing.RegisterTransitCallback([&demand, &manager](int64 i, int64 j) {
-        return demand.Demand(manager.IndexToNode(i), manager.IndexToNode(j));
-      }),
-      kNullCapacitySlack, kVehicleCapacity,
-      /*fix_start_cumul_to_zero=*/true, kCapacity);
+  routing.AddDimension(routing.RegisterTransitCallback(
+                           [&demand, &manager](int64_t i, int64_t j) {
+                             return demand.Demand(manager.IndexToNode(i),
+                                                  manager.IndexToNode(j));
+                           }),
+                       kNullCapacitySlack, kVehicleCapacity,
+                       /*fix_start_cumul_to_zero=*/true, kCapacity);
 
   // Adding time dimension constraints.
-  const int64 kTimePerDemandUnit = 300;
-  const int64 kHorizon = 24 * 3600;
+  const int64_t kTimePerDemandUnit = 300;
+  const int64_t kHorizon = 24 * 3600;
   ServiceTimePlusTransition time(
       kTimePerDemandUnit,
       [&demand](RoutingNodeIndex i, RoutingNodeIndex j) {
@@ -124,7 +126,7 @@ int main(int argc, char** argv) {
         return locations.ManhattanTime(i, j);
       });
   routing.AddDimension(
-      routing.RegisterTransitCallback([&time, &manager](int64 i, int64 j) {
+      routing.RegisterTransitCallback([&time, &manager](int64_t i, int64_t j) {
         return time.Compute(manager.IndexToNode(i), manager.IndexToNode(j));
       }),
       kHorizon, kHorizon, /*fix_start_cumul_to_zero=*/true, kTime);
@@ -136,10 +138,10 @@ int main(int argc, char** argv) {
   // performance: I got good performance for about 10% of the seeds.
   std::mt19937 randomizer(
       144 + GetSeed(absl::GetFlag(FLAGS_vrp_use_deterministic_random_seed)));
-  const int64 kTWDuration = 5 * 3600;
+  const int64_t kTWDuration = 5 * 3600;
   for (int order = 1; order < manager.num_nodes(); ++order) {
     if (!IsRefuelNode(order)) {
-      const int64 start =
+      const int64_t start =
           absl::Uniform<int32_t>(randomizer, 0, kHorizon - kTWDuration);
       time_dimension.CumulVar(order)->SetRange(start, start + kTWDuration);
     }
@@ -148,12 +150,13 @@ int main(int argc, char** argv) {
   // Adding fuel dimension. This dimension consumes a quantity equal to the
   // distance traveled. Only refuel nodes can make the quantity of dimension
   // increase by letting slack variable replenish the fuel.
-  const int64 kFuelCapacity = kXMax + kYMax;
+  const int64_t kFuelCapacity = kXMax + kYMax;
   routing.AddDimension(
-      routing.RegisterTransitCallback([&locations, &manager](int64 i, int64 j) {
-        return locations.NegManhattanDistance(manager.IndexToNode(i),
-                                              manager.IndexToNode(j));
-      }),
+      routing.RegisterTransitCallback(
+          [&locations, &manager](int64_t i, int64_t j) {
+            return locations.NegManhattanDistance(manager.IndexToNode(i),
+                                                  manager.IndexToNode(j));
+          }),
       kFuelCapacity, kFuelCapacity, /*fix_start_cumul_to_zero=*/false, kFuel);
   const RoutingDimension& fuel_dimension = routing.GetDimensionOrDie(kFuel);
   for (int order = 0; order < routing.Size(); ++order) {
@@ -166,11 +169,11 @@ int main(int argc, char** argv) {
   }
 
   // Adding penalty costs to allow skipping orders.
-  const int64 kPenalty = 100000;
+  const int64_t kPenalty = 100000;
   const RoutingIndexManager::NodeIndex kFirstNodeAfterDepot(1);
   for (RoutingIndexManager::NodeIndex order = kFirstNodeAfterDepot;
        order < routing.nodes(); ++order) {
-    std::vector<int64> orders(1, manager.NodeToIndex(order));
+    std::vector<int64_t> orders(1, manager.NodeToIndex(order));
     routing.AddDisjunction(orders, kPenalty);
   }
 

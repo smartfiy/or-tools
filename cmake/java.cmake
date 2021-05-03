@@ -42,7 +42,7 @@ set(JAVA_PACKAGE_PATH src/main/java/com/google/ortools)
 set(JAVA_TEST_PATH src/test/java/com/google/ortools)
 set(JAVA_RESOURCES_PATH src/main/resources)
 if(APPLE)
-  set(NATIVE_IDENTIFIER darwin)
+  set(NATIVE_IDENTIFIER darwin-x86-64)
 elseif(UNIX)
   set(NATIVE_IDENTIFIER linux-x86-64)
 elseif(WIN32)
@@ -116,7 +116,7 @@ elseif(UNIX)
 endif()
 
 # Swig wrap all libraries
-foreach(SUBPROJECT IN ITEMS algorithms graph linear_solver constraint_solver sat util)
+foreach(SUBPROJECT IN ITEMS algorithms graph init linear_solver constraint_solver sat util)
   add_subdirectory(ortools/${SUBPROJECT}/java)
   target_link_libraries(jniortools PRIVATE jni${SUBPROJECT})
 endforeach()
@@ -139,9 +139,9 @@ add_custom_target(java_native_package
     $<TARGET_FILE:jniortools>
     $<$<NOT:$<PLATFORM_ID:Windows>>:$<TARGET_SONAME_FILE:${PROJECT_NAME}>>
     ${JAVA_RESOURCES_PATH}/${NATIVE_IDENTIFIER}/
-  COMMAND ${MAVEN_EXECUTABLE} compile
-  COMMAND ${MAVEN_EXECUTABLE} package
-  COMMAND ${MAVEN_EXECUTABLE} install
+  COMMAND ${MAVEN_EXECUTABLE} compile -B
+  COMMAND ${MAVEN_EXECUTABLE} package -B
+  COMMAND ${MAVEN_EXECUTABLE} install -B $<$<BOOL:${SKIP_GPG}>:-Dgpg.skip=true>
   BYPRODUCTS
     ${JAVA_NATIVE_PROJECT_PATH}/target
   WORKING_DIRECTORY ${JAVA_NATIVE_PROJECT_PATH})
@@ -152,10 +152,17 @@ add_custom_target(java_native_package
 set(JAVA_PROJECT_PATH ${PROJECT_BINARY_DIR}/java/${JAVA_PROJECT})
 file(MAKE_DIRECTORY ${JAVA_PROJECT_PATH}/${JAVA_PACKAGE_PATH})
 
-configure_file(
-  ${PROJECT_SOURCE_DIR}/ortools/java/pom-local.xml.in
-  ${JAVA_PROJECT_PATH}/pom.xml
-  @ONLY)
+if(UNIVERSAL_JAVA_PACKAGE)
+  configure_file(
+    ${PROJECT_SOURCE_DIR}/ortools/java/pom-full.xml.in
+    ${JAVA_PROJECT_PATH}/pom.xml
+    @ONLY)
+else()
+  configure_file(
+    ${PROJECT_SOURCE_DIR}/ortools/java/pom-local.xml.in
+    ${JAVA_PROJECT_PATH}/pom.xml
+    @ONLY)
+endif()
 
 file(GLOB_RECURSE java_files RELATIVE ${PROJECT_SOURCE_DIR}/ortools/java
   "ortools/java/*.java")
@@ -182,9 +189,9 @@ add_custom_target(java_package ALL
   DEPENDS
   ${JAVA_PROJECT_PATH}/pom.xml
   ${JAVA_SRCS}
-  COMMAND ${MAVEN_EXECUTABLE} compile
-  COMMAND ${MAVEN_EXECUTABLE} package
-  COMMAND ${MAVEN_EXECUTABLE} install
+  COMMAND ${MAVEN_EXECUTABLE} compile -B
+  COMMAND ${MAVEN_EXECUTABLE} package -B
+  COMMAND ${MAVEN_EXECUTABLE} install -B $<$<BOOL:${SKIP_GPG}>:-Dgpg.skip=true>
   BYPRODUCTS
     ${JAVA_PROJECT_PATH}/target
   WORKING_DIRECTORY ${JAVA_PROJECT_PATH})
@@ -208,7 +215,7 @@ if(BUILD_TESTING)
 
   add_custom_target(java_test_Test ALL
     DEPENDS ${TEST_PATH}/pom.xml
-    COMMAND ${MAVEN_EXECUTABLE} compile
+    COMMAND ${MAVEN_EXECUTABLE} compile -B
     BYPRODUCTS
       ${TEST_PATH}/target
     WORKING_DIRECTORY ${TEST_PATH})
@@ -249,7 +256,7 @@ function(add_java_sample FILE_NAME)
 
   add_custom_target(java_sample_${SAMPLE_NAME} ALL
     DEPENDS ${SAMPLE_PATH}/pom.xml
-    COMMAND ${MAVEN_EXECUTABLE} compile
+    COMMAND ${MAVEN_EXECUTABLE} compile -B
     BYPRODUCTS
       ${SAMPLE_PATH}/target
     WORKING_DIRECTORY ${SAMPLE_PATH})
@@ -292,7 +299,7 @@ function(add_java_example FILE_NAME)
 
   add_custom_target(java_example_${EXAMPLE_NAME} ALL
     DEPENDS ${EXAMPLE_PATH}/pom.xml
-    COMMAND ${MAVEN_EXECUTABLE} compile
+    COMMAND ${MAVEN_EXECUTABLE} compile -B
     BYPRODUCTS
       ${EXAMPLE_PATH}/target
     WORKING_DIRECTORY ${EXAMPLE_PATH})
@@ -333,7 +340,7 @@ function(add_java_test FILE_NAME)
 
   add_custom_target(java_test_${TEST_NAME} ALL
     DEPENDS ${TEST_PATH}/pom.xml
-    COMMAND ${MAVEN_EXECUTABLE} compile
+    COMMAND ${MAVEN_EXECUTABLE} compile -B
     BYPRODUCTS
       ${TEST_PATH}/target
     WORKING_DIRECTORY ${TEST_PATH})

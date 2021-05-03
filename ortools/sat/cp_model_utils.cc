@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,8 @@
 // limitations under the License.
 
 #include "ortools/sat/cp_model_utils.h"
+
+#include <cstdint>
 
 #include "ortools/base/stl_util.h"
 
@@ -535,14 +537,14 @@ std::vector<int> UsedIntervals(const ConstraintProto& ct) {
   return used_intervals;
 }
 
-int64 ComputeInnerObjective(const CpObjectiveProto& objective,
-                            const CpSolverResponse& response) {
-  int64 objective_value = 0;
+int64_t ComputeInnerObjective(const CpObjectiveProto& objective,
+                              const CpSolverResponse& response) {
+  int64_t objective_value = 0;
   auto& repeated_field_values = response.solution().empty()
                                     ? response.solution_lower_bounds()
                                     : response.solution();
   for (int i = 0; i < objective.vars_size(); ++i) {
-    int64 coeff = objective.coeffs(i);
+    int64_t coeff = objective.coeffs(i);
     const int ref = objective.vars(i);
     const int var = PositiveRef(ref);
     if (!RefIsPositive(ref)) coeff = -coeff;

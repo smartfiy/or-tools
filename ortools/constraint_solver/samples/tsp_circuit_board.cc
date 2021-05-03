@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -146,7 +146,8 @@ void Tsp() {
   // [START transit_callback]
   const auto distance_matrix = ComputeEuclideanDistanceMatrix(data.locations);
   const int transit_callback_index = routing.RegisterTransitCallback(
-      [&distance_matrix, &manager](int64 from_index, int64 to_index) -> int64 {
+      [&distance_matrix, &manager](int64_t from_index,
+                                   int64_t to_index) -> int64_t {
         // Convert from routing variable Index to distance matrix NodeIndex.
         auto from_node = manager.IndexToNode(from_index).value();
         auto to_node = manager.IndexToNode(to_index).value();

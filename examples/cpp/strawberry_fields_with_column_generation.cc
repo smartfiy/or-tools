@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -634,6 +634,7 @@ int main(int argc, char** argv) {
     found = true;
   }
 #endif
+
   if (!found) {
     LOG(ERROR) << "Unknown solver " << absl::GetFlag(FLAGS_colgen_solver);
     return 1;

@@ -20,8 +20,8 @@ UNIX_SWIG_BINARY ?= swig
 PROTOC_BINARY := $(shell $(WHICH) ${UNIX_PROTOC_BINARY})
 
 # Tags of dependencies to checkout.
-PROTOBUF_TAG = v3.15.3
-ABSL_TAG = 20200923.3
+PROTOBUF_TAG = v3.15.8
+ABSL_TAG = 20210324.1
 CBC_TAG = 2.10.5
 CGL_TAG = 0.60.3
 # Clp >= 1.17.5 is broken, so we must keep 1.17.4
@@ -375,6 +375,8 @@ $(_ABSL_STATIC_LIB_DIR)libabsl_flags_reflection.a \
 $(_ABSL_STATIC_LIB_DIR)libabsl_flags_usage.a \
 $(_ABSL_STATIC_LIB_DIR)libabsl_flags_usage_internal.a \
 $(_ABSL_STATIC_LIB_DIR)libabsl_base.a \
+$(_ABSL_STATIC_LIB_DIR)libabsl_city.a \
+$(_ABSL_STATIC_LIB_DIR)libabsl_wyhash.a
 
 ABSL_LNK = $(STATIC_ABSL_LNK)
 

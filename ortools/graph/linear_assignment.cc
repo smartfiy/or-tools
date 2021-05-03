@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,7 +15,7 @@
 
 #include "ortools/base/commandlineflags.h"
 
-ABSL_FLAG(int64, assignment_alpha, 5,
+ABSL_FLAG(int64_t, assignment_alpha, 5,
           "Divisor for epsilon at each Refine "
           "step of LinearSumAssignment.");
 ABSL_FLAG(int, assignment_progress_logging_period, 5000,

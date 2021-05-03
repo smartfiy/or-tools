@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -1043,17 +1043,25 @@ public final class CpModel {
 
   /** Returns some statistics on model as a string. */
   public String modelStats() {
-    return SatHelper.modelStats(model());
+    return CpSatHelper.modelStats(model());
   }
 
   /** Returns a non empty string explaining the issue if the model is invalid. */
   public String validate() {
-    return SatHelper.validateModel(model());
+    return CpSatHelper.validateModel(model());
   }
 
-  /** Write the model as a ascii protocol buffer to 'file'. */
+  /**
+   * Write the model as a protocol buffer to 'file'.
+   *
+   *
+   * @param file file to write the model to. If the filename ends with 'txt', the
+   *    model will be written as a text file, otherwise, the binary format will be used.
+   *
+   * @return true if the model was correctly written.
+   */
   public Boolean exportToFile(String file) {
-    return SatHelper.writeModelToFile(model(), file);
+    return CpSatHelper.writeModelToFile(model(), file);
   }
 
   // Helpers
@@ -1067,9 +1075,8 @@ public final class CpModel {
   }
 
   int indexFromConstant(long constant) {
-    int index = modelBuilder.getVariablesCount();
-    modelBuilder.addVariablesBuilder().addDomain(constant).addDomain(constant);
-    return index;
+    IntVar constVar = newConstant(constant);
+    return constVar.getIndex();
   }
 
   // Getters.

@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -396,7 +396,7 @@ class IntegralProblemConverter {
   // t is a constraint or the objective.
   // Returns the bound error due to the scaling.
   // The weight is scaled using:
-  //   static_cast<int64>(round(weight * scaling_factor)) / gcd;
+  //   static_cast<int64_t>(round(weight * scaling_factor)) / gcd;
   template <class T>
   double ScaleAndSparsifyWeights(
       double scaling_factor, int64_t gcd,

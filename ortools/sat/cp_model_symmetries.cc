@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,6 +13,8 @@
 
 #include "ortools/sat/cp_model_symmetries.h"
 
+#include <cstdint>
+#include <limits>
 #include <memory>
 
 #include "absl/container/flat_hash_map.h"
@@ -29,9 +31,9 @@ namespace sat {
 
 namespace {
 struct VectorHash {
-  std::size_t operator()(const std::vector<int64>& values) const {
+  std::size_t operator()(const std::vector<int64_t>& values) const {
     size_t hash = 0;
-    for (const int64 value : values) {
+    for (const int64_t value : values) {
       hash = util_hash::Hash(value, hash);
     }
     return hash;
@@ -46,23 +48,23 @@ class IdGenerator {
 
   // If the color was never seen before, then generate a new id, otherwise
   // return the previously generated id.
-  int GetId(const std::vector<int64>& color) {
+  int GetId(const std::vector<int64_t>& color) {
     return gtl::LookupOrInsert(&id_map_, color, id_map_.size());
   }
 
   int NextFreeId() const { return id_map_.size(); }
 
  private:
-  absl::flat_hash_map<std::vector<int64>, int, VectorHash> id_map_;
+  absl::flat_hash_map<std::vector<int64_t>, int, VectorHash> id_map_;
 };
 
 // Appends values in `repeated_field` to `vector`.
 //
-// We use a template as proto int64 != C++ int64 in open source.
+// We use a template as proto int64_t != C++ int64_t in open source.
 template <typename FieldInt64Type>
 void Append(
     const google::protobuf::RepeatedField<FieldInt64Type>& repeated_field,
-    std::vector<int64>* vector) {
+    std::vector<int64_t>* vector) {
   CHECK(vector != nullptr);
   for (const FieldInt64Type value : repeated_field) {
     vector->push_back(value);
@@ -85,8 +87,8 @@ void Append(
 // between each other.
 template <typename Graph>
 std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
-    bool log_info, const CpModelProto& problem,
-    std::vector<int>* initial_equivalence_classes) {
+    const CpModelProto& problem, std::vector<int>* initial_equivalence_classes,
+    SolverLogger* logger) {
   CHECK(initial_equivalence_classes != nullptr);
 
   const int num_variables = problem.variables_size();
@@ -96,7 +98,7 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
   // can never be send one into another by a symmetry. The first element of
   // the color vector will always be the NodeType.
   //
-  // TODO(user): Using a full int64 for storing 3 values is not great. We
+  // TODO(user): Using a full int64_t for storing 3 values is not great. We
   // can optimize this at the price of a bit more code.
   enum NodeType {
     VARIABLE_NODE,
@@ -106,7 +108,7 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
   IdGenerator color_id_generator;
   initial_equivalence_classes->clear();
   auto new_node = [&initial_equivalence_classes, &graph,
-                   &color_id_generator](const std::vector<int64>& color) {
+                   &color_id_generator](const std::vector<int64_t>& color) {
     // Since we add nodes one by one, initial_equivalence_classes->size() gives
     // the number of nodes at any point, which we use as the next node index.
     const int node = initial_equivalence_classes->size();
@@ -124,17 +126,17 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
   // TODO(user): We could ignore the objective coefficients, and just make sure
   // that when we break symmetry amongst variables, we choose the possibility
   // with the smallest cost?
-  std::vector<int64> objective_by_var(num_variables, 0);
+  std::vector<int64_t> objective_by_var(num_variables, 0);
   for (int i = 0; i < problem.objective().vars_size(); ++i) {
     const int ref = problem.objective().vars(i);
     const int var = PositiveRef(ref);
-    const int64 coeff = problem.objective().coeffs(i);
+    const int64_t coeff = problem.objective().coeffs(i);
     objective_by_var[var] = RefIsPositive(ref) ? coeff : -coeff;
   }
 
   // Create one node for each variable. Note that the code rely on the fact that
   // the index of a VARIABLE_NODE type is the same as the variable index.
-  std::vector<int64> tmp_color;
+  std::vector<int64_t> tmp_color;
   for (int v = 0; v < num_variables; ++v) {
     tmp_color = {VARIABLE_NODE, objective_by_var[v]};
     Append(problem.variables(v).domain(), &tmp_color);
@@ -143,9 +145,9 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
 
   // We will lazily create "coefficient nodes" that correspond to a variable
   // with a given coefficient.
-  absl::flat_hash_map<std::pair<int64, int64>, int> coefficient_nodes;
+  absl::flat_hash_map<std::pair<int64_t, int64_t>, int> coefficient_nodes;
   auto get_coefficient_node = [&new_node, &graph, &coefficient_nodes,
-                               &tmp_color](int var, int64 coeff) {
+                               &tmp_color](int var, int64_t coeff) {
     const int var_node = var;
     DCHECK(RefIsPositive(var));
 
@@ -188,7 +190,7 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
   auto get_implication_node = [&new_node, &graph, &coefficient_nodes,
                                &tmp_color](int ref) {
     const int var = PositiveRef(ref);
-    const int64 coeff = RefIsPositive(ref) ? 1 : -1;
+    const int64_t coeff = RefIsPositive(ref) ? 1 : -1;
     const auto insert =
         coefficient_nodes.insert({std::make_pair(var, coeff), 0});
     if (!insert.second) return insert.first->second;
@@ -213,7 +215,8 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
   // Add constraints to the graph.
   for (const ConstraintProto& constraint : problem.constraints()) {
     const int constraint_node = initial_equivalence_classes->size();
-    std::vector<int64> color = {CONSTRAINT_NODE, constraint.constraint_case()};
+    std::vector<int64_t> color = {CONSTRAINT_NODE,
+                                  constraint.constraint_case()};
 
     switch (constraint.constraint_case()) {
       case ConstraintProto::CONSTRAINT_NOT_SET:
@@ -228,9 +231,9 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
         for (int i = 0; i < constraint.linear().vars_size(); ++i) {
           const int ref = constraint.linear().vars(i);
           const int variable_node = PositiveRef(ref);
-          const int64 coeff = RefIsPositive(ref)
-                                  ? constraint.linear().coeffs(i)
-                                  : -constraint.linear().coeffs(i);
+          const int64_t coeff = RefIsPositive(ref)
+                                    ? constraint.linear().coeffs(i)
+                                    : -constraint.linear().coeffs(i);
           graph->AddArc(get_coefficient_node(variable_node, coeff),
                         constraint_node);
         }
@@ -275,11 +278,11 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
         // The other cases should be presolved before this is called.
         // TODO(user): not 100% true, this happen on rmatr200-p5, Fix.
         if (constraint.enforcement_literal_size() != 1) {
-          if (log_info) {
-            LOG(INFO) << "BoolAnd with multiple enforcement literal are not "
-                         "supported in symmetry code:"
-                      << constraint.ShortDebugString();
-          }
+          SOLVER_LOG(
+              logger,
+              "[Symmetry] BoolAnd with multiple enforcement literal are not "
+              "supported in symmetry code:",
+              constraint.ShortDebugString());
           return nullptr;
         }
 
@@ -297,10 +300,8 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
         // TODO(user): support other types of constraints. Or at least, we
         // could associate to them an unique node so that their variables can
         // appear in no symmetry.
-        if (log_info) {
-          LOG(INFO) << "Unsupported constraint type "
-                    << ConstraintCaseName(constraint.constraint_case());
-        }
+        VLOG(1) << "Unsupported constraint type "
+                << ConstraintCaseName(constraint.constraint_case());
         return nullptr;
       }
     }
@@ -335,7 +336,7 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
   }
   for (int i = 0; i < num_nodes; ++i) {
     if (in_degree[i] >= num_nodes || out_degree[i] >= num_nodes) {
-      if (log_info) LOG(INFO) << "Too many multi-arcs in symmetry code.";
+      SOLVER_LOG(logger, "[Symmetry] Too many multi-arcs in symmetry code.");
       return nullptr;
     }
   }
@@ -373,8 +374,7 @@ std::unique_ptr<Graph> GenerateGraphForSymmetryDetection(
 void FindCpModelSymmetries(
     const SatParameters& params, const CpModelProto& problem,
     std::vector<std::unique_ptr<SparsePermutation>>* generators,
-    double deterministic_limit) {
-  const bool log_info = params.log_search_progress() || VLOG_IS_ON(1);
+    double deterministic_limit, SolverLogger* logger) {
   CHECK(generators != nullptr);
   generators->clear();
 
@@ -382,13 +382,11 @@ void FindCpModelSymmetries(
 
   std::vector<int> equivalence_classes;
   std::unique_ptr<Graph> graph(GenerateGraphForSymmetryDetection<Graph>(
-      log_info, problem, &equivalence_classes));
+      problem, &equivalence_classes, logger));
   if (graph == nullptr) return;
 
-  if (log_info) {
-    LOG(INFO) << "Graph for symmetry has " << graph->num_nodes()
-              << " nodes and " << graph->num_arcs() << " arcs.";
-  }
+  SOLVER_LOG(logger, "[Symmetry] Graph for symmetry has ", graph->num_nodes(),
+             " nodes and ", graph->num_arcs(), " arcs.");
   if (graph->num_nodes() == 0) return;
 
   GraphSymmetryFinder symmetry_finder(*graph, /*is_undirected=*/false);
@@ -401,8 +399,9 @@ void FindCpModelSymmetries(
 
   // TODO(user): Change the API to not return an error when the time limit is
   // reached.
-  if (log_info && !status.ok()) {
-    LOG(INFO) << "GraphSymmetryFinder error: " << status.message();
+  if (!status.ok()) {
+    SOLVER_LOG(logger,
+               "[Symmetry] GraphSymmetryFinder error: ", status.message());
   }
 
   // Remove from the permutations the part not concerning the variables.
@@ -440,30 +439,28 @@ void FindCpModelSymmetries(
   }
   generators->resize(num_generators);
   average_support_size /= num_generators;
-  if (log_info) {
-    LOG(INFO) << "Symmetry computation done. time: "
-              << time_limit->GetElapsedTime()
-              << " dtime: " << time_limit->GetElapsedDeterministicTime();
-    if (num_generators > 0) {
-      LOG(INFO) << "# of generators: " << num_generators;
-      LOG(INFO) << "Average support size: " << average_support_size;
-      if (num_duplicate_constraints > 0) {
-        LOG(INFO) << "The model contains " << num_duplicate_constraints
-                  << " duplicate constraints !";
-      }
+  SOLVER_LOG(logger, "[Symmetry] Symmetry computation done. time: ",
+             time_limit->GetElapsedTime(),
+             " dtime: ", time_limit->GetElapsedDeterministicTime());
+  if (num_generators > 0) {
+    SOLVER_LOG(logger, "[Symmetry] # of generators: ", num_generators);
+    SOLVER_LOG(logger,
+               "[Symmetry] Average support size: ", average_support_size);
+    if (num_duplicate_constraints > 0) {
+      SOLVER_LOG(logger, "[Symmetry] The model contains ",
+                 num_duplicate_constraints, " duplicate constraints !");
     }
   }
 }
 
 void DetectAndAddSymmetryToProto(const SatParameters& params,
-                                 CpModelProto* proto) {
-  const bool log_info = params.log_search_progress() || VLOG_IS_ON(1);
+                                 CpModelProto* proto, SolverLogger* logger) {
   SymmetryProto* symmetry = proto->mutable_symmetry();
   symmetry->Clear();
 
   std::vector<std::unique_ptr<SparsePermutation>> generators;
   FindCpModelSymmetries(params, *proto, &generators,
-                        /*deterministic_limit=*/1.0);
+                        /*deterministic_limit=*/1.0, logger);
   if (generators.empty()) return;
 
   for (const std::unique_ptr<SparsePermutation>& perm : generators) {
@@ -480,10 +477,8 @@ void DetectAndAddSymmetryToProto(const SatParameters& params,
 
   std::vector<std::vector<int>> orbitope = BasicOrbitopeExtraction(generators);
   if (orbitope.empty()) return;
-  if (log_info) {
-    LOG(INFO) << "Found orbitope of size " << orbitope.size() << " x "
-              << orbitope[0].size();
-  }
+  SOLVER_LOG(logger, "[Symmetry] Found orbitope of size ", orbitope.size(),
+             " x ", orbitope[0].size());
   DenseMatrixProto* matrix = symmetry->add_orbitopes();
   matrix->set_num_rows(orbitope.size());
   matrix->set_num_cols(orbitope[0].size());
@@ -496,7 +491,6 @@ void DetectAndAddSymmetryToProto(const SatParameters& params,
 
 bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
   const SatParameters& params = context->params();
-  const bool log_info = params.log_search_progress() || VLOG_IS_ON(1);
   const CpModelProto& proto = *context->working_model;
 
   // We need to make sure the proto is up to date before computing symmetries!
@@ -511,7 +505,7 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
 
   // Tricky: the equivalence relation are not part of the proto.
   // We thus add them temporarily to compute the symmetry.
-  int64 num_added = 0;
+  int64_t num_added = 0;
   const int initial_ct_index = proto.constraints().size();
   for (int var = 0; var < num_vars; ++var) {
     if (context->IsFixed(var)) continue;
@@ -534,7 +528,7 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
 
   std::vector<std::unique_ptr<SparsePermutation>> generators;
   FindCpModelSymmetries(params, proto, &generators,
-                        /*deterministic_limit=*/1.0);
+                        /*deterministic_limit=*/1.0, context->logger());
 
   // Remove temporary affine relation.
   context->working_model->mutable_constraints()->DeleteSubrange(
@@ -547,7 +541,7 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
   // Note(user): This relies on the fact that the pointers remain stable when
   // we adds new constraints. It should be the case, but it is a bit unsafe.
   // On the other hand it is annoying to deal with both cases below.
-  std::vector<const google::protobuf::RepeatedField<int32>*> at_most_ones;
+  std::vector<const google::protobuf::RepeatedField<int32_t>*> at_most_ones;
   for (int i = 0; i < proto.constraints_size(); ++i) {
     if (proto.constraints(i).constraint_case() == ConstraintProto::kAtMostOne) {
       at_most_ones.push_back(&proto.constraints(i).at_most_one().literals());
@@ -577,7 +571,7 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
 
     std::vector<int> tmp_to_clear;
     std::vector<int> tmp_sizes(num_vars, 0);
-    for (const google::protobuf::RepeatedField<int32>* literals :
+    for (const google::protobuf::RepeatedField<int32_t>* literals :
          at_most_ones) {
       tmp_to_clear.clear();
 
@@ -618,11 +612,10 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
       }
     }
 
-    if (log_info) {
-      LOG(INFO) << "Num fixable by intersecting at_most_one with orbits: "
-                << can_be_fixed_to_false.size()
-                << " largest_orbit: " << max_orbit_size;
-    }
+    SOLVER_LOG(
+        context->logger(),
+        "[Symmetry] Num fixable by intersecting at_most_one with orbits: ",
+        can_be_fixed_to_false.size(), " largest_orbit: ", max_orbit_size);
   }
 
   // Orbitope approach.
@@ -641,9 +634,9 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
   //
   // TODO(user): code the generic approach with orbits and stabilizer.
   std::vector<std::vector<int>> orbitope = BasicOrbitopeExtraction(generators);
-  if (!orbitope.empty() && log_info) {
-    LOG(INFO) << "Found orbitope of size " << orbitope.size() << " x "
-              << orbitope[0].size();
+  if (!orbitope.empty()) {
+    SOLVER_LOG(context->logger(), "[Symmetry] Found orbitope of size ",
+               orbitope.size(), " x ", orbitope[0].size());
   }
 
   // Supper simple heuristic to use the orbitope or not.
@@ -680,7 +673,8 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
   // TODO(user): The code below requires that no variable appears twice in the
   // same at most one. In particular lit and not(lit) cannot appear in the same
   // at most one.
-  for (const google::protobuf::RepeatedField<int32>* literals : at_most_ones) {
+  for (const google::protobuf::RepeatedField<int32_t>* literals :
+       at_most_ones) {
     for (const int lit : *literals) {
       const int var = PositiveRef(lit);
       CHECK_NE(tmp_sizes[var], 1);
@@ -730,11 +724,11 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
     // the set of best rows on which we have an at most one (or at most one
     // zero) on all their entries.
     bool at_most_one_in_best_rows;  // The alternative is at most one zero.
-    int64 best_score = 0;
+    int64_t best_score = 0;
     std::vector<int> best_rows;
 
     std::vector<int> rows_in_at_most_one;
-    for (const google::protobuf::RepeatedField<int32>* literals :
+    for (const google::protobuf::RepeatedField<int32_t>* literals :
          at_most_ones) {
       tmp_to_clear.clear();
       for (const int literal : *literals) {
@@ -796,7 +790,7 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
       // we fix before choosing the next row to break symmetry on. If there are
       // multiple row involved, we could also take the intersection instead of
       // probably counting the same constraints more than once.
-      int64 score = 0;
+      int64_t score = 0;
       for (const int row : rows_in_at_most_one) {
         score +=
             context->VarToConstraints(PositiveRef(orbitope[row][0])).size();
@@ -897,7 +891,7 @@ bool DetectAndExploitSymmetriesInPresolve(PresolveContext* context) {
       ct->mutable_linear()->add_coeffs(-1);
       ct->mutable_linear()->add_vars(orbitope[0][i + 1]);
       ct->mutable_linear()->add_domain(0);
-      ct->mutable_linear()->add_domain(kint64max);
+      ct->mutable_linear()->add_domain(std::numeric_limits<int64_t>::max());
       context->UpdateRuleStats("symmetry: added symmetry breaking inequality");
     }
     context->UpdateNewConstraintsVariableUsage();

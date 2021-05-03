@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -55,6 +55,9 @@ ABSL_FLAG(std::string, lp_dump_file_basename, "",
           "Base name for dump files. LinearProgram::name_ is used if "
           "lp_dump_file_basename is empty. If LinearProgram::name_ is "
           "empty, \"linear_program_dump_file\" is used.");
+ABSL_FLAG(std::string, glop_params, "",
+          "Override any user parameters with the value of this flag. This is "
+          "interpreted as a GlopParameters proto in text format.");
 
 namespace operations_research {
 namespace glop {
@@ -112,6 +115,14 @@ LPSolver::LPSolver() : num_solves_(0) {}
 
 void LPSolver::SetParameters(const GlopParameters& parameters) {
   parameters_ = parameters;
+#ifndef __PORTABLE_PLATFORM__
+  if (!absl::GetFlag(FLAGS_glop_params).empty()) {
+    GlopParameters flag_params;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        absl::GetFlag(FLAGS_glop_params), &flag_params));
+    parameters_.MergeFrom(flag_params);
+  }
+#endif
 }
 
 const GlopParameters& LPSolver::GetParameters() const { return parameters_; }
@@ -555,6 +566,11 @@ void LPSolver::RunRevisedSimplexIfNeeded(ProblemSolution* solution,
                                          TimeLimit* time_limit) {
   // Note that the transpose matrix is no longer needed at this point.
   // This helps reduce the peak memory usage of the solver.
+  //
+  // TODO(user): actually, once the linear_program is loaded into the internal
+  // glop memory, there is no point keeping it around. Add a more complex
+  // Load/Solve API to RevisedSimplex so we can completely reclaim its memory
+  // right away.
   current_linear_program_.ClearTransposeMatrix();
   if (solution->status != ProblemStatus::INIT) return;
   if (revised_simplex_ == nullptr) {

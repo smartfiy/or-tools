@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -54,7 +54,7 @@
       SWIG_Error(SWIG_TypeError, "sequence(type) expected");
     return NULL;
   }
-$1.swap(temp);
+  $1 = std::move(temp);
 }
 %typemap(in) const std::vector<type>& (std::vector<type> temp),
              const std::vector<type>* (std::vector<type> temp) {
@@ -84,8 +84,9 @@ $1.swap(temp);
 %enddef  // PY_LIST_OUTPUT_TYPEMAP
 
 PY_LIST_INPUT_OUTPUT_TYPEMAP(int, PyInt_Check, PyInt_FromLong);
-PY_LIST_INPUT_OUTPUT_TYPEMAP(int64, SwigPyIntOrLong_Check, PyLong_FromLongLong);
+PY_LIST_INPUT_OUTPUT_TYPEMAP(int64_t, SwigPyIntOrLong_Check, PyLong_FromLongLong);
 PY_LIST_INPUT_OUTPUT_TYPEMAP(double, PyFloat_Check, PyFloat_FromDouble);
+PY_LIST_INPUT_OUTPUT_TYPEMAP(std::string, SwigString_Check, SwigString_FromString);
 
 // Add conversion list(tuple(int)) -> std::vector<std::vector>.
 // TODO(user): see if we can also get rid of this and utilize already
@@ -184,12 +185,12 @@ PY_LIST_INPUT_OUTPUT_TYPEMAP(double, PyFloat_Check, PyFloat_FromDouble);
       }
     }
   }
-$1.swap(temp);
+  $1 = std::move(temp);
 }
 %enddef  // PY_LIST_LIST_INPUT_TYPEMAP
 
 PY_LIST_LIST_INPUT_TYPEMAP(int, PyInt_Check);
-PY_LIST_LIST_INPUT_TYPEMAP(int64, SwigPyIntOrLong_Check);
+PY_LIST_LIST_INPUT_TYPEMAP(int64_t, SwigPyIntOrLong_Check);
 PY_LIST_LIST_INPUT_TYPEMAP(double, PyFloat_Check);
 
 // Helpers to convert vectors of operations_research::Class*

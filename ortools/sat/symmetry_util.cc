@@ -1,4 +1,4 @@
-// Copyright 2010-2018 Google LLC
+// Copyright 2010-2021 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,8 @@
 // limitations under the License.
 
 #include "ortools/sat/symmetry_util.h"
+
+#include <cstdint>
 
 #include "ortools/algorithms/dynamic_partition.h"
 
@@ -50,7 +52,7 @@ std::vector<std::vector<int>> BasicOrbitopeExtraction(
     if (num_cycles_to_2cyclers[i].size() > 1) {
       const int num_perms = num_cycles_to_2cyclers[i].size() + 1;
       VLOG(1) << "Potential orbitope: " << i << " x " << num_perms;
-      const int64 score = std::min(i, num_perms);
+      const int64_t score = std::min(i, num_perms);
       if (score > best_score) {
         best = i;
         best_score = score;
