@@ -88,7 +88,7 @@
   Swig_free(p.arr)
 }
 %typemap(out) CppProtoType {
-  uint8 *go_arr = (uint8*)malloc($1.ByteSizeLong());
+  uint8_t *go_arr = (uint8_t*)malloc($1.ByteSizeLong());
   $1.SerializeToArray(go_arr, $1.ByteSizeLong());
 
   _goslice_ slice;

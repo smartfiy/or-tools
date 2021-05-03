@@ -168,4 +168,4 @@ type name##SliceWithPointer struct {
 #define VECTOR_AS_GO_POINTER_SLICE_NAMESPACE(ns, name, goname) _VECTOR_AS_GO_SLICE(ns, name, goname, *, nothing)
 
 VECTOR_AS_GO_SLICE(int, int)
-VECTOR_AS_GO_SLICE(int64, int64)
+VECTOR_AS_GO_SLICE(int64_t, int64)

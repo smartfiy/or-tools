@@ -85,24 +85,24 @@ struct FailureProtect {
 %enddef  // PROTECT_FROM_FAILURE
 
 namespace operations_research {
-PROTECT_FROM_FAILURE(IntExpr::SetValue(int64 v), arg1->solver());
-PROTECT_FROM_FAILURE(IntExpr::SetMin(int64 v), arg1->solver());
-PROTECT_FROM_FAILURE(IntExpr::SetMax(int64 v), arg1->solver());
-PROTECT_FROM_FAILURE(IntExpr::SetRange(int64 l, int64 u), arg1->solver());
-PROTECT_FROM_FAILURE(IntVar::RemoveValue(int64 v), arg1->solver());
-PROTECT_FROM_FAILURE(IntVar::RemoveValues(const std::vector<int64>& values),
+PROTECT_FROM_FAILURE(IntExpr::SetValue(int64_t v), arg1->solver());
+PROTECT_FROM_FAILURE(IntExpr::SetMin(int64_t v), arg1->solver());
+PROTECT_FROM_FAILURE(IntExpr::SetMax(int64_t v), arg1->solver());
+PROTECT_FROM_FAILURE(IntExpr::SetRange(int64_t l, int64_t u), arg1->solver());
+PROTECT_FROM_FAILURE(IntVar::RemoveValue(int64_t v), arg1->solver());
+PROTECT_FROM_FAILURE(IntVar::RemoveValues(const std::vector<int64_t>& values),
                      arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetStartMin(int64 m), arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetStartMax(int64 m), arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetStartRange(int64 mi, int64 ma),
+PROTECT_FROM_FAILURE(IntervalVar::SetStartMin(int64_t m), arg1->solver());
+PROTECT_FROM_FAILURE(IntervalVar::SetStartMax(int64_t m), arg1->solver());
+PROTECT_FROM_FAILURE(IntervalVar::SetStartRange(int64_t mi, int64_t ma),
                      arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetDurationMin(int64 m), arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetDurationMax(int64 m), arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetDurationRange(int64 mi, int64 ma),
+PROTECT_FROM_FAILURE(IntervalVar::SetDurationMin(int64_t m), arg1->solver());
+PROTECT_FROM_FAILURE(IntervalVar::SetDurationMax(int64_t m), arg1->solver());
+PROTECT_FROM_FAILURE(IntervalVar::SetDurationRange(int64_t mi, int64_t ma),
                      arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetEndMin(int64 m), arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetEndMax(int64 m), arg1->solver());
-PROTECT_FROM_FAILURE(IntervalVar::SetEndRange(int64 mi, int64 ma),
+PROTECT_FROM_FAILURE(IntervalVar::SetEndMin(int64_t m), arg1->solver());
+PROTECT_FROM_FAILURE(IntervalVar::SetEndMax(int64_t m), arg1->solver());
+PROTECT_FROM_FAILURE(IntervalVar::SetEndRange(int64_t mi, int64_t ma),
                      arg1->solver());
 PROTECT_FROM_FAILURE(IntervalVar::SetPerformed(bool val), arg1->solver());
 PROTECT_FROM_FAILURE(Solver::AddConstraint(Constraint* const c), arg1);
@@ -112,8 +112,8 @@ PROTECT_FROM_FAILURE(Solver::Fail(), arg1);
 
 // ############ END DUPLICATED CODE BLOCK ############
 
-%apply int64 * INOUT { int64 *const marker };
-%apply int64 * OUTPUT { int64 *l, int64 *u, int64 *value };
+%apply int64_t * INOUT { int64_t *const marker };
+%apply int64_t * OUTPUT { int64_t *l, int64_t *u, int64_t *value };
 
 // Since knapsack_solver.i and constraint_solver.i both need to
 // instantiate the vector template, but their go_wrap.cc
@@ -256,52 +256,52 @@ namespace operations_research {
   Constraint* StartsAtStart(IntervalVar* other) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::STARTS_AT_START, other);
   }
-  Constraint* EndsAfterEndWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* EndsAfterEndWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::ENDS_AFTER_END, other, delay);
   }
-  Constraint* EndsAfterStartWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* EndsAfterStartWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::ENDS_AFTER_START, other, delay);
   }
-  Constraint* EndsAtEndWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* EndsAtEndWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::ENDS_AT_END, other, delay);
   }
-  Constraint* EndsAtStartWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* EndsAtStartWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::ENDS_AT_START, other, delay);
   }
-  Constraint* StartsAfterEndWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* StartsAfterEndWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::STARTS_AFTER_END, other, delay);
   }
-  Constraint* StartsAfterStartWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* StartsAfterStartWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::STARTS_AFTER_START, other, delay);
   }
-  Constraint* StartsAtEndWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* StartsAtEndWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::STARTS_AT_END, other, delay);
   }
-  Constraint* StartsAtStartWithDelay(IntervalVar* other, int64 delay) {
+  Constraint* StartsAtStartWithDelay(IntervalVar* other, int64_t delay) {
     return $self->solver()->MakeIntervalVarRelationWithDelay($self, operations_research::Solver::STARTS_AT_START, other, delay);
   }
-  Constraint* EndsAfter(int64 date) {
+  Constraint* EndsAfter(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::ENDS_AFTER, date);
   }
-  Constraint* EndsAt(int64 date) {
+  Constraint* EndsAt(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::ENDS_AT, date);
   }
-  Constraint* EndsBefore(int64 date) {
+  Constraint* EndsBefore(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::ENDS_BEFORE, date);
   }
-  Constraint* StartsAfter(int64 date) {
+  Constraint* StartsAfter(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::STARTS_AFTER, date);
   }
-  Constraint* StartsAt(int64 date) {
+  Constraint* StartsAt(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::STARTS_AT, date);
   }
-  Constraint* StartsBefore(int64 date) {
+  Constraint* StartsBefore(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::STARTS_BEFORE, date);
   }
-  Constraint* CrossesDate(int64 date) {
+  Constraint* CrossesDate(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::CROSS_DATE, date);
   }
-  Constraint* AvoidsDate(int64 date) {
+  Constraint* AvoidsDate(int64_t date) {
     return $self->solver()->MakeIntervalVarRelation($self, operations_research::Solver::AVOID_DATE, date);
   }
   IntervalVar* RelaxedMax() {
@@ -504,7 +504,7 @@ namespace operations_research {
 // Extend IntVarLocalSearchFilter with an intuitive API.
 %extend IntVarLocalSearchFilter {
   int Index(IntVar* const var) {
-    int64 index = -1;
+    int64_t index = -1;
     $self->FindIndex(var, &index);
     return index;
   }
@@ -581,7 +581,7 @@ namespace operations_research {
 %include "ortools/constraint_solver/constraint_solveri.h"
 
 namespace operations_research {
-%template(RevInteger) Rev<int64>;
+%template(RevInteger) Rev<int64_t>;
 %template(RevBool) Rev<bool>;
 typedef Assignment::AssignmentContainer AssignmentContainer;
 %template(AssignmentIntContainer) AssignmentContainer<IntVar, IntVarElement>;

@@ -73,5 +73,5 @@ DEFINE_INDEX_TYPE(operations_research::, RoutingDimensionIndex);
 DEFINE_INDEX_TYPE(operations_research::, RoutingDisjunctionIndex);
 DEFINE_INDEX_TYPE(operations_research::, RoutingVehicleClassIndex);
 
-STD_FUNCTION_AS_GO(RoutingTransitCallback1, int64, int64);
-STD_FUNCTION_AS_GO(RoutingTransitCallback2, int64, int64, int64);
+STD_FUNCTION_AS_GO(RoutingTransitCallback1, int64_t, int64_t);
+STD_FUNCTION_AS_GO(RoutingTransitCallback2, int64_t, int64_t, int64_t);

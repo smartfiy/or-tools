@@ -23,8 +23,8 @@
 namespace operations_research {
 class RoutingModelParameters;
 class RoutingSearchParameters;
-typedef std::function<int64(int64)> RoutingTransitCallback1;
-typedef std::function<int64(int64, int64)> RoutingTransitCallback2;
+typedef std::function<int64_t(int64_t)> RoutingTransitCallback1;
+typedef std::function<int64_t(int64_t, int64_t)> RoutingTransitCallback2;
 }  // namespace operations_research
 
 // Include the files we want to wrap a first time.
@@ -57,7 +57,7 @@ namespace operations_research {
 %ignore RoutingModel::AddDimensionDependentDimensionWithVehicleCapacity;
 %ignore RoutingModel::AddHardTypeIncompatibility;
 %ignore RoutingModel::AddMatrixDimension(
-    std::vector<std::vector<int64> > values,
+    std::vector<std::vector<int64_t> > values,
     int64 capacity,
     bool fix_start_cumul_to_zero,
     const std::string& name);

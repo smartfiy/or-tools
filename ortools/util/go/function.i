@@ -20,11 +20,15 @@
   #endif
 %}
 
+// Go type corresponding to the given CType
+#define GO_TYPE_int64_t int64
+#define GO_TYPE(x) GO_TYPE_ ## x
+
 // These are the things we actually use
 #define param(num,type) $typemap(gotype,type) arg ## num
 #define unpack(num,type) arg##num
 #define lval(num,type) type arg##num
-#define lvalgo(num,type) arg##num type
+#define lvalgo(num,type) arg##num GO_TYPE(type)
 #define lvalref(num,type) type&& arg##num
 #define forward(num,type) std::forward<type>(arg##num)
 
@@ -80,10 +84,10 @@
 
   type overwrittenMethodsOn##Name##Impl struct {
     i Name##Impl
-    goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) Ret
+    goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret)
   }
 
-  func NewGo##Name##Wrapper(goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) Ret) Go##Name##Wrapper {
+  func NewGo##Name##Wrapper(goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret)) Go##Name##Wrapper {
     om := &overwrittenMethodsOn##Name##Impl{
       goCb: goCb,
     }
@@ -98,7 +102,7 @@
   }
 
   // callback implementation
-  func (o *overwrittenMethodsOn##Name##Impl) Call(FOR_EACH(lvalgo, __VA_ARGS__)) Ret {
+  func (o *overwrittenMethodsOn##Name##Impl) Call(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret) {
     return o.goCb(FOR_EACH(unpack, __VA_ARGS__))
   }
 %}
