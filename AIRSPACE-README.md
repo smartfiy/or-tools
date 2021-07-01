@@ -10,6 +10,8 @@ It has Go bindings and binaries for use with Go projects.
     `sudo tar -xf or-tools_MacOsX-11.2.3_v9.0.9073.tar.gz --strip 1 -C /usr/local`
  1. Export `DYLD_LIBRARY_PATH` if necessary:
     `export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/lib`
+ 1. Clean module download cache if necessary:
+    `go clean --modcache`
 
 ## Mac Setup for Local OR-tools Development (Extending/Wrapping OR-tools)
  1. Install XCode:
