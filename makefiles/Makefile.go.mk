@@ -44,6 +44,8 @@ endif
 # Go gen dirs (go only wants go source in its tree)
 $(GEN_DIR)/ortools/go/constraintsolver:
 	-$(MKDIR_P) $(GEN_DIR)/ortools/go/constraintsolver
+$(GEN_DIR)/ortools/go/sat:
+	-$(MKDIR_P) $(GEN_DIR)/ortools/go/sat
 $(GEN_DIR)/ortools/go/util:
 	-$(MKDIR_P) $(GEN_DIR)/ortools/go/util
 
@@ -58,6 +60,8 @@ proto: \
  $(GEN_DIR)/ortools/go/constraintsolver/solver_parameters.pb.go \
  $(GEN_DIR)/ortools/go/constraintsolver/routing_parameters.pb.go \
  $(GEN_DIR)/ortools/go/constraintsolver/routing_enums.pb.go \
+ $(GEN_DIR)/ortools/go/sat \
+ $(GEN_DIR)/ortools/go/sat/sat_parameters.pb.go \
  $(GEN_DIR)/ortools/go/util \
  $(GEN_DIR)/ortools/go/util/optional_boolean.pb.go
 
@@ -109,13 +113,15 @@ $(GEN_DIR)/ortools/go/constraintsolver/routing_enums.pb.go: \
 #  --go_opt=paths=source_relative \
 #  $(SRC_DIR)$Sortools$Ssat$Scp_model.proto
 
-# $(GEN_DIR)/ortools/sat/sat_parameters.pb.go: \
-#  $(SRC_DIR)/ortools/sat/sat_parameters.proto \
-#  | $(GEN_DIR)/ortools/sat
-# 	$(PROTOC) --proto_path=$(SRC_DIR) \
-#  --go_out=$(GEN_DIR) \
-#  --go_opt=paths=source_relative \
-#  $(SRC_DIR)$Sortools$Ssat$Ssat_parameters.proto
+$(GEN_DIR)/ortools/go/sat/sat_parameters.pb.go: \
+ $(SRC_DIR)/ortools/sat/sat_parameters.proto \
+ | $(GEN_DIR)/ortools/go/sat
+	$(PROTOC) --proto_path=$(SRC_DIR) \
+ --go_out=$(GEN_DIR) \
+ --go_opt=paths=source_relative \
+ $(SRC_DIR)$Sortools$Ssat$Ssat_parameters.proto
+	$(RENAME) $(GEN_DIR)/ortools/sat/sat_parameters.pb.go \
+	$(GEN_DIR)/ortools/go/sat
 
 $(GEN_DIR)/ortools/go/util/optional_boolean.pb.go: \
  $(SRC_DIR)/ortools/util/optional_boolean.proto \
