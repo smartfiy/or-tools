@@ -3,7 +3,7 @@
 This is a fork of [Google's OR-Tools repo](https://github.com/google/or-tools).
 It has Go bindings and binaries for use with Go projects.
 
-## Mac Setup for Local Go Development
+## Install OR-tools for Go (Mac)
  1. Download binaries for Mac:
     `https://github.com/AirspaceTechnologies/or-tools/releases/download/v9.0-go1.16.3/or-tools_MacOsX-11.2.3_v9.0.9073.tar.gz`
  1. Install/extract to rpath:
@@ -13,33 +13,41 @@ It has Go bindings and binaries for use with Go projects.
  1. Clean module download cache if necessary:
     `go clean --modcache`
 
-## Mac Setup for Local OR-tools Development (Extending/Wrapping OR-tools)
- 1. Install XCode:
-    `xcode-select install`
- 1. Install C++ tools:
-    `brew install cmake wget pkg-config`
- 1. Install SWIG 4.0.1:
-    `brew install swig`
- 1. Install protobuf for Go:
-    `go get -u github.com/golang/protobuf/protoc-gen-go@v1.5.2`
- 1. Clone Airspace OR-tools:
-    `git clone git@github.com:AirspaceTechnologies/or-tools.git`
- 1. Make third party:
-    `make clean clean_third_party third_party`
- 1. Make go:
-    `make clean_go go`
- 1. Make go tests:
-    `make test_go`
+## Develop OR-tools for Go (Mac)
 
-## Build and Release
- 1. Follow steps above (`Mac Setup for Local OR-tools Development`)
+### Setup
+<details>
+  <summary>Required once; expand for steps</summary>
+
+  1. Install XCode:
+     `xcode-select install`
+  1. Install C++ tools:
+     `brew install cmake wget pkg-config`
+  1. Install SWIG 4.0.1:
+     `brew install swig`
+  1. Install protobuf for Go:
+     `go get -u github.com/golang/protobuf/protoc-gen-go@v1.5.2`
+  1. Clone Airspace OR-tools:
+     `git clone git@github.com:AirspaceTechnologies/or-tools.git`
+</details>
+
+### Build
+  1. Make third party:
+     `make clean clean_third_party third_party`
+  1. Make go:
+     `make clean_go go`
+  1. Make go tests:
+     `make test_go`
+
+### Release
+ 1. Follow `Build` steps above
  1. Make Debian binary archive (takes ~45 mins, uses Docker to build everything from scratch):
     `make --directory=makefiles debian_go_export`
  1. Make local Mac binary archive:
     `make golib_archive`
  1. Log into Github and create a release with the resulting binaries
 
-## Update Fork from Upstream
+### Update Fork from Upstream
  1. Configure git remote pointing to upstream or-tools repo:
     `git remote add upstream git@github.com:google/or-tools.git`
  1. Fetch upstream:
