@@ -347,14 +347,15 @@ $(JAVA_ORTOOLS_JAR): \
  $(GEN_DIR)/java/com/google/ortools/constraintsolver/RoutingParameters.java \
  $(GEN_DIR)/java/com/google/ortools/constraintsolver/RoutingEnums.java \
  $(GEN_DIR)/java/com/google/ortools/linearsolver/MPModelProto.java \
+ $(GEN_DIR)/java/com/google/ortools/sat/CpModelProto.java \
  $(GEN_DIR)/java/com/google/ortools/sat/SatParameters.java \
  $(GEN_DIR)/java/com/google/ortools/util/OptionalBoolean.java \
- $(GEN_DIR)/java/com/google/ortools/sat/CpModelProto.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/Loader.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/constraintsolver/IntIntToLongFunction.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/constraintsolver/JavaDecisionBuilder.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/constraintsolver/LongTernaryOperator.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/constraintsolver/LongTernaryPredicate.java \
+ $(SRC_DIR)/ortools/java/com/google/ortools/sat/Constant.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/sat/Constraint.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/sat/CpModel.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/sat/CpSolver.java \
@@ -366,6 +367,7 @@ $(JAVA_ORTOOLS_JAR): \
  $(SRC_DIR)/ortools/java/com/google/ortools/sat/Literal.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/sat/NotBooleanVariable.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/sat/ScalProd.java \
+ $(SRC_DIR)/ortools/java/com/google/ortools/sat/Sum.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/sat/SumOfVariables.java \
  | $(CLASS_DIR)/com/google/ortools
 	"$(JAVAC_BIN)" -encoding UTF-8 -d $(CLASS_DIR) \
@@ -413,7 +415,9 @@ GPG_ARGS ?= <arg>--pinentry-mode</arg><arg>loopback</arg>
 $(TEMP_JAVA_DIR):
 	$(MKDIR) $(TEMP_JAVA_DIR)
 
-# ortools-native
+#########################
+# Java Runtime Package ##
+#########################
 $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT): | $(TEMP_JAVA_DIR)
 	$(MKDIR) $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT)
 
@@ -436,17 +440,19 @@ java_runtime_pimpl: $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/timestamp
 $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/timestamp: \
  $(JAVA_ORTOOLS_NATIVE_LIBS) \
  $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_NATIVE_PROJECT)/pom.xml
-	$(MKDIR_P) $(JAVA_NATIVE_PATH)$Sresources$S$(JAVA_NATIVE_IDENTIFIER)
-	$(COPY) $(subst /,$S,$(JAVA_ORTOOLS_NATIVE_LIBS)) $(JAVA_NATIVE_PATH)$Sresources$S$(JAVA_NATIVE_IDENTIFIER)
+	$(MKDIR_P) $(JAVA_NATIVE_PATH)$Sresources$S$(JAVA_ORTOOLS_NATIVE_PROJECT)
+	$(COPY) $(subst /,$S,$(JAVA_ORTOOLS_NATIVE_LIBS)) $(JAVA_NATIVE_PATH)$Sresources$S$(JAVA_ORTOOLS_NATIVE_PROJECT)
 ifeq ($(SYSTEM),unix)
-	$(COPY) $(OR_TOOLS_LIBS) $(JAVA_NATIVE_PATH)$Sresources$S$(JAVA_NATIVE_IDENTIFIER)
+	$(COPY) $(OR_TOOLS_LIBS) $(JAVA_NATIVE_PATH)$Sresources$S$(JAVA_ORTOOLS_NATIVE_PROJECT)
 endif
 	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" compile -B
 	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" package -B
 	cd $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT) && "$(MVN_BIN)" install -B $(GPG_SIGN)
 	$(TOUCH) $(TEMP_JAVA_DIR)$S$(JAVA_ORTOOLS_NATIVE_PROJECT)$Stimestamp
 
-# ortools-java
+####################
+##  JAVA Package  ##
+####################
 ifeq ($(UNIVERSAL_JAVA_PACKAGE),1)
 JAVA_ORTOOLS_POM=pom-full.xml.in
 else
@@ -481,9 +487,9 @@ $(TEMP_JAVA_DIR)/$(JAVA_ORTOOLS_PROJECT)/timestamp: \
  $(GEN_DIR)/java/com/google/ortools/constraintsolver/RoutingParameters.java \
  $(GEN_DIR)/java/com/google/ortools/constraintsolver/RoutingEnums.java \
  $(GEN_DIR)/java/com/google/ortools/linearsolver/MPModelProto.java \
+ $(GEN_DIR)/java/com/google/ortools/sat/CpModelProto.java \
  $(GEN_DIR)/java/com/google/ortools/sat/SatParameters.java \
  $(GEN_DIR)/java/com/google/ortools/util/OptionalBoolean.java \
- $(GEN_DIR)/java/com/google/ortools/sat/CpModelProto.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/Loader.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/constraintsolver/IntIntToLongFunction.java \
  $(SRC_DIR)/ortools/java/com/google/ortools/constraintsolver/JavaDecisionBuilder.java \
@@ -564,7 +570,6 @@ $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java: \
 
 rjava_%: \
  java \
- $$(SRC_DIR)/ortools/$1/samples/%.java \
  $$(TEMP_JAVA_DIR)/$1/%/pom.xml \
  $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java \
  FORCE
@@ -615,7 +620,6 @@ $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java: \
 
 rjava_%: \
  java \
- $$(SRC_DIR)/examples/$1/%.java \
  $$(TEMP_JAVA_DIR)/$1/%/pom.xml \
  $$(TEMP_JAVA_DIR)/$1/%/$$(JAVA_SRC_DIR)/%.java \
  FORCE
@@ -663,7 +667,6 @@ $(TEMP_JAVA_DIR)/tests/%/$(JAVA_TEST_DIR)/%.java: \
 
 rjava_%: \
  java \
- $(SRC_DIR)/examples/tests/%.java \
  $(TEMP_JAVA_DIR)/tests/%/pom.xml \
  $(TEMP_JAVA_DIR)/tests/%/$(JAVA_TEST_DIR)/%.java \
  FORCE
@@ -711,7 +714,8 @@ test_java_linear_solver_samples: \
  rjava_MipVarArray \
  rjava_MultipleKnapsackMip \
  rjava_SimpleLpProgram \
- rjava_SimpleMipProgram
+ rjava_SimpleMipProgram \
+ rjava_StiglerDiet
 
 .PHONY: test_java_sat_samples # Build and Run all Java SAT Samples (located in ortools/sat/samples)
 test_java_sat_samples: \
@@ -750,9 +754,14 @@ check_java_pimpl: \
 
 .PHONY: test_java_tests # Build and Run all Java Tests (located in examples/tests)
 test_java_tests: \
+ rjava_KnapsackSolverTest \
+ rjava_FlowTest \
  rjava_LinearSolverTest \
  rjava_ConstraintSolverTest \
  rjava_RoutingSolverTest \
+ rjava_LinearExprTest \
+ rjava_CpModelTest \
+ rjava_CpSolverTest \
  rjava_SatSolverTest \
 
 .PHONY: test_java_contrib # Build and Run all Java Contrib (located in examples/contrib)

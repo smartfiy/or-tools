@@ -23,10 +23,12 @@
 #include "absl/types/span.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/sat/cp_model.pb.h"
+#include "ortools/sat/cp_model_presolve.h"
 #include "ortools/sat/model.h"
 #include "ortools/sat/subsolver.h"
 #include "ortools/sat/synchronization.h"
 #include "ortools/util/adaptative_parameter_value.h"
+#include "ortools/util/logging.h"
 
 namespace operations_research {
 namespace sat {
@@ -39,6 +41,9 @@ struct Neighborhood {
   // True if an optimal solution to the neighborhood is also an optimal solution
   // to the original model.
   bool is_reduced = false;
+
+  // True if this neighborhood was just obtained by fixing some variables.
+  bool is_simple = false;
 
   // Specification of the delta between the initial model and the lns fragment.
   // The delta will contains all variables from the initial model, potentially
@@ -56,6 +61,21 @@ struct Neighborhood {
   // Used for identifying the source of the neighborhood if it is generated
   // using solution repositories.
   std::string source_info = "";
+
+  // Statistic, only filled when is_simple is true.
+  int num_relaxed_variables = 0;
+  int num_relaxed_variables_in_objective = 0;
+
+  // Only filled when is_simple is true. If we solve the fragment to optimality,
+  // then we can just fix the variable listed here to that optimal solution.
+  //
+  // This can happen if the neighborhood fully cover some part that are
+  // completely independent from the rest of the model. Like for instance an
+  // unused but not yet fixed variable.
+  //
+  // WARNING: all such variables should be fixed at once in a lock-like manner,
+  // because they can be multiple optimal solutions on these variables.
+  std::vector<int> variables_that_can_be_fixed_to_local_optimum;
 };
 
 // Contains pre-computed information about a given CpModelProto that is meant
@@ -80,8 +100,8 @@ class NeighborhoodGeneratorHelper : public SubSolver {
   // Returns the LNS fragment where the given variables are fixed to the value
   // they take in the given solution.
   Neighborhood FixGivenVariables(
-      const CpSolverResponse& initial_solution,
-      const std::vector<int>& variables_to_fix) const;
+      const CpSolverResponse& base_solution,
+      const absl::flat_hash_set<int>& variables_to_fix) const;
 
   // Returns the neighborhood where the given constraints are removed.
   Neighborhood RemoveMarkedConstraints(
@@ -97,22 +117,12 @@ class NeighborhoodGeneratorHelper : public SubSolver {
   // solution values.
   Neighborhood FixAllVariables(const CpSolverResponse& initial_solution) const;
 
-  // Return a neighborhood that correspond to the full problem.
+  // Returns a neighborhood that correspond to the full problem.
   Neighborhood FullNeighborhood() const;
 
-  // Copies all variables from the in_model to the delta model of the
-  // neighborhood. For all variables in fixed_variable_set, the domain will be
-  // overwritten with the value stored in the initial solution.
-  //
-  // It returns true iff all fixed values are compatible with the domain of the
-  // corresponding variables in the in_model.
-  // TODO(user): We should probably make sure that this can never happen, or
-  // relax the bounds so that we can try to improve the initial solution rather
-  // than just aborting early.
-  bool CopyAndFixVariables(const CpModelProto& source_model,
-                           const absl::flat_hash_set<int>& fixed_variables_set,
-                           const CpSolverResponse& initial_solution,
-                           CpModelProto* output_model) const;
+  // Returns a neighborhood that will just be skipped.
+  // It usually indicate that the generator failed to generated a neighborhood.
+  Neighborhood NoNeighborhood() const;
 
   // Adds solution hinting to the neighborhood from the value of the initial
   // solution.
@@ -135,6 +145,19 @@ class NeighborhoodGeneratorHelper : public SubSolver {
   int NumActiveVariables() const {
     absl::ReaderMutexLock lock(&graph_mutex_);
     return active_variables_.size();
+  }
+
+  bool DifficultyMeansFullNeighborhood(double difficulty) const {
+    absl::ReaderMutexLock lock(&graph_mutex_);
+    const int target_size = std::ceil(difficulty * active_variables_.size());
+    return target_size == active_variables_.size();
+  }
+
+  // Returns the vector of active variables. The graph_mutex_ must be
+  // locked before calling this method.
+  const std::vector<int>& ActiveVariablesWhileHoldingLock() const
+      ABSL_SHARED_LOCKS_REQUIRED(graph_mutex_) {
+    return active_variables_;
   }
 
   // Constraints <-> Variables graph.
@@ -162,6 +185,14 @@ class NeighborhoodGeneratorHelper : public SubSolver {
   std::vector<int> GetActiveIntervals(
       const CpSolverResponse& initial_solution) const;
 
+  // Returns one sub-vector per circuit or per single vehicle ciruit in a routes
+  // constraints. Each circuit is non empty, and does not contain any
+  // self-looping arcs. Path are sorted, starting from the arc with the lowest
+  // tail index, and going in sequence up to the last arc before the circuit is
+  // closed. Each entry correspond to the arc literal on the circuit.
+  std::vector<std::vector<int>> GetRoutingPaths(
+      const CpSolverResponse& initial_solution) const;
+
   // The initial problem.
   // Note that the domain of the variables are not updated here.
   const CpModelProto& ModelProto() const { return model_proto_; }
@@ -178,13 +209,26 @@ class NeighborhoodGeneratorHelper : public SubSolver {
   // Note: This mutex needs to be public for thread annotations.
   mutable absl::Mutex graph_mutex_;
 
+  // TODO(user): Display LNS statistics through the StatisticsString()
+  // method.
+
  private:
+  // Precompute stuff that will never change. During the execution, only the
+  // domain of the variable will change, so data that only depends on the
+  // constraints need to be computed just once.
+  void InitializeHelperData();
+
   // Recompute most of the class member. This needs to be called when the
   // domains of the variables are updated.
   void RecomputeHelperData();
 
   // Indicates if a variable is fixed in the model.
   bool IsConstant(int var) const ABSL_SHARED_LOCKS_REQUIRED(domain_mutex_);
+
+  // Returns true if the domain on the objective is constraining and we might
+  // get a lower objective value at optimum without it.
+  bool ObjectiveDomainIsConstraining() const
+      ABSL_SHARED_LOCKS_REQUIRED(domain_mutex_);
 
   const SatParameters& parameters_;
   const CpModelProto& model_proto_;
@@ -201,19 +245,37 @@ class NeighborhoodGeneratorHelper : public SubSolver {
   // TODO(user): Use custom domain repository rather than a proto?
   CpModelProto model_proto_with_only_variables_ ABSL_GUARDED_BY(domain_mutex_);
 
-  // Constraints by types.
+  // Constraints by types. This never changes.
   std::vector<std::vector<int>> type_to_constraints_;
 
+  // Whether a model_proto_ variable appear in the objective. This never
+  // changes.
+  std::vector<bool> is_in_objective_;
+
+  // A copy of CpModelProto where we did some basic presolving to remove all
+  // constraint that are always true. The Variable-Constraint graph is based on
+  // this model. Note that only the constraints field is present here.
+  CpModelProto simplied_model_proto_ ABSL_GUARDED_BY(graph_mutex_);
+
   // Variable-Constraint graph.
+  // We replace an interval by its variables in the scheduling constraints.
+  //
+  // TODO(user): Note that the objective is not considered here. Which is fine
+  // except if the objective domain is constraining.
   std::vector<std::vector<int>> constraint_to_var_
       ABSL_GUARDED_BY(graph_mutex_);
   std::vector<std::vector<int>> var_to_constraint_
       ABSL_GUARDED_BY(graph_mutex_);
 
-  // The set of active variables, that is the list of non constant variables if
-  // parameters_.focus_on_decision_variables() is false, or the list of non
-  // constant decision variables otherwise. It is stored both as a list and as a
-  // set (using a Boolean vector).
+  // Connected components of the variable-constraint graph. If a variable is
+  // constant, it will not appear in any component and
+  // var_to_component_index_[var] will be -1.
+  std::vector<std::vector<int>> components_ ABSL_GUARDED_BY(graph_mutex_);
+  std::vector<int> var_to_component_index_ ABSL_GUARDED_BY(graph_mutex_);
+
+  // The set of active variables which is currently the list of non-constant
+  // variables. It is stored both as a list and as a set (using a Boolean
+  // vector).
   std::vector<bool> active_variables_set_ ABSL_GUARDED_BY(graph_mutex_);
   std::vector<int> active_variables_ ABSL_GUARDED_BY(graph_mutex_);
 
@@ -381,9 +443,12 @@ class NeighborhoodGenerator {
 };
 
 // Pick a random subset of variables.
-class SimpleNeighborhoodGenerator : public NeighborhoodGenerator {
+//
+// TODO(user): In the presence of connected components, this should just work
+// on one of them.
+class RelaxRandomVariablesGenerator : public NeighborhoodGenerator {
  public:
-  explicit SimpleNeighborhoodGenerator(
+  explicit RelaxRandomVariablesGenerator(
       NeighborhoodGeneratorHelper const* helper, const std::string& name)
       : NeighborhoodGenerator(name, helper) {}
   Neighborhood Generate(const CpSolverResponse& initial_solution,
@@ -393,9 +458,12 @@ class SimpleNeighborhoodGenerator : public NeighborhoodGenerator {
 // Pick a random subset of constraints and relax all the variables of these
 // constraints. Note that to satisfy the difficulty, we might not relax all the
 // variable of the "last" constraint.
-class SimpleConstraintNeighborhoodGenerator : public NeighborhoodGenerator {
+//
+// TODO(user): In the presence of connected components, this should just work
+// on one of them.
+class RelaxRandomConstraintsGenerator : public NeighborhoodGenerator {
  public:
-  explicit SimpleConstraintNeighborhoodGenerator(
+  explicit RelaxRandomConstraintsGenerator(
       NeighborhoodGeneratorHelper const* helper, const std::string& name)
       : NeighborhoodGenerator(name, helper) {}
   Neighborhood Generate(const CpSolverResponse& initial_solution,
@@ -406,6 +474,9 @@ class SimpleConstraintNeighborhoodGenerator : public NeighborhoodGenerator {
 // variable <-> constraint graph. That is, pick a random variable, then all the
 // variable connected by some constraint to the first one, and so on. The
 // variable of the last "level" are selected randomly.
+//
+// Note that in the presence of connected component, this works correctly
+// already.
 class VariableGraphNeighborhoodGenerator : public NeighborhoodGenerator {
  public:
   explicit VariableGraphNeighborhoodGenerator(
@@ -456,6 +527,47 @@ class SchedulingNeighborhoodGenerator : public NeighborhoodGenerator {
 class SchedulingTimeWindowNeighborhoodGenerator : public NeighborhoodGenerator {
  public:
   explicit SchedulingTimeWindowNeighborhoodGenerator(
+      NeighborhoodGeneratorHelper const* helper, const std::string& name)
+      : NeighborhoodGenerator(name, helper) {}
+
+  Neighborhood Generate(const CpSolverResponse& initial_solution,
+                        double difficulty, absl::BitGenRef random) final;
+};
+
+// This routing based LNS generator will relax random arcs in all the paths of
+// the circuit or routes constraints.
+class RoutingRandomNeighborhoodGenerator : public NeighborhoodGenerator {
+ public:
+  RoutingRandomNeighborhoodGenerator(NeighborhoodGeneratorHelper const* helper,
+                                     const std::string& name)
+      : NeighborhoodGenerator(name, helper) {}
+
+  Neighborhood Generate(const CpSolverResponse& initial_solution,
+                        double difficulty, absl::BitGenRef random) final;
+};
+
+// This routing based LNS generator will relax small sequences of arcs randomly
+// chosen in all the paths of the circuit or routes constraints.
+class RoutingPathNeighborhoodGenerator : public NeighborhoodGenerator {
+ public:
+  RoutingPathNeighborhoodGenerator(NeighborhoodGeneratorHelper const* helper,
+                                   const std::string& name)
+      : NeighborhoodGenerator(name, helper) {}
+
+  Neighborhood Generate(const CpSolverResponse& initial_solution,
+                        double difficulty, absl::BitGenRef random) final;
+};
+
+// This routing based LNS generator aims are relaxing one full path, and make
+// some room on the other paths to absorb the nodes of the relaxed path.
+//
+// In order to do so, it will relax the first and the last arc of each path in
+// the circuit or routes constraints. Then it will relax all arc literals in one
+// random path. Then it will relax random arcs in the remaining paths until it
+// reaches the given difficulty.
+class RoutingFullPathNeighborhoodGenerator : public NeighborhoodGenerator {
+ public:
+  RoutingFullPathNeighborhoodGenerator(
       NeighborhoodGeneratorHelper const* helper, const std::string& name)
       : NeighborhoodGenerator(name, helper) {}
 

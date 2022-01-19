@@ -19,6 +19,7 @@
 #include <queue>
 #include <type_traits>
 
+#include "absl/strings/str_cat.h"
 #include "ortools/base/iterator_adaptors.h"
 #include "ortools/base/stl_util.h"
 #include "ortools/util/time_limit.h"
@@ -33,6 +34,16 @@ std::vector<IntegerVariable> NegationOf(
     result[i] = NegationOf(vars[i]);
   }
   return result;
+}
+
+std::string ValueLiteralPair::DebugString() const {
+  return absl::StrCat("(literal = ", literal.DebugString(),
+                      ", value = ", value.value(), ")");
+}
+
+std::ostream& operator<<(std::ostream& os, const ValueLiteralPair& p) {
+  os << p.DebugString();
+  return os;
 }
 
 void IntegerEncoder::FullyEncodeVariable(IntegerVariable var) {
@@ -52,10 +63,8 @@ void IntegerEncoder::FullyEncodeVariable(IntegerVariable var) {
   // garbage. Note that it is okay to call the function on values no longer
   // reachable, as this will just do nothing.
   tmp_values_.clear();
-  for (const ClosedInterval interval : (*domains_)[var]) {
-    for (IntegerValue v(interval.start); v <= interval.end; ++v) {
-      tmp_values_.push_back(v);
-    }
+  for (const int64_t v : (*domains_)[var].Values()) {
+    tmp_values_.push_back(IntegerValue(v));
   }
   for (const IntegerValue v : tmp_values_) {
     GetOrCreateLiteralAssociatedToEquality(var, v);
@@ -91,11 +100,9 @@ bool IntegerEncoder::VariableIsFullyEncoded(IntegerVariable var) const {
   // not properly synced because the propagation is not finished.
   const auto& ref = equality_by_var_[index];
   int i = 0;
-  for (const ClosedInterval interval : (*domains_)[var]) {
-    for (int64_t v = interval.start; v <= interval.end; ++v) {
-      if (i < ref.size() && v == ref[i].value) {
-        i++;
-      }
+  for (const int64_t v : (*domains_)[var].Values()) {
+    if (i < ref.size() && v == ref[i].value) {
+      i++;
     }
   }
   if (i == ref.size()) {
@@ -104,14 +111,14 @@ bool IntegerEncoder::VariableIsFullyEncoded(IntegerVariable var) const {
   return is_fully_encoded_[index];
 }
 
-std::vector<IntegerEncoder::ValueLiteralPair>
-IntegerEncoder::FullDomainEncoding(IntegerVariable var) const {
+std::vector<ValueLiteralPair> IntegerEncoder::FullDomainEncoding(
+    IntegerVariable var) const {
   CHECK(VariableIsFullyEncoded(var));
   return PartialDomainEncoding(var);
 }
 
-std::vector<IntegerEncoder::ValueLiteralPair>
-IntegerEncoder::PartialDomainEncoding(IntegerVariable var) const {
+std::vector<ValueLiteralPair> IntegerEncoder::PartialDomainEncoding(
+    IntegerVariable var) const {
   CHECK_EQ(sat_solver_->CurrentDecisionLevel(), 0);
   const PositiveOnlyIndex index = GetPositiveOnlyIndex(var);
   if (index >= equality_by_var_.size()) return {};
@@ -130,14 +137,23 @@ IntegerEncoder::PartialDomainEncoding(IntegerVariable var) const {
     ref[new_size++] = pair;
   }
   ref.resize(new_size);
-  std::sort(ref.begin(), ref.end());
+  std::sort(ref.begin(), ref.end(), ValueLiteralPair::CompareByValue());
 
-  std::vector<IntegerEncoder::ValueLiteralPair> result = ref;
+  std::vector<ValueLiteralPair> result = ref;
   if (!VariableIsPositive(var)) {
     std::reverse(result.begin(), result.end());
     for (ValueLiteralPair& ref : result) ref.value = -ref.value;
   }
   return result;
+}
+
+std::vector<ValueLiteralPair> IntegerEncoder::RawDomainEncoding(
+    IntegerVariable var) const {
+  CHECK(VariableIsPositive(var));
+  const PositiveOnlyIndex index = GetPositiveOnlyIndex(var);
+  if (index >= equality_by_var_.size()) return {};
+
+  return equality_by_var_[index];
 }
 
 // Note that by not inserting the literal in "order" we can in the worst case
@@ -361,7 +377,7 @@ void IntegerEncoder::AssociateToIntegerEqualValue(Literal literal,
     is_fully_encoded_.resize(index.value() + 1);
   }
   equality_by_var_[index].push_back(
-      ValueLiteralPair(VariableIsPositive(var) ? value : -value, literal));
+      {VariableIsPositive(var) ? value : -value, literal});
 
   // Fix literal for constant domain.
   if (value == domain.Min() && value == domain.Max()) {
@@ -474,8 +490,8 @@ LiteralIndex IntegerEncoder::SearchForLiteralAtOrBefore(
 
 IntegerTrail::~IntegerTrail() {
   if (parameters_.log_search_progress() && num_decisions_to_break_loop_ > 0) {
-    LOG(INFO) << "Num decisions to break propagation loop: "
-              << num_decisions_to_break_loop_;
+    VLOG(1) << "Num decisions to break propagation loop: "
+            << num_decisions_to_break_loop_;
   }
 }
 
@@ -544,6 +560,7 @@ bool IntegerTrail::Propagate(Trail* trail) {
 
 void IntegerTrail::Untrail(const Trail& trail, int literal_trail_index) {
   ++num_untrails_;
+  conditional_lbs_.clear();
   const int level = trail.CurrentDecisionLevel();
   var_to_current_lb_interval_index_.SetLevel(level);
   propagation_trail_index_ =
@@ -675,8 +692,7 @@ bool IntegerTrail::UpdateInitialDomain(IntegerVariable var, Domain domain) {
   // Set to false excluded literals.
   int i = 0;
   int num_fixed = 0;
-  for (const IntegerEncoder::ValueLiteralPair pair :
-       encoder_->PartialDomainEncoding(var)) {
+  for (const ValueLiteralPair pair : encoder_->PartialDomainEncoding(var)) {
     while (i < domain.NumIntervals() && pair.value > domain[i].end) ++i;
     if (i == domain.NumIntervals() || pair.value < domain[i].start) {
       ++num_fixed;
@@ -990,6 +1006,24 @@ std::string IntegerTrail::DebugString() {
   return result;
 }
 
+bool IntegerTrail::SafeEnqueue(
+    IntegerLiteral i_lit, absl::Span<const IntegerLiteral> integer_reason) {
+  if (i_lit.IsTrueLiteral()) return true;
+
+  std::vector<IntegerLiteral> cleaned_reason;
+  for (const IntegerLiteral lit : integer_reason) {
+    DCHECK(!lit.IsFalseLiteral());
+    if (lit.IsTrueLiteral()) continue;
+    cleaned_reason.push_back(lit);
+  }
+
+  if (i_lit.IsFalseLiteral()) {
+    return ReportConflict({}, cleaned_reason);
+  } else {
+    return Enqueue(i_lit, {}, cleaned_reason);
+  }
+}
+
 bool IntegerTrail::Enqueue(IntegerLiteral i_lit,
                            absl::Span<const Literal> literal_reason,
                            absl::Span<const IntegerLiteral> integer_reason) {
@@ -1023,6 +1057,21 @@ bool IntegerTrail::ConditionalEnqueue(
   }
 
   // We can't push anything in this case.
+  //
+  // We record it for this propagation phase (until the next untrail) as this
+  // is relatively fast and heuristics can exploit this.
+  //
+  // Note that currently we only use ConditionalEnqueue() in scheduling
+  // propagator, and these propagator are quite slow so this is not visible.
+  //
+  // TODO(user): We could even keep the reason and maybe do some reasoning using
+  // at_least_one constraint on a set of the Boolean used here.
+  const auto [it, inserted] =
+      conditional_lbs_.insert({{lit.Index(), i_lit.var}, i_lit.bound});
+  if (!inserted) {
+    it->second = std::max(it->second, i_lit.bound);
+  }
+
   return true;
 }
 
@@ -1078,11 +1127,12 @@ bool IntegerTrail::ReasonIsValid(
         num_literal_assigned_after_root_node++;
       }
     }
-    DLOG_IF(INFO, num_literal_assigned_after_root_node == 0)
-        << "Propagating a literal with no reason at a positive level!\n"
-        << "level:" << integer_search_levels_.size() << " "
-        << ReasonDebugString(literal_reason, integer_reason) << "\n"
-        << DebugString();
+    if (num_literal_assigned_after_root_node == 0) {
+      VLOG(2) << "Propagating a literal with no reason at a positive level!\n"
+              << "level:" << integer_search_levels_.size() << " "
+              << ReasonDebugString(literal_reason, integer_reason) << "\n"
+              << DebugString();
+    }
   }
 
   return true;
@@ -1152,7 +1202,7 @@ bool IntegerTrail::InPropagationLoop() const {
   const int num_vars = vars_.size();
   return (!integer_search_levels_.empty() &&
           integer_trail_.size() - integer_search_levels_.back() >
-              std::max(10000, num_vars) &&
+              std::max(10000, 10 * num_vars) &&
           parameters_.search_branching() != SatParameters::FIXED_SEARCH);
 }
 
@@ -1827,7 +1877,7 @@ bool GenericLiteralWatcher::Propagate(Trail* trail) {
     //
     // TODO(user): The queue will not be emptied, but I am not sure the solver
     // will be left in an usable state. Fix if it become needed to resume
-    // the solve from the last time it was interupted.
+    // the solve from the last time it was interrupted.
     if (test_limit > 100) {
       test_limit = 0;
       if (time_limit_->LimitReached()) break;

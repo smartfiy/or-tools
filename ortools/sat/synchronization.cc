@@ -18,7 +18,7 @@
 
 #if !defined(__PORTABLE_PLATFORM__)
 #include "ortools/base/file.h"
-#include "ortools/sat/cp_model_loader.h"
+#include "ortools/sat/cp_model_mapping.h"
 #endif  // __PORTABLE_PLATFORM__
 
 #include "absl/container/flat_hash_set.h"
@@ -102,18 +102,12 @@ void SharedIncompleteSolutionManager::AddNewSolution(
   solutions_.push_back(lp_solution);
 }
 
-// TODO(user): Experiments and play with the num_solutions_to_keep parameter.
-SharedResponseManager::SharedResponseManager(bool enumerate_all_solutions,
-                                             const CpModelProto* proto,
-                                             const WallTimer* wall_timer,
-                                             SharedTimeLimit* shared_time_limit,
-                                             SolverLogger* logger)
-    : enumerate_all_solutions_(enumerate_all_solutions),
-      model_proto_(*proto),
-      wall_timer_(*wall_timer),
-      shared_time_limit_(shared_time_limit),
-      solutions_(/*num_solutions_to_keep=*/3),
-      logger_(logger) {}
+SharedResponseManager::SharedResponseManager(Model* model)
+    : parameters_(*model->GetOrCreate<SatParameters>()),
+      wall_timer_(*model->GetOrCreate<WallTimer>()),
+      shared_time_limit_(model->GetOrCreate<ModelSharedTimeLimit>()),
+      solutions_(parameters_.solution_pool_size()),
+      logger_(model->GetOrCreate<SolverLogger>()) {}
 
 namespace {
 
@@ -131,41 +125,60 @@ std::string ProgressMessage(const std::string& event_or_solution_count,
 std::string SatProgressMessage(const std::string& event_or_solution_count,
                                double time_in_seconds,
                                const std::string& solution_info) {
-  return absl::StrFormat("#%-5s %6.2fs  %s", event_or_solution_count,
+  return absl::StrFormat("#%-5s %6.2fs %s", event_or_solution_count,
                          time_in_seconds, solution_info);
 }
 
 }  // namespace
 
-void SharedResponseManager::SetUpdatePrimalIntegralOnEachChange(bool set) {
+void SharedResponseManager::LogMessage(std::string message) {
+  absl::MutexLock mutex_lock(&mutex_);
+  SOLVER_LOG(logger_,
+             absl::StrFormat("#Model %6.2fs %s", wall_timer_.Get(), message));
+}
+
+void SharedResponseManager::InitializeObjective(const CpModelProto& cp_model) {
+  if (cp_model.has_objective()) {
+    objective_or_null_ = &cp_model.objective();
+    const Domain domain = ReadDomainFromProto(cp_model.objective());
+    if (!domain.IsEmpty()) {
+      UpdateInnerObjectiveBounds("initial_domain", IntegerValue(domain.Min()),
+                                 IntegerValue(domain.Max()));
+    }
+  } else {
+    objective_or_null_ = nullptr;
+  }
+}
+
+void SharedResponseManager::SetUpdateGapIntegralOnEachChange(bool set) {
   absl::MutexLock mutex_lock(&mutex_);
   update_integral_on_each_change_ = set;
 }
 
-void SharedResponseManager::UpdatePrimalIntegral() {
+void SharedResponseManager::UpdateGapIntegral() {
   absl::MutexLock mutex_lock(&mutex_);
-  UpdatePrimalIntegralInternal();
+  UpdateGapIntegralInternal();
 }
 
-void SharedResponseManager::UpdatePrimalIntegralInternal() {
-  if (!model_proto_.has_objective()) return;
+void SharedResponseManager::UpdateGapIntegralInternal() {
+  if (objective_or_null_ == nullptr) return;
 
   const double current_time = shared_time_limit_->GetElapsedDeterministicTime();
-  const double time_delta = current_time - last_primal_integral_time_stamp_;
+  const double time_delta = current_time - last_gap_integral_time_stamp_;
 
   // We use the log of the absolute objective gap.
   //
   // Using the log should count no solution as just log(2*64) = 18, and
   // otherwise just compare order of magnitude which seems nice. Also, It is
   // more easy to compare the primal integral with the total time.
-  const CpObjectiveProto& obj = model_proto_.objective();
+  const CpObjectiveProto& obj = *objective_or_null_;
   const double factor =
       obj.scaling_factor() != 0.0 ? std::abs(obj.scaling_factor()) : 1.0;
   const double bounds_delta = std::log(1 + factor * last_absolute_gap_);
-  primal_integral_ += time_delta * bounds_delta;
+  gap_integral_ += time_delta * bounds_delta;
 
   // Update with new value.
-  last_primal_integral_time_stamp_ = current_time;
+  last_gap_integral_time_stamp_ = current_time;
   last_absolute_gap_ =
       std::max(0.0, static_cast<double>(inner_objective_upper_bound_) -
                         static_cast<double>(inner_objective_lower_bound_));
@@ -174,7 +187,7 @@ void SharedResponseManager::UpdatePrimalIntegralInternal() {
 void SharedResponseManager::SetGapLimitsFromParameters(
     const SatParameters& parameters) {
   absl::MutexLock mutex_lock(&mutex_);
-  if (!model_proto_.has_objective()) return;
+  if (objective_or_null_ == nullptr) return;
   absolute_gap_limit_ = parameters.absolute_gap_limit();
   relative_gap_limit_ = parameters.relative_gap_limit();
 }
@@ -183,13 +196,13 @@ void SharedResponseManager::TestGapLimitsIfNeeded() {
   // This is called on each internal limit change, so it is a good place to
   // update the integral. Note that this is not called at the end of the search
   // though.
-  if (update_integral_on_each_change_) UpdatePrimalIntegralInternal();
+  if (update_integral_on_each_change_) UpdateGapIntegralInternal();
 
   if (absolute_gap_limit_ == 0 && relative_gap_limit_ == 0) return;
   if (best_solution_objective_value_ >= kMaxIntegerValue) return;
   if (inner_objective_lower_bound_ <= kMinIntegerValue) return;
 
-  const CpObjectiveProto& obj = model_proto_.objective();
+  const CpObjectiveProto& obj = *objective_or_null_;
   const double user_best =
       ScaleObjectiveValue(obj, best_solution_objective_value_);
   const double user_bound =
@@ -218,7 +231,7 @@ void SharedResponseManager::TestGapLimitsIfNeeded() {
 void SharedResponseManager::UpdateInnerObjectiveBounds(
     const std::string& update_info, IntegerValue lb, IntegerValue ub) {
   absl::MutexLock mutex_lock(&mutex_);
-  CHECK(model_proto_.has_objective());
+  CHECK(objective_or_null_ != nullptr);
 
   // The problem is already solved!
   //
@@ -250,18 +263,18 @@ void SharedResponseManager::UpdateInnerObjectiveBounds(
     } else {
       best_response_.set_status(CpSolverStatus::INFEASIBLE);
     }
-    if (update_integral_on_each_change_) UpdatePrimalIntegralInternal();
+    if (update_integral_on_each_change_) UpdateGapIntegralInternal();
     SOLVER_LOG(logger_,
                SatProgressMessage("Done", wall_timer_.Get(), update_info));
     return;
   }
   if (logger_->LoggingIsEnabled() && change) {
-    const CpObjectiveProto& obj = model_proto_.objective();
+    const CpObjectiveProto& obj = *objective_or_null_;
     const double best =
         ScaleObjectiveValue(obj, best_solution_objective_value_);
     double new_lb = ScaleObjectiveValue(obj, inner_objective_lower_bound_);
     double new_ub = ScaleObjectiveValue(obj, inner_objective_upper_bound_);
-    if (model_proto_.objective().scaling_factor() < 0) {
+    if (obj.scaling_factor() < 0) {
       std::swap(new_lb, new_ub);
     }
     RegisterObjectiveBoundImprovement(update_info);
@@ -282,14 +295,11 @@ void SharedResponseManager::NotifyThatImprovingProblemIsInfeasible(
     // We also use this status to indicate that we enumerated all solutions to
     // a feasible problem.
     best_response_.set_status(CpSolverStatus::OPTIMAL);
-    if (!model_proto_.has_objective()) {
-      best_response_.set_all_solutions_were_found(true);
-    }
 
     // We just proved that the best solution cannot be improved uppon, so we
     // have a new lower bound.
     inner_objective_lower_bound_ = best_solution_objective_value_;
-    if (update_integral_on_each_change_) UpdatePrimalIntegralInternal();
+    if (update_integral_on_each_change_) UpdateGapIntegralInternal();
   } else {
     CHECK_EQ(num_solutions_, 0);
     best_response_.set_status(CpSolverStatus::INFEASIBLE);
@@ -339,9 +349,27 @@ IntegerValue SharedResponseManager::BestSolutionInnerObjectiveValue() {
   return IntegerValue(best_solution_objective_value_);
 }
 
-double SharedResponseManager::PrimalIntegral() const {
+double SharedResponseManager::GapIntegral() const {
   absl::MutexLock mutex_lock(&mutex_);
-  return primal_integral_;
+  return gap_integral_;
+}
+
+void SharedResponseManager::AddSolutionPostprocessor(
+    std::function<void(std::vector<int64_t>*)> postprocessor) {
+  absl::MutexLock mutex_lock(&mutex_);
+  solution_postprocessors_.push_back(postprocessor);
+}
+
+void SharedResponseManager::AddResponsePostprocessor(
+    std::function<void(CpSolverResponse*)> postprocessor) {
+  absl::MutexLock mutex_lock(&mutex_);
+  postprocessors_.push_back(postprocessor);
+}
+
+void SharedResponseManager::AddFinalResponsePostprocessor(
+    std::function<void(CpSolverResponse*)> postprocessor) {
+  absl::MutexLock mutex_lock(&mutex_);
+  final_postprocessors_.push_back(postprocessor);
 }
 
 int SharedResponseManager::AddSolutionCallback(
@@ -363,19 +391,57 @@ void SharedResponseManager::UnregisterCallback(int callback_id) {
   LOG(DFATAL) << "Callback id " << callback_id << " not registered.";
 }
 
-CpSolverResponse SharedResponseManager::GetResponse() {
-  absl::MutexLock mutex_lock(&mutex_);
+CpSolverResponse SharedResponseManager::GetResponseInternal() {
   FillObjectiveValuesInBestResponse();
-  return best_response_;
+
+  // We need to copy the response before we postsolve it.
+  CpSolverResponse result = best_response_;
+  if (result.status() == CpSolverStatus::FEASIBLE ||
+      result.status() == CpSolverStatus::OPTIMAL) {
+    std::vector<int64_t> solution(result.solution().begin(),
+                                  result.solution().end());
+    for (int i = solution_postprocessors_.size(); --i >= 0;) {
+      solution_postprocessors_[i](&solution);
+    }
+    result.mutable_solution()->Assign(solution.begin(), solution.end());
+  }
+  for (int i = postprocessors_.size(); --i >= 0;) {
+    postprocessors_[i](&result);
+  }
+  return result;
+}
+
+CpSolverResponse SharedResponseManager::GetResponse(bool full_response) {
+  absl::MutexLock mutex_lock(&mutex_);
+  CpSolverResponse result = GetResponseInternal();
+  if (full_response) {
+    // If this is true, we postsolve and copy all of our solutions.
+    if (parameters_.fill_additional_solutions_in_response()) {
+      std::vector<int64_t> temp;
+      for (int i = 0; i < solutions_.NumSolutions(); ++i) {
+        temp = solutions_.GetSolution(i).variable_values;
+        for (int i = solution_postprocessors_.size(); --i >= 0;) {
+          solution_postprocessors_[i](&temp);
+        }
+        result.add_additional_solutions()->mutable_values()->Assign(
+            temp.begin(), temp.end());
+      }
+    }
+    for (int i = final_postprocessors_.size(); --i >= 0;) {
+      final_postprocessors_[i](&result);
+    }
+  }
+  return result;
 }
 
 void SharedResponseManager::FillObjectiveValuesInBestResponse() {
-  if (!model_proto_.has_objective()) return;
-  const CpObjectiveProto& obj = model_proto_.objective();
+  if (objective_or_null_ == nullptr) return;
+  const CpObjectiveProto& obj = *objective_or_null_;
 
   if (best_response_.status() == CpSolverStatus::INFEASIBLE) {
     best_response_.clear_objective_value();
     best_response_.clear_best_objective_bound();
+    best_response_.clear_inner_objective_lower_bound();
     return;
   }
 
@@ -390,20 +456,31 @@ void SharedResponseManager::FillObjectiveValuesInBestResponse() {
   }
 
   // Update the best bound in the response.
+  best_response_.set_inner_objective_lower_bound(
+      ScaleInnerObjectiveValue(obj, inner_objective_lower_bound_));
   best_response_.set_best_objective_bound(
       ScaleObjectiveValue(obj, inner_objective_lower_bound_));
 
   // Update the primal integral.
-  best_response_.set_primal_integral(primal_integral_);
+  best_response_.set_gap_integral(gap_integral_);
 }
 
 void SharedResponseManager::NewSolution(const CpSolverResponse& response,
                                         Model* model) {
   absl::MutexLock mutex_lock(&mutex_);
 
-  if (model_proto_.has_objective()) {
+  // Special case if the user asked to keep solutions in the pool.
+  if (objective_or_null_ == nullptr && parameters_.enumerate_all_solutions() &&
+      parameters_.fill_additional_solutions_in_response()) {
+    SharedSolutionRepository<int64_t>::Solution solution;
+    solution.variable_values.assign(response.solution().begin(),
+                                    response.solution().end());
+    solutions_.Add(solution);
+  }
+
+  if (objective_or_null_ != nullptr) {
     const int64_t objective_value =
-        ComputeInnerObjective(model_proto_.objective(), response);
+        ComputeInnerObjective(*objective_or_null_, response);
 
     // Add this solution to the pool, even if it is not improving.
     if (!response.solution().empty()) {
@@ -430,9 +507,16 @@ void SharedResponseManager::NewSolution(const CpSolverResponse& response,
     inner_objective_upper_bound_ = objective_value - 1;
   }
 
+  // TODO(user): Hack. In single thread, no one is synchronizing the solution,
+  // so we should do it from here. We currently "reuse"
+  // update_integral_on_each_change_ which should probably just change name.
+  if (update_integral_on_each_change_) {
+    solutions_.Synchronize();
+  }
+
   // Note that the objective will be filled by
   // FillObjectiveValuesInBestResponse().
-  if (!model_proto_.has_objective() && !enumerate_all_solutions_) {
+  if (objective_or_null_ == nullptr && !parameters_.enumerate_all_solutions()) {
     best_response_.set_status(CpSolverStatus::OPTIMAL);
   } else {
     best_response_.set_status(CpSolverStatus::FEASIBLE);
@@ -440,13 +524,9 @@ void SharedResponseManager::NewSolution(const CpSolverResponse& response,
 
   best_response_.set_solution_info(response.solution_info());
   *best_response_.mutable_solution() = response.solution();
-  *best_response_.mutable_solution_lower_bounds() =
-      response.solution_lower_bounds();
-  *best_response_.mutable_solution_upper_bounds() =
-      response.solution_upper_bounds();
 
   // Mark model as OPTIMAL if the inner bound crossed.
-  if (model_proto_.has_objective() &&
+  if (objective_or_null_ != nullptr &&
       inner_objective_lower_bound_ > inner_objective_upper_bound_) {
     best_response_.set_status(CpSolverStatus::OPTIMAL);
   }
@@ -462,13 +542,13 @@ void SharedResponseManager::NewSolution(const CpSolverResponse& response,
                       num_bool);
     }
 
-    if (model_proto_.has_objective()) {
-      const CpObjectiveProto& obj = model_proto_.objective();
+    if (objective_or_null_ != nullptr) {
+      const CpObjectiveProto& obj = *objective_or_null_;
       const double best =
           ScaleObjectiveValue(obj, best_solution_objective_value_);
       double lb = ScaleObjectiveValue(obj, inner_objective_lower_bound_);
       double ub = ScaleObjectiveValue(obj, inner_objective_upper_bound_);
-      if (model_proto_.objective().scaling_factor() < 0) {
+      if (obj.scaling_factor() < 0) {
         std::swap(lb, ub);
       }
       RegisterSolutionFound(solution_info);
@@ -485,10 +565,10 @@ void SharedResponseManager::NewSolution(const CpSolverResponse& response,
   // Note that we cannot call function that try to get the mutex_ here.
   TestGapLimitsIfNeeded();
   if (!callbacks_.empty()) {
-    FillObjectiveValuesInBestResponse();
     SetStatsFromModelInternal(model);
+    const CpSolverResponse copy = GetResponseInternal();
     for (const auto& pair : callbacks_) {
-      pair.second(best_response_);
+      pair.second(copy);
     }
   }
 
@@ -497,7 +577,7 @@ void SharedResponseManager::NewSolution(const CpSolverResponse& response,
   // another solution manager, and we do not want to dump those.
   if (absl::GetFlag(FLAGS_cp_model_dump_solutions)) {
     const std::string file =
-        absl::StrCat(dump_prefix_, "solution_", num_solutions_, ".pbtxt");
+        absl::StrCat(dump_prefix_, "solution_", num_solutions_, ".pb.txt");
     LOG(INFO) << "Dumping solution to '" << file << "'.";
     CHECK_OK(file::SetTextProto(file, best_response_, file::Defaults()));
   }
@@ -533,7 +613,7 @@ void SharedResponseManager::LoadDebugSolution(Model* model) {
 
   const IntegerVariable objective_var = objective_def->objective_var;
   const int64_t objective_value =
-      ComputeInnerObjective(model_proto_.objective(), response);
+      ComputeInnerObjective(*objective_or_null_, response);
   debug_solution[objective_var] = objective_value;
   debug_solution[NegationOf(objective_var)] = -objective_value;
 #endif  // __PORTABLE_PLATFORM__
@@ -574,42 +654,29 @@ bool SharedResponseManager::ProblemIsSolved() const {
          best_response_.status() == CpSolverStatus::INFEASIBLE;
 }
 
-std::string ExtractWorkerName(const std::string& improvement_info) {
+std::string ExtractSubSolverName(const std::string& improvement_info) {
   if (improvement_info.empty()) return "";
 
-  std::string worker_name = improvement_info;
-
-  // Remove ' [hint]' suffix.
-  const auto& hint_suffix = worker_name.find(" [");
-  if (hint_suffix != std::string::npos) {
-    worker_name.erase(hint_suffix);
+  // We assume the subsolver name is always first.
+  for (int i = 0; i < improvement_info.size(); ++i) {
+    if (!std::isalnum(improvement_info[i]) && improvement_info[i] != '_') {
+      return improvement_info.substr(0, i);
+    }
   }
 
-  // Remove lns info suffix.
-  const auto& lns_suffix = worker_name.find('(');
-  if (lns_suffix != std::string::npos) {
-    worker_name.erase(lns_suffix);
-  }
-
-  // Remove fixed_bools suffix.
-  const auto fixed_suffix = worker_name.find(" fixed_bools:");
-  if (fixed_suffix != std::string::npos) {
-    worker_name.erase(fixed_suffix);
-  }
-
-  return worker_name;
+  return improvement_info;
 }
 
 void SharedResponseManager::RegisterSolutionFound(
     const std::string& improvement_info) {
   if (improvement_info.empty()) return;
-  primal_improvements_count_[ExtractWorkerName(improvement_info)]++;
+  primal_improvements_count_[ExtractSubSolverName(improvement_info)]++;
 }
 
 void SharedResponseManager::RegisterObjectiveBoundImprovement(
     const std::string& improvement_info) {
   if (improvement_info.empty() || improvement_info == "initial domain") return;
-  dual_improvements_count_[ExtractWorkerName(improvement_info)]++;
+  dual_improvements_count_[ExtractSubSolverName(improvement_info)]++;
 }
 
 void SharedResponseManager::DisplayImprovementStatistics() {
@@ -621,6 +688,7 @@ void SharedResponseManager::DisplayImprovementStatistics() {
     }
   }
   if (!dual_improvements_count_.empty()) {
+    SOLVER_LOG(logger_, "");
     SOLVER_LOG(logger_, "Objective bounds found per subsolver:");
     for (const auto& entry : dual_improvements_count_) {
       SOLVER_LOG(logger_, "  '", entry.first, "': ", entry.second);
@@ -683,6 +751,42 @@ void SharedBoundsManager::ReportPotentialNewBounds(
   if (num_improvements > 0) {
     VLOG(2) << worker_name << " exports " << num_improvements
             << " modifications";
+  }
+}
+
+// TODO(user): Because we look at the non-synchronized and up to date bounds,
+// this break determinism if two solution for the same subpart comes at the same
+// time.
+void SharedBoundsManager::FixVariablesFromPartialSolution(
+    const std::vector<int64_t>& solution,
+    const std::vector<int>& variables_to_fix) {
+  absl::MutexLock mutex_lock(&mutex_);
+
+  // Abort if incompatible. Note that we only check the position that we are
+  // about to fix. This should be enough. Otherwise we might never accept any
+  // solution because the base LNS solution was not the same in some of the
+  // variables that we fixed here.
+  for (const int var : variables_to_fix) {
+    const int64_t value = solution[var];
+    if (value < lower_bounds_[var] || value > upper_bounds_[var]) {
+      VLOG(1) << "Incompatibility in FixVariablesFromPartialSolution() "
+              << "var: " << var << " value: " << value << " bounds: ["
+              << lower_bounds_[var] << "," << upper_bounds_[var] << "]";
+      return;
+    }
+  }
+
+  // Fix the variables.
+  for (const int var : variables_to_fix) {
+    const int64_t old_lb = lower_bounds_[var];
+    const int64_t old_ub = upper_bounds_[var];
+    const bool changed_lb = solution[var] > old_lb;
+    const bool changed_ub = solution[var] < old_ub;
+    if (!changed_lb && !changed_ub) continue;
+
+    lower_bounds_[var] = solution[var];
+    upper_bounds_[var] = solution[var];
+    changed_variables_since_last_synchronize_.Set(var);
   }
 }
 

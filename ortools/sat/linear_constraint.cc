@@ -23,6 +23,7 @@ namespace operations_research {
 namespace sat {
 
 void LinearConstraintBuilder::AddTerm(IntegerVariable var, IntegerValue coeff) {
+  if (coeff == 0) return;
   // We can either add var or NegationOf(var), and we always choose the
   // positive one.
   if (VariableIsPositive(var)) {
@@ -34,6 +35,7 @@ void LinearConstraintBuilder::AddTerm(IntegerVariable var, IntegerValue coeff) {
 
 void LinearConstraintBuilder::AddTerm(AffineExpression expr,
                                       IntegerValue coeff) {
+  if (coeff == 0) return;
   // We can either add var or NegationOf(var), and we always choose the
   // positive one.
   if (expr.var != kNoIntegerVariable) {
@@ -43,13 +45,46 @@ void LinearConstraintBuilder::AddTerm(AffineExpression expr,
       terms_.push_back({NegationOf(expr.var), -coeff * expr.coeff});
     }
   }
-  if (lb_ > kMinIntegerValue) lb_ -= coeff * expr.constant;
-  if (ub_ < kMaxIntegerValue) ub_ -= coeff * expr.constant;
+  offset_ += coeff * expr.constant;
+}
+
+void LinearConstraintBuilder::AddLinearExpression(
+    const LinearExpression& expr) {
+  AddLinearExpression(expr, IntegerValue(1));
+}
+
+void LinearConstraintBuilder::AddLinearExpression(const LinearExpression& expr,
+                                                  IntegerValue coeff) {
+  for (int i = 0; i < expr.vars.size(); ++i) {
+    // We must use positive variables.
+    if (VariableIsPositive(expr.vars[i])) {
+      terms_.push_back({expr.vars[i], expr.coeffs[i] * coeff});
+    } else {
+      terms_.push_back({NegationOf(expr.vars[i]), -expr.coeffs[i] * coeff});
+    }
+  }
+  offset_ += expr.offset * coeff;
+}
+
+void LinearConstraintBuilder::AddQuadraticLowerBound(
+    AffineExpression left, AffineExpression right,
+    IntegerTrail* integer_trail) {
+  if (integer_trail->IsFixed(left)) {
+    AddTerm(right, integer_trail->FixedValue(left));
+  } else if (integer_trail->IsFixed(right)) {
+    AddTerm(left, integer_trail->FixedValue(right));
+  } else {
+    const IntegerValue left_min = integer_trail->LowerBound(left);
+    const IntegerValue right_min = integer_trail->LowerBound(right);
+    AddTerm(left, right_min);
+    AddTerm(right, left_min);
+    // Substract the energy counted twice.
+    AddConstant(-left_min * right_min);
+  }
 }
 
 void LinearConstraintBuilder::AddConstant(IntegerValue value) {
-  if (lb_ > kMinIntegerValue) lb_ -= value;
-  if (ub_ < kMaxIntegerValue) ub_ -= value;
+  offset_ += value;
 }
 
 ABSL_MUST_USE_RESULT bool LinearConstraintBuilder::AddLiteralTerm(
@@ -75,49 +110,29 @@ ABSL_MUST_USE_RESULT bool LinearConstraintBuilder::AddLiteralTerm(
   }
   if (has_opposite_view) {
     AddTerm(encoder_.GetLiteralView(lit.Negated()), -coeff);
-    if (lb_ > kMinIntegerValue) lb_ -= coeff;
-    if (ub_ < kMaxIntegerValue) ub_ -= coeff;
+    offset_ += coeff;
     return true;
   }
   return false;
 }
 
-void CleanTermsAndFillConstraint(
-    std::vector<std::pair<IntegerVariable, IntegerValue>>* terms,
-    LinearConstraint* constraint) {
-  constraint->vars.clear();
-  constraint->coeffs.clear();
-
-  // Sort and add coeff of duplicate variables. Note that a variable and
-  // its negation will appear one after another in the natural order.
-  std::sort(terms->begin(), terms->end());
-  IntegerVariable previous_var = kNoIntegerVariable;
-  IntegerValue current_coeff(0);
-  for (const std::pair<IntegerVariable, IntegerValue> entry : *terms) {
-    if (previous_var == entry.first) {
-      current_coeff += entry.second;
-    } else if (previous_var == NegationOf(entry.first)) {
-      current_coeff -= entry.second;
-    } else {
-      if (current_coeff != 0) {
-        constraint->vars.push_back(previous_var);
-        constraint->coeffs.push_back(current_coeff);
-      }
-      previous_var = entry.first;
-      current_coeff = entry.second;
-    }
-  }
-  if (current_coeff != 0) {
-    constraint->vars.push_back(previous_var);
-    constraint->coeffs.push_back(current_coeff);
-  }
+LinearConstraint LinearConstraintBuilder::Build() {
+  return BuildConstraint(lb_, ub_);
 }
 
-LinearConstraint LinearConstraintBuilder::Build() {
+LinearConstraint LinearConstraintBuilder::BuildConstraint(IntegerValue lb,
+                                                          IntegerValue ub) {
   LinearConstraint result;
-  result.lb = lb_;
-  result.ub = ub_;
+  result.lb = lb > kMinIntegerValue ? lb - offset_ : lb;
+  result.ub = ub < kMaxIntegerValue ? ub - offset_ : ub;
   CleanTermsAndFillConstraint(&terms_, &result);
+  return result;
+}
+
+LinearExpression LinearConstraintBuilder::BuildExpression() {
+  LinearExpression result;
+  CleanTermsAndFillConstraint(&terms_, &result);
+  result.offset = offset_;
   return result;
 }
 
@@ -237,6 +252,27 @@ void MakeAllVariablesPositive(LinearConstraint* constraint) {
   }
 }
 
+double LinearExpression::LpValue(
+    const absl::StrongVector<IntegerVariable, double>& lp_values) const {
+  double result = ToDouble(offset);
+  for (int i = 0; i < vars.size(); ++i) {
+    result += ToDouble(coeffs[i]) * lp_values[vars[i]];
+  }
+  return result;
+}
+
+std::string LinearExpression::DebugString() const {
+  std::string result;
+  for (int i = 0; i < vars.size(); ++i) {
+    absl::StrAppend(&result, i > 0 ? " " : "",
+                    IntegerTermDebugString(vars[i], coeffs[i]));
+  }
+  if (offset != 0) {
+    absl::StrAppend(&result, " + ", offset.value());
+  }
+  return result;
+}
+
 // TODO(user): it would be better if LinearConstraint natively supported
 // term and not two separated vectors. Fix?
 //
@@ -310,6 +346,34 @@ IntegerValue LinExprUpperBound(const LinearExpression& expr,
     upper_bound += expr.coeffs[i] * integer_trail.UpperBound(expr.vars[i]);
   }
   return upper_bound;
+}
+
+// TODO(user): Avoid duplication with PossibleIntegerOverflow() in the checker?
+// At least make sure the code is the same.
+bool ValidateLinearConstraintForOverflow(const LinearConstraint& constraint,
+                                         const IntegerTrail& integer_trail) {
+  int64_t positive_sum(0);
+  int64_t negative_sum(0);
+  for (int i = 0; i < constraint.vars.size(); ++i) {
+    const IntegerVariable var = constraint.vars[i];
+    const IntegerValue coeff = constraint.coeffs[i];
+    const IntegerValue lb = integer_trail.LevelZeroLowerBound(var);
+    const IntegerValue ub = integer_trail.LevelZeroUpperBound(var);
+
+    int64_t min_prod = CapProd(coeff.value(), lb.value());
+    int64_t max_prod = CapProd(coeff.value(), ub.value());
+    if (min_prod > max_prod) std::swap(min_prod, max_prod);
+
+    positive_sum = CapAdd(positive_sum, std::max(int64_t{0}, max_prod));
+    negative_sum = CapAdd(negative_sum, std::min(int64_t{0}, min_prod));
+  }
+
+  const int64_t limit = std::numeric_limits<int64_t>::max();
+  if (positive_sum >= limit) return false;
+  if (negative_sum <= -limit) return false;
+  if (CapSub(positive_sum, negative_sum) >= limit) return false;
+
+  return true;
 }
 
 LinearExpression NegationOf(const LinearExpression& expr) {

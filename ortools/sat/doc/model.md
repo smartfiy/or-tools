@@ -3,6 +3,7 @@
 
 # Model manipulation
 
+https://developers.google.com/optimization/
 
 <!--ts-->
    * [Model manipulation](#model-manipulation)
@@ -23,6 +24,7 @@
 ## Introduction
 
 In all languages, the CpModel class is a thin wrapper around a
+[protocol buffer](http://developers.google.com/protocol-buffers/) object
 [cp_model.proto](../cp_model.proto).
 
 Some functionalities require using the cp_model protobuf directly. To write code
@@ -115,7 +117,7 @@ def SolutionHintingSampleSat():
   # Creates a solver and solves.
   solver = cp_model.CpSolver()
   solution_printer = cp_model.VarArrayAndObjectiveSolutionPrinter([x, y, z])
-  status = solver.SolveWithSolutionCallback(model, solution_printer)
+  status = solver.Solve(model, solution_printer)
 
   print('Status = %s' % solver.StatusName(status))
   print('Number of solutions found: %i' % solution_printer.solution_count())
@@ -143,7 +145,7 @@ void SolutionHintingSampleSat() {
 
   cp_model.AddNotEqual(x, y);
 
-  cp_model.Maximize(LinearExpr::ScalProd({x, y, z}, {1, 2, 3}));
+  cp_model.Maximize(x + 2 * y + 3 * z);
 
   // Solution hinting: x <- 1, y <- 2
   cp_model.AddHint(x, 1);
@@ -214,7 +216,7 @@ public class SolutionHintingSampleSat {
     CpSolver solver = new CpSolver();
     VarArraySolutionPrinterWithObjective cb =
         new VarArraySolutionPrinterWithObjective(new IntVar[] {x, y, z});
-    solver.solveWithSolutionCallback(model, cb);
+    solver.solve(model, cb);
   }
 
   static class VarArraySolutionPrinterWithObjective extends CpSolverSolutionCallback {
@@ -298,7 +300,7 @@ public class SolutionHintingSampleSat
         // Creates a solver and solves the model.
         CpSolver solver = new CpSolver();
         VarArraySolutionPrinter cb = new VarArraySolutionPrinter(new IntVar[] { x, y, z });
-        CpSolverStatus status = solver.SolveWithSolutionCallback(model, cb);
+        CpSolverStatus status = solver.Solve(model, cb);
     }
 }
 ```
@@ -379,7 +381,7 @@ void CopyModelSat() {
 
   cp_model.AddNotEqual(x, y);
 
-  cp_model.Maximize(LinearExpr::ScalProd({x, y, z}, {1, 2, 3}));
+  cp_model.Maximize(x + 2 * y + 3 * z);
 
   const CpSolverResponse initial_response = Solve(cp_model.Build());
   LOG(INFO) << "Optimal value of the original model: "
@@ -392,7 +394,7 @@ void CopyModelSat() {
   IntVar copy_of_x = copy.GetIntVarFromProtoIndex(x.index());
   IntVar copy_of_y = copy.GetIntVarFromProtoIndex(y.index());
 
-  copy.AddLessOrEqual(LinearExpr::Sum({copy_of_x, copy_of_y}), 1);
+  copy.AddLessOrEqual(copy_of_x + copy_of_y, 1);
 
   const CpSolverResponse modified_response = Solve(copy.Build());
   LOG(INFO) << "Optimal value of the modified model: "

@@ -295,7 +295,7 @@ echo %BRANCH% %SHA1%>build_examples.log
 exit /B 0
 
 
-REM PYTHON 3.6,3.7,3.8,3.9
+REM PYTHON 3.6,3.7,3.8,3.9,3.10
 :BUILD_PYTHON
 title Build Python
 set HASH=
@@ -305,12 +305,14 @@ echo Python build seems up to date, skipping
 exit /B 0
 )
 
-for %%v in (6 7 8 9) do (
+for %%v in (6 7 8 9 10) do (
   title Build Python 3.%%v
   REM Check Python
   which.exe C:\python3%%v-64\python.exe || exit 1
   echo C:\python3%%v-64\python.exe: FOUND | tee.exe -a build.log
   C:\python3%%v-64\python.exe -m pip install --user absl-py mypy-protobuf
+  set PATH+=;%userprofile%\appdata\roaming\python\python3%%v\Scripts"
+  set PATH+=;C:\python3%%v-64\Scripts"
 
   echo Cleaning Python... | tee.exe -a build.log
  make.exe clean_python WINDOWS_PATH_TO_PYTHON=c:\python3%%v-64

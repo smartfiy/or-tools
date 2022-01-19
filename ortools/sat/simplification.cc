@@ -23,7 +23,6 @@
 #include "ortools/algorithms/dynamic_partition.h"
 #include "ortools/base/adjustable_priority_queue-inl.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/random.h"
 #include "ortools/base/stl_util.h"
 #include "ortools/base/strong_vector.h"
 #include "ortools/base/timer.h"
@@ -226,7 +225,7 @@ void SatPresolver::AddClauseInternal(std::vector<Literal>* clause) {
   if (drat_proof_handler_ != nullptr) drat_proof_handler_->AddClause(*clause);
 
   DCHECK(std::is_sorted(clause->begin(), clause->end()));
-  DCHECK_GT(clause->size(), 0) << "TODO(fdid): Unsat during presolve?";
+  DCHECK_GT(clause->size(), 0) << "TODO(user): Unsat during presolve?";
   const ClauseIndex ci(clauses_.size());
   clauses_.push_back(std::vector<Literal>());
   clauses_.back().swap(*clause);
@@ -381,7 +380,7 @@ void SatPresolver::PresolveWithBva() {
   }
 }
 
-// We use the same notation as in the article mentionned in the .h
+// We use the same notation as in the article mentioned in the .h
 void SatPresolver::SimpleBva(LiteralIndex l) {
   literal_to_p_size_.resize(literal_to_clauses_.size(), 0);
   DCHECK(std::all_of(literal_to_p_size_.begin(), literal_to_p_size_.end(),

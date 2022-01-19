@@ -38,6 +38,7 @@
 
 #define QCHECK CHECK
 #define QCHECK_EQ CHECK_EQ
+#define QCHECK_GE CHECK_GE
 #define ABSL_DIE_IF_NULL CHECK_NOTNULL
 #define CHECK_OK(x) CHECK((x).ok())
 #define QCHECK_OK CHECK_OK
@@ -188,19 +189,12 @@ void FixFlagsAndEnvironmentForSwig();
 //     // that can't be accomplished with just VLOG(2) << ...;
 //   }
 //
-// There are also VLOG_IF, VLOG_EVERY_N and VLOG_IF_EVERY_N "verbose level"
+// There is also a VLOG_EVERY_N "verbose level"
 // condition macros for sample cases, when some extra computation and
 // preparation for logs is not needed.
-//   VLOG_IF(1, (size > 1024))
-//      << "I'm printed when size is more than 1024 and when you run the "
-//         "program with --v=1 or more";
 //   VLOG_EVERY_N(1, 10)
 //      << "I'm printed every 10th occurrence, and when you run the program "
 //         "with --v=1 or more. Present occurrence is " << google::COUNTER;
-//   VLOG_IF_EVERY_N(1, (size > 1024), 10)
-//      << "I'm printed on every 10th occurrence of case when size is more "
-//         " than 1024, when you run the program with --v=1 or more. ";
-//         "Present occurrence is " << google::COUNTER;
 //
 // The supported severity levels for macros that allow you to specify one
 // are (in increasing order of severity) INFO, WARNING, ERROR, and FATAL.
@@ -985,14 +979,8 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 
 #define VLOG(verboselevel) LOG_IF(INFO, VLOG_IS_ON(verboselevel))
 
-#define VLOG_IF(verboselevel, condition) \
-  LOG_IF(INFO, (condition) && VLOG_IS_ON(verboselevel))
-
 #define VLOG_EVERY_N(verboselevel, n) \
   LOG_IF_EVERY_N(INFO, VLOG_IS_ON(verboselevel), n)
-
-#define VLOG_IF_EVERY_N(verboselevel, condition, n) \
-  LOG_IF_EVERY_N(INFO, (condition) && VLOG_IS_ON(verboselevel), n)
 
 namespace base_logging {
 

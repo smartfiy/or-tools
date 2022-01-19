@@ -13,6 +13,9 @@
 
 package com.google.ortools.sat;
 
+import com.google.ortools.sat.CpModelProto;
+import com.google.ortools.sat.LinearExpressionProto;
+
 /** A linear expression interface that can be parsed. */
 public interface LinearExpr {
   /** Returns the number of elements in the interface. */
@@ -81,6 +84,53 @@ public interface LinearExpr {
 
   /** Creates a linear term (var * coefficient). */
   static LinearExpr term(IntVar variable, long coefficient) {
-    return new ScalProd(new IntVar[] {variable}, new long[] {coefficient});
+    return new ScalProd(variable, coefficient, 0);
+  }
+
+  /** Creates a linear term (lit * coefficient). */
+  static LinearExpr term(Literal lit, long coefficient) {
+    return new ScalProd(lit, coefficient, 0);
+  }
+
+  /** Creates an affine expression (var * coefficient + offset). */
+  static LinearExpr affine(IntVar variable, long coefficient, long offset) {
+    return new ScalProd(variable, coefficient, offset);
+  }
+
+  /** Creates an affine expression (lit * coefficient + offset). */
+  static LinearExpr affine(Literal lit, long coefficient, long offset) {
+    return new ScalProd(lit, coefficient, offset);
+  }
+
+  /** Creates an constant expression. */
+  static LinearExpr constant(long value) {
+    return new Constant(value);
+  }
+
+  static LinearExpr rebuildFromLinearExpressionProto(
+      LinearExpressionProto proto, CpModelProto.Builder builder) {
+    int numElements = proto.getVarsCount();
+    if (numElements == 0) {
+      return constant(proto.getOffset());
+    } else if (numElements == 1) {
+      return affine(new IntVar(builder, proto.getVars(0)), proto.getCoeffs(0), proto.getOffset());
+    } else {
+      IntVar[] vars = new IntVar[numElements];
+      long[] coeffs = new long[numElements];
+      long offset = proto.getOffset();
+      boolean allOnes = true;
+      for (int i = 0; i < numElements; ++i) {
+        vars[i] = new IntVar(builder, proto.getVars(i));
+        coeffs[i] = proto.getCoeffs(i);
+        if (coeffs[i] != 1) {
+          allOnes = false;
+        }
+      }
+      if (allOnes) {
+        return new SumOfVariables(vars, offset);
+      } else {
+        return new ScalProd(vars, coeffs, offset);
+      }
+    }
   }
 }

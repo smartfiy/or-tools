@@ -163,6 +163,7 @@
 #include <new>
 #include <vector>
 
+#include "absl/base/port.h"
 #include "absl/debugging/leak_check.h"
 #include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
@@ -176,7 +177,7 @@ template <typename T>
 class SVector;
 
 // Base class of all Graphs implemented here. The default value for the graph
-// index types is int32_t since allmost all graphs that fit into memory do not
+// index types is int32_t since almost all graphs that fit into memory do not
 // need bigger indices.
 //
 // Note: The type can be unsigned, except for the graphs with reverse arcs
@@ -978,7 +979,7 @@ void BaseGraph<NodeIndexType, ArcIndexType,
   arc_capacity_ = std::max(arc_capacity_, num_arcs_);
 }
 
-// Computes the cummulative sum of the entry in v. We only use it with
+// Computes the cumulative sum of the entry in v. We only use it with
 // in/out degree distribution, hence the Check() at the end.
 template <typename NodeIndexType, typename ArcIndexType, bool HasReverseArcs>
 void BaseGraph<NodeIndexType, ArcIndexType, HasReverseArcs>::

@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/port.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
@@ -267,7 +268,8 @@ class TimeLimit {
    * i.e. \c LimitReached() returns true when the value of
    * external_boolean_as_limit is true whatever the time limits are.
    *
-   * Note : The external_boolean_as_limit can be modified during solve.
+   * Note that users of the TimeLimit can modify the provided atomic for their
+   * own internal logic (see SharedTimeLimit::Stop() for example).
    */
   void RegisterExternalBooleanAsLimit(
       std::atomic<bool>* external_boolean_as_limit) {

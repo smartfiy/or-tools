@@ -96,6 +96,8 @@ class ScatteredIntegerVector {
     return dense_vector_[col];
   }
 
+  const bool IsSparse() const { return is_sparse_; }
+
  private:
   // If is_sparse is true we maintain the non_zeros positions and bool vector
   // of dense_vector_. Otherwise we don't. Note that we automatically switch
@@ -132,7 +134,6 @@ class LinearProgrammingConstraint : public PropagatorInterface,
   typedef glop::RowIndex ConstraintIndex;
 
   explicit LinearProgrammingConstraint(Model* model);
-  ~LinearProgrammingConstraint() override;
 
   // Add a new linear constraint to this LP.
   void AddLinearConstraint(const LinearConstraint& ct);
@@ -144,6 +145,7 @@ class LinearProgrammingConstraint : public PropagatorInterface,
   // The main objective variable should be equal to the linear sum of
   // the arguments passed to SetObjectiveCoefficient().
   void SetMainObjectiveVariable(IntegerVariable ivar) { objective_cp_ = ivar; }
+  IntegerVariable ObjectiveVariable() const { return objective_cp_; }
 
   // Register a new cut generator with this constraint.
   void AddCutGenerator(CutGenerator generator);
@@ -220,6 +222,19 @@ class LinearProgrammingConstraint : public PropagatorInterface,
     return total_num_simplex_iterations_;
   }
 
+  // Returns some statistics about this LP.
+  std::string Statistics() const;
+
+  // Important: this is only temporarily valid.
+  IntegerSumLE* LatestOptimalConstraintOrNull() const {
+    if (optimal_constraints_.empty()) return nullptr;
+    return optimal_constraints_.back().get();
+  }
+
+  const std::vector<std::unique_ptr<IntegerSumLE>>& OptimalConstraints() const {
+    return optimal_constraints_;
+  }
+
  private:
   // Helper methods for branching. Returns true if branching on the given
   // variable helps with more propagation or finds a conflict.
@@ -262,6 +277,7 @@ class LinearProgrammingConstraint : public PropagatorInterface,
 
   // Computes and adds the corresponding type of cuts.
   // This can currently only be called at the root node.
+  void AddObjectiveCut();
   void AddCGCuts();
   void AddMirCuts();
   void AddZeroHalfCuts();
@@ -315,7 +331,7 @@ class LinearProgrammingConstraint : public PropagatorInterface,
   // Shortcut for an integer linear expression type.
   using LinearExpression = std::vector<std::pair<glop::ColIndex, IntegerValue>>;
 
-  // Converts a dense represenation of a linear constraint to a sparse one
+  // Converts a dense representation of a linear constraint to a sparse one
   // expressed in terms of IntegerVariable.
   void ConvertToLinearConstraint(
       const absl::StrongVector<glop::ColIndex, IntegerValue>& dense_vector,
@@ -441,7 +457,7 @@ class LinearProgrammingConstraint : public PropagatorInterface,
   IntegerVariable objective_cp_;
 
   // Singletons from Model.
-  const SatParameters& sat_parameters_;
+  const SatParameters& parameters_;
   Model* model_;
   TimeLimit* time_limit_;
   IntegerTrail* integer_trail_;
@@ -523,6 +539,7 @@ class LinearProgrammingConstraint : public PropagatorInterface,
   int64_t total_num_simplex_iterations_ = 0;
 
   // Some stats on the LP statuses encountered.
+  int64_t num_solves_ = 0;
   std::vector<int64_t> num_solves_by_status_;
 };
 

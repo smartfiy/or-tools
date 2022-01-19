@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# [START program]
 """Code sample that solves a model and displays a small number of solutions."""
 
 from ortools.sat.python import cp_model
@@ -51,10 +52,14 @@ def StopAfterNSolutionsSampleSat():
     # Create a solver and solve.
     solver = cp_model.CpSolver()
     solution_printer = VarArraySolutionPrinterWithLimit([x, y, z], 5)
-    status = solver.SearchForAllSolutions(model, solution_printer)
+    # Enumerate all solutions.
+    solver.parameters.enumerate_all_solutions = True
+    # Solve.
+    status = solver.Solve(model, solution_printer)
     print('Status = %s' % solver.StatusName(status))
     print('Number of solutions found: %i' % solution_printer.solution_count())
     assert solution_printer.solution_count() == 5
 
 
 StopAfterNSolutionsSampleSat()
+# [END program]

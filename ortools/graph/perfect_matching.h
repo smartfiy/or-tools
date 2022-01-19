@@ -26,9 +26,11 @@
 #ifndef OR_TOOLS_GRAPH_PERFECT_MATCHING_H_
 #define OR_TOOLS_GRAPH_PERFECT_MATCHING_H_
 
+#include <cstdint>
 #include <limits>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "ortools/base/adjustable_priority_queue-inl.h"
@@ -97,7 +99,7 @@ class MinCostPerfectMatching {
   };
   ABSL_MUST_USE_RESULT Status Solve();
 
-  // Returns the cost of the perfect macthing. Only valid when the last solve
+  // Returns the cost of the perfect matching. Only valid when the last solve
   // status was OPTIMAL.
   int64_t OptimalCost() const {
     DCHECK(optimal_solution_found_);

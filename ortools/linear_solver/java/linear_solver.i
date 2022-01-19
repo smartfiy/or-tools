@@ -157,7 +157,10 @@ PROTO2_RETURN(
    *       that.
    */
    bool loadSolutionFromProto(const MPSolutionResponse& response) {
-     return $self->LoadSolutionFromProto(response).ok();
+     const absl::Status status =
+         $self->LoadSolutionFromProto(response);
+     LOG_IF(ERROR, !status.ok()) << "LoadSolutionFromProto() failed: " << status;
+     return status.ok();
    }
 
   /**
@@ -356,6 +359,7 @@ PROTO2_RETURN(
 // - loadSolutionFromProto;  // Use hand-written version.
 
 // Expose some of the more advanced MPSolver API.
+%rename (problemType) operations_research::MPSolver::ProblemType;  // no test
 %rename (supportsProblemType) operations_research::MPSolver::SupportsProblemType;  // no test
 %rename (setSolverSpecificParametersAsString)
     operations_research::MPSolver::SetSolverSpecificParametersAsString;  // no test

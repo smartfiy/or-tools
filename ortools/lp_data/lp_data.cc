@@ -298,7 +298,7 @@ bool LinearProgram::IsVariableInteger(ColIndex col) const {
 }
 
 bool LinearProgram::IsVariableBinary(ColIndex col) const {
-  // TODO(user,user): bounds of binary variables (and of integer ones) should
+  // TODO(user): bounds of binary variables (and of integer ones) should
   // be integer. Add a preprocessor for that.
   return IsVariableInteger(col) && (variable_lower_bounds_[col] < kEpsilon) &&
          (variable_lower_bounds_[col] > Fractional(-1)) &&
@@ -1510,7 +1510,10 @@ bool LinearProgram::BoundsOfIntegerConstraintsAreInteger(
         integer_constraint = false;
         break;
       }
-      if (!IsIntegerWithinTolerance(var.coefficient(), tolerance)) {
+
+      // To match what the IntegerBoundsPreprocessor is doing, we require all
+      // coefficient to be EXACTLY integer here.
+      if (std::round(var.coefficient()) != var.coefficient()) {
         integer_constraint = false;
         break;
       }
