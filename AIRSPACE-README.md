@@ -5,9 +5,9 @@ It has Go bindings and binaries for use with Go projects.
 
 ## Install OR-tools for Go (Mac)
  1. Download binaries for Mac:
-    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v9.0-go1.16.3/or-tools_MacOsX-11.2.3_v9.0.9073.tar.gz`
+    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v9.2-go1.17.6/or-tools_MacOsX-11.2.3_v9.2.9074.tar.gz`
  1. Install/extract to rpath:
-    `sudo tar -xf or-tools_MacOsX-11.2.3_v9.0.9073.tar.gz --strip 1 -C /usr/local`
+    `sudo tar -xf or-tools_MacOsX-11.2.3_v9.2.9074.tar.gz --strip 1 -C /usr/local`
  1. Export `DYLD_LIBRARY_PATH` if necessary:
     `export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/lib`
  1. Clean module download cache if necessary:
