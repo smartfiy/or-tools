@@ -8,7 +8,7 @@
  * interface file instead.
  * ----------------------------------------------------------------------------- */
 
-// source: ./ortools/constraint_solver/go/routing.i
+// source: /Users/brett/src/or-tools/ortools/constraint_solver/go/routing.i
 
 package constraintsolver
 
@@ -29,7 +29,7 @@ typedef struct { void* array; intgo len; intgo cap; } _goslice_;
 
 
 
-#cgo LDFLAGS: -L../../../../../lib -lgoortools
+#cgo LDFLAGS: -L../../../lib -lgoortools
 
 typedef _goslice_ swig_type_1;
 typedef _goslice_ swig_type_2;

@@ -96,6 +96,50 @@ function clean_build() {
   mkdir -p "${BUILD_DIR}"
 }
 
+function expand_thinkski_config() {
+  #ref: https://github.com/thinkski/osx-arm-linux-toolchains
+  local -r THINKSKI_ROOT_URL=https://github.com/thinkski/osx-arm-linux-toolchains/releases/download/
+
+  local -r GCC_VERSION=8.3.0
+  local -r GCC_URL=${THINKSKI_ROOT_URL}/${GCC_VERSION}/${TARGET}.tar.xz
+  # local -r GCC_RELATIVE_DIR="gcc-thinkski-${GCC_VERSION}-x86_64_${TARGET}"
+  local -r GCC_RELATIVE_DIR="${TARGET}"
+  unpack "${GCC_URL}" "${GCC_RELATIVE_DIR}"
+
+  # local -r SYSROOT_RELATIVE_DIR=sysroot-glibc-thinkski-${TARGET}
+  # local -r SYSROOT_DIR=${ARCHIVE_DIR}/${SYSROOT_RELATIVE_DIR}
+
+  local -r STAGING_DIR=${SYSROOT_DIR}-stage
+  local -r GCC_DIR=${ARCHIVE_DIR}/${GCC_RELATIVE_DIR}
+  local -r SYSROOT_DIR=${GCC_DIR}/${TARGET}/sysroot
+  # mv ${GCC_DIR}/${TARGET}/sysroot ${SYSROOT_DIR}
+  sudo xattr -r -d com.apple.quarantine ${GCC_DIR}/bin/*
+
+  # Write a Toolchain file
+  # note: This is manadatory to use a file in order to have the CMake variable
+  # 'CMAKE_CROSSCOMPILING' set to TRUE.
+  # ref: https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html#cross-compiling-for-linux
+  cat >"$TOOLCHAIN_FILE" <<EOL
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR ${TARGET})
+
+set(CMAKE_SYSROOT ${SYSROOT_DIR})
+set(CMAKE_STAGING_PREFIX ${STAGING_DIR})
+
+set(tools ${GCC_DIR})
+set(CMAKE_C_COMPILER \${tools}/bin/${TARGET}-gcc)
+set(CMAKE_CXX_COMPILER \${tools}/bin/${TARGET}-g++)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+EOL
+CMAKE_ADDITIONAL_ARGS+=( -DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE}" )
+QEMU_ARGS+=( -L "${SYSROOT_DIR}" )
+QEMU_ARGS+=( -E LD_LIBRARY_PATH=/lib )
+}
+
 function expand_linaro_config() {
   #ref: https://releases.linaro.org/components/toolchain/binaries/
   local -r LINARO_VERSION=7.5-2019.12
@@ -313,7 +357,7 @@ function main() {
     glop)
       CMAKE_DEFAULT_ARGS+=( -DBUILD_CXX=OFF -DBUILD_GLOP=ON ) ;;
     or-tools)
-      CMAKE_DEFAULT_ARGS+=( -DBUILD_CXX=ON ) ;;
+      CMAKE_DEFAULT_ARGS+=( -DBUILD_CXX=ON -DBUILD_GO=ON ) ;;
     *)
       >&2 echo "Unknown PROJECT '${PROJECT}'..."
       exit 1 ;;
@@ -324,6 +368,9 @@ function main() {
   case ${TARGET} in
     x86_64)
       declare -r QEMU_ARCH=x86_64 ;;
+    aarch64-unknown-linux-gnu)
+      expand_thinkski_config
+      declare -r QEMU_ARCH=aarch64 ;;
     aarch64-linux-gnu)
       expand_linaro_config
       declare -r QEMU_ARCH=aarch64 ;;

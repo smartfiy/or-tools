@@ -70,9 +70,11 @@ option(BUILD_JAVA "Build Java Library" OFF)
 message(STATUS "Build Java: ${BUILD_JAVA}")
 option(BUILD_DOTNET "Build .NET Library" OFF)
 message(STATUS "Build .Net: ${BUILD_DOTNET}")
+option(BUILD_GO "Build Go Library" OFF)
+message(STATUS "Build Go: ${BUILD_GO}")
 
 # If wrapper are built, we need to have the install rpath in BINARY_DIR to package
-if(BUILD_PYTHON OR BUILD_JAVA OR BUILD_DOTNET)
+if(BUILD_PYTHON OR BUILD_JAVA OR BUILD_DOTNET OR BUILD_GO)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
@@ -109,13 +111,15 @@ CMAKE_DEPENDENT_OPTION(BUILD_JAVA_EXAMPLES "Build java examples" ON "BUILD_EXAMP
 message(STATUS "Build Java examples: ${BUILD_JAVA_EXAMPLES}")
 CMAKE_DEPENDENT_OPTION(BUILD_DOTNET_EXAMPLES "Build dotnet examples" ON "BUILD_EXAMPLES;BUILD_DOTNET" OFF)
 message(STATUS "Build .Net examples: ${BUILD_DOTNET_EXAMPLES}")
+CMAKE_DEPENDENT_OPTION(BUILD_GO_EXAMPLES "Build go examples" ON "BUILD_EXAMPLES;BUILD_GO" OFF)
+message(STATUS "Build Go examples: ${BUILD_GO_EXAMPLES}")
 
 #option(BUILD_DOC "Build doxygen" OFF)
 #message(STATUS "Build doxygen: ${BUILD_DOC}")
 
 # By default all dependencies are NOT built (i.e. BUILD_DEPS=OFF),
 # BUT if building any wrappers (Python, Java or .Net) then BUILD_DEPS=ON.
-if(BUILD_PYTHON OR BUILD_JAVA OR BUILD_DOTNET)
+if(BUILD_PYTHON OR BUILD_JAVA OR BUILD_DOTNET OR BUILD_GO)
   option(BUILD_DEPS "Build all dependencies" ON)
 else()
   option(BUILD_DEPS "Build all dependencies" OFF)
@@ -252,6 +256,7 @@ include(glop)
 include(python)
 include(java)
 include(dotnet)
+include(go)
 
 # Since samples mix all languages we must parse them once we have included all
 # <language>.cmake files
@@ -260,7 +265,7 @@ foreach(SAMPLES IN ITEMS algorithms graph linear_solver constraint_solver sat)
 endforeach()
 
 # Same for examples
-foreach(EXAMPLES IN ITEMS contrib cpp python java dotnet)
+foreach(EXAMPLES IN ITEMS contrib cpp python java dotnet go)
   add_subdirectory(examples/${EXAMPLES})
 endforeach()
 
