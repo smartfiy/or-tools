@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,24 +14,118 @@
 #ifndef OR_TOOLS_SAT_PRECEDENCES_H_
 #define OR_TOOLS_SAT_PRECEDENCES_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <utility>
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
-#include "ortools/base/int_type.h"
-#include "ortools/base/integral_types.h"
-#include "ortools/base/macros.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "ortools/base/strong_vector.h"
+#include "ortools/base/types.h"
+#include "ortools/graph/graph.h"
 #include "ortools/sat/integer.h"
 #include "ortools/sat/model.h"
 #include "ortools/sat/sat_base.h"
 #include "ortools/sat/sat_solver.h"
+#include "ortools/sat/synchronization.h"
 #include "ortools/util/bitset.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
+
+struct FullIntegerPrecedence {
+  IntegerVariable var;
+  std::vector<int> indices;
+  std::vector<IntegerValue> offsets;
+};
+
+// Stores all the precedences relation of the form "tail_X + offset <= head_X"
+// that we could extract from the linear constraint of the model. These are
+// stored in a directed graph.
+//
+// TODO(user): Support conditional relation.
+// TODO(user): Support non-DAG like graph.
+// TODO(user): Support variable offset that can be updated as search progress.
+class PrecedenceRelations {
+ public:
+  explicit PrecedenceRelations(Model* model)
+      : integer_trail_(model->GetOrCreate<IntegerTrail>()) {}
+
+  void Resize(int num_variables) {
+    graph_.ReserveNodes(num_variables);
+    graph_.AddNode(num_variables - 1);
+  }
+
+  // Add a relation tail + offset <= head.
+  void Add(IntegerVariable tail, IntegerVariable head, IntegerValue offset);
+
+  // Returns a set of relations var >= max_i(vars[index[i]] + offsets[i]).
+  //
+  // This currently only works if the precedence relation form a DAG.
+  // If not we will just abort. TODO(user): generalize.
+  //
+  // TODO(user): Put some work limit in place, as this can be slow. Complexity
+  // is in O(vars.size()) * num_arcs.
+  //
+  // TODO(user): Since we don't need ALL precedences, we could just work on a
+  // sub-DAG of the full precedence graph instead of aborting. Or we can just
+  // support the general non-DAG cases.
+  //
+  // TODO(user): Many relations can be redundant. Filter them.
+  void ComputeFullPrecedences(const std::vector<IntegerVariable>& vars,
+                              std::vector<FullIntegerPrecedence>* output);
+
+  // If we don't have too many variable, we compute the full transtive closure
+  // and can query in O(1) if there is a relation between two variables.
+  // This can be used to optimize some scheduling propagation and reasons.
+  //
+  // Warning: If we there are too many, this will NOT contain all relations.
+  //
+  // Returns kMinIntegerValue if there are none.
+  // Otherwise a + offset <= b.
+  IntegerValue GetOffset(IntegerVariable a, IntegerVariable b) {
+    const auto it = all_relations_.find({a, b});
+    return it == all_relations_.end() ? kMinIntegerValue : it->second;
+  }
+
+  // Update the hash table of precedence relation.
+  void UpdateOffset(IntegerVariable a, IntegerVariable b, IntegerValue offset) {
+    InternalUpdate(a, b, offset);
+    InternalUpdate(NegationOf(b), NegationOf(a), -offset);
+  }
+
+  // The current code requires the internal data to be processed once all
+  // relations are loaded.
+  //
+  // TODO(user): Be more dynamic as we start to add relations during search.
+  void Build();
+
+ private:
+  void InternalUpdate(IntegerVariable a, IntegerVariable b,
+                      IntegerValue offset) {
+    const auto [it, inserted] = all_relations_.insert({{a, b}, offset});
+    if (!inserted) {
+      it->second = std::max(it->second, offset);
+    }
+  }
+
+  IntegerTrail* integer_trail_;
+
+  util::StaticGraph<> graph_;
+  std::vector<IntegerValue> arc_offset_;
+
+  bool is_built_ = false;
+  bool is_dag_ = false;
+  std::vector<IntegerVariable> topological_order_;
+
+  absl::flat_hash_map<std::pair<IntegerVariable, IntegerVariable>, IntegerValue>
+      all_relations_;
+};
 
 // This class implement a propagator on simple inequalities between integer
 // variables of the form (i1 + offset <= i2). The offset can be constant or
@@ -55,12 +149,18 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
       : SatPropagator("PrecedencesPropagator"),
         trail_(model->GetOrCreate<Trail>()),
         integer_trail_(model->GetOrCreate<IntegerTrail>()),
+        shared_stats_(model->Mutable<SharedStatistics>()),
         watcher_(model->GetOrCreate<GenericLiteralWatcher>()),
         watcher_id_(watcher_->Register(this)) {
     model->GetOrCreate<SatSolver>()->AddPropagator(this);
     integer_trail_->RegisterWatcher(&modified_vars_);
     watcher_->SetPropagatorPriority(watcher_id_, 0);
   }
+
+  // This type is neither copyable nor movable.
+  PrecedencesPropagator(const PrecedencesPropagator&) = delete;
+  PrecedencesPropagator& operator=(const PrecedencesPropagator&) = delete;
+  ~PrecedencesPropagator() override;
 
   bool Propagate() final;
   bool Propagate(Trail* trail) final;
@@ -95,6 +195,10 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
                                    IntegerVariable offset_var,
                                    absl::Span<const Literal> presence_literals);
 
+  // This version check current precedence. It is however "slow".
+  bool AddPrecedenceWithOffsetIfNew(IntegerVariable i1, IntegerVariable i2,
+                                    IntegerValue offset);
+
   // Finds all the IntegerVariable that are "after" at least two of the
   // IntegerVariable in vars. Returns a vector of these precedences relation
   // sorted by IntegerPrecedences.var so that it is efficient to find all the
@@ -121,6 +225,16 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
                            std::vector<Literal>* literal_reason,
                            std::vector<IntegerLiteral>* integer_reason) const;
 
+  // This just wrap ComputePrecedences() above and convert its output format to
+  // the same format as PrecedenceRelations::ComputeFullPrecedences(). This is
+  // less efficient but more convenient to use.
+  //
+  //
+  // Returns a bunch of precedences relations:
+  // An IntegerVariable >= to vars[indices[i]] + offset[i], for i in indices.
+  void ComputePartialPrecedences(const std::vector<IntegerVariable>& vars,
+                                 std::vector<FullIntegerPrecedence>* output);
+
   // Advanced usage. To be called once all the constraints have been added to
   // the model. This will loop over all "node" in this class, and if one of its
   // optional incoming arcs must be chosen, it will add a corresponding
@@ -131,15 +245,29 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
   // so that we can use it all the time.
   int AddGreaterThanAtLeastOneOfConstraints(Model* model);
 
+  // If known, return an offset such that we have a + offset <= b.
+  // Note that this only cover the case where this was conditionned by a single
+  // literal.
+  //
+  // TODO(user): Support list of literals, it isn't that much harder.
+  std::pair<Literal, IntegerValue> GetConditionalOffset(IntegerVariable a,
+                                                        IntegerVariable b) {
+    const auto it = conditional_relations_.find({a, b});
+    if (it == conditional_relations_.end()) {
+      return {Literal(), kMinIntegerValue};
+    }
+    return it->second;
+  }
+
  private:
-  DEFINE_INT_TYPE(ArcIndex, int);
-  DEFINE_INT_TYPE(OptionalArcIndex, int);
+  DEFINE_STRONG_INDEX_TYPE(ArcIndex);
+  DEFINE_STRONG_INDEX_TYPE(OptionalArcIndex);
 
   // Given an existing clause, sees if it can be used to add "greater than at
   // least one of" type of constraints. Returns the number of such constraint
   // added.
   int AddGreaterThanAtLeastOneOfConstraintsFromClause(
-      const absl::Span<const Literal> clause, Model* model);
+      absl::Span<const Literal> clause, Model* model);
 
   // Another approach for AddGreaterThanAtLeastOneOfConstraints(), this one
   // might be a bit slow as it relies on the propagation engine to detect
@@ -214,10 +342,15 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
   // This is only meant to be used in a DCHECK() and is not optimized.
   bool NoPropagationLeft(const Trail& trail) const;
 
+  // Update conditional_relations_.
+  void AddToConditionalRelations(const ArcInfo& arc);
+  void RemoveFromConditionalRelations(const ArcInfo& arc);
+
   // External class needed to get the IntegerVariable lower bounds and Enqueue
   // new ones.
   Trail* trail_;
   IntegerTrail* integer_trail_;
+  SharedStatistics* shared_stats_ = nullptr;
   GenericLiteralWatcher* watcher_;
   int watcher_id_;
 
@@ -286,7 +419,18 @@ class PrecedencesPropagator : public SatPropagator, PropagatorInterface {
   // Temp vector used by the tree traversal in DisassembleSubtree().
   std::vector<int> tmp_vector_;
 
-  DISALLOW_COPY_AND_ASSIGN(PrecedencesPropagator);
+  // When a literal => X + offset <= Y become true, we add it here if X and Y
+  // do not already have a conditial relation. We also remove it on untrail.
+  // This is especially useful when we create all the literal between pair of
+  // interval for a disjunctive constraint.
+  absl::flat_hash_map<std::pair<IntegerVariable, IntegerVariable>,
+                      std::pair<Literal, IntegerValue>>
+      conditional_relations_;
+
+  // Stats.
+  int64_t num_cycles_ = 0;
+  int64_t num_pushes_ = 0;
+  int64_t num_enforcement_pushes_ = 0;
 };
 
 // =============================================================================
@@ -344,7 +488,8 @@ inline std::function<void(Model*)> LowerOrEqualWithOffset(IntegerVariable a,
                                                           IntegerVariable b,
                                                           int64_t offset) {
   return [=](Model* model) {
-    return model->GetOrCreate<PrecedencesPropagator>()->AddPrecedenceWithOffset(
+    model->GetOrCreate<PrecedenceRelations>()->Add(a, b, IntegerValue(offset));
+    model->GetOrCreate<PrecedencesPropagator>()->AddPrecedenceWithOffset(
         a, b, IntegerValue(offset));
   };
 }
@@ -422,86 +567,6 @@ inline std::function<void(Model*)> ConditionalLowerOrEqualWithOffset(
   return [=](Model* model) {
     PrecedencesPropagator* p = model->GetOrCreate<PrecedencesPropagator>();
     p->AddConditionalPrecedenceWithOffset(a, b, IntegerValue(offset), is_le);
-  };
-}
-
-// is_le => (a <= b).
-inline std::function<void(Model*)> ConditionalLowerOrEqual(IntegerVariable a,
-                                                           IntegerVariable b,
-                                                           Literal is_le) {
-  return ConditionalLowerOrEqualWithOffset(a, b, 0, is_le);
-}
-
-// literals => (a <= b).
-inline std::function<void(Model*)> ConditionalLowerOrEqual(
-    IntegerVariable a, IntegerVariable b, absl::Span<const Literal> literals) {
-  return [=](Model* model) {
-    PrecedencesPropagator* p = model->GetOrCreate<PrecedencesPropagator>();
-    p->AddPrecedenceWithAllOptions(a, b, IntegerValue(0),
-                                   /*offset_var*/ kNoIntegerVariable, literals);
-  };
-}
-
-// is_le <=> (a + offset <= b).
-inline std::function<void(Model*)> ReifiedLowerOrEqualWithOffset(
-    IntegerVariable a, IntegerVariable b, int64_t offset, Literal is_le) {
-  return [=](Model* model) {
-    PrecedencesPropagator* p = model->GetOrCreate<PrecedencesPropagator>();
-    p->AddConditionalPrecedenceWithOffset(a, b, IntegerValue(offset), is_le);
-
-    // The negation of (a + offset <= b) is (a + offset > b) which can be
-    // rewritten as (b + 1 - offset <= a).
-    p->AddConditionalPrecedenceWithOffset(b, a, IntegerValue(1 - offset),
-                                          is_le.Negated());
-  };
-}
-
-// is_eq <=> (a == b).
-inline std::function<void(Model*)> ReifiedEquality(IntegerVariable a,
-                                                   IntegerVariable b,
-                                                   Literal is_eq) {
-  return [=](Model* model) {
-    // We creates two extra Boolean variables in this case.
-    //
-    // TODO(user): Avoid creating them if we already have some literal that
-    // have the same meaning. For instance if a client also wanted to know if
-    // a <= b, he would have called ReifiedLowerOrEqualWithOffset() directly.
-    const Literal is_le = Literal(model->Add(NewBooleanVariable()), true);
-    const Literal is_ge = Literal(model->Add(NewBooleanVariable()), true);
-    model->Add(ReifiedBoolAnd({is_le, is_ge}, is_eq));
-    model->Add(ReifiedLowerOrEqualWithOffset(a, b, 0, is_le));
-    model->Add(ReifiedLowerOrEqualWithOffset(b, a, 0, is_ge));
-  };
-}
-
-// is_eq <=> (a + offset == b).
-inline std::function<void(Model*)> ReifiedEqualityWithOffset(IntegerVariable a,
-                                                             IntegerVariable b,
-                                                             int64_t offset,
-                                                             Literal is_eq) {
-  return [=](Model* model) {
-    // We creates two extra Boolean variables in this case.
-    //
-    // TODO(user): Avoid creating them if we already have some literal that
-    // have the same meaning. For instance if a client also wanted to know if
-    // a <= b, he would have called ReifiedLowerOrEqualWithOffset() directly.
-    const Literal is_le = Literal(model->Add(NewBooleanVariable()), true);
-    const Literal is_ge = Literal(model->Add(NewBooleanVariable()), true);
-    model->Add(ReifiedBoolAnd({is_le, is_ge}, is_eq));
-    model->Add(ReifiedLowerOrEqualWithOffset(a, b, offset, is_le));
-    model->Add(ReifiedLowerOrEqualWithOffset(b, a, -offset, is_ge));
-  };
-}
-
-// a != b.
-inline std::function<void(Model*)> NotEqual(IntegerVariable a,
-                                            IntegerVariable b) {
-  return [=](Model* model) {
-    // We have two options (is_gt or is_lt) and one must be true.
-    const Literal is_lt = Literal(model->Add(NewBooleanVariable()), true);
-    const Literal is_gt = is_lt.Negated();
-    model->Add(ConditionalLowerOrEqualWithOffset(a, b, 1, is_lt));
-    model->Add(ConditionalLowerOrEqualWithOffset(b, a, 1, is_gt));
   };
 }
 

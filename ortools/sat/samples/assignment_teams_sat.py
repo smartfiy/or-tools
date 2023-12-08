@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2010-2021 Google LLC
+# Copyright 2010-2022 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # [START program]
 """Solve a simple assignment problem."""
 # [START import]
@@ -48,18 +49,18 @@ def main():
     x = {}
     for worker in range(num_workers):
         for task in range(num_tasks):
-            x[worker, task] = model.NewBoolVar(f'x[{worker},{task}]')
+            x[worker, task] = model.NewBoolVar(f"x[{worker},{task}]")
     # [END variables]
 
     # Constraints
     # [START constraints]
     # Each worker is assigned to at most one task.
     for worker in range(num_workers):
-        model.Add(sum(x[worker, task] for task in range(num_tasks)) <= 1)
+        model.AddAtMostOne(x[worker, task] for task in range(num_tasks))
 
     # Each task is assigned to exactly one worker.
     for task in range(num_tasks):
-        model.Add(sum(x[worker, task] for worker in range(num_workers)) == 1)
+        model.AddExactlyOne(x[worker, task] for worker in range(num_workers))
 
     # Each team takes at most two tasks.
     team1_tasks = []
@@ -93,17 +94,19 @@ def main():
     # Print solution.
     # [START print_solution]
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print(f'Total cost = {solver.ObjectiveValue()}\n')
+        print(f"Total cost = {solver.ObjectiveValue()}\n")
         for worker in range(num_workers):
             for task in range(num_tasks):
                 if solver.BooleanValue(x[worker, task]):
-                    print(f'Worker {worker} assigned to task {task}.' +
-                          f' Cost = {costs[worker][task]}')
+                    print(
+                        f"Worker {worker} assigned to task {task}."
+                        + f" Cost = {costs[worker][task]}"
+                    )
     else:
-        print('No solution found.')
+        print("No solution found.")
     # [END print_solution]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 # [END program]

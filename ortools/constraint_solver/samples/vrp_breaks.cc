@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 // [START program]
 // [START import]
 #include <cstdint>
+#include <sstream>
 #include <vector>
 
 #include "ortools/constraint_solver/constraint_solver.h"
@@ -88,7 +89,7 @@ void PrintSolution(const RoutingIndexManager& manager,
     LOG(INFO) << "Route for Vehicle " << vehicle_id << ":";
     int64_t index = routing.Start(vehicle_id);
     std::stringstream route;
-    while (routing.IsEnd(index) == false) {
+    while (!routing.IsEnd(index)) {
       const IntVar* time_var = time_dimension.CumulVar(index);
       route << manager.IndexToNode(index).value() << " Time("
             << solution.Value(time_var) << ") -> ";
@@ -127,10 +128,11 @@ void VrpBreaks() {
   // Create and register a transit callback.
   // [START transit_callback]
   const int transit_callback_index = routing.RegisterTransitCallback(
-      [&data, &manager](int64_t from_index, int64_t to_index) -> int64_t {
+      [&data, &manager](const int64_t from_index,
+                        const int64_t to_index) -> int64_t {
         // Convert from routing variable Index to distance matrix NodeIndex.
-        int from_node = manager.IndexToNode(from_index).value();
-        int to_node = manager.IndexToNode(to_index).value();
+        const int from_node = manager.IndexToNode(from_index).value();
+        const int to_node = manager.IndexToNode(to_index).value();
         return data.time_matrix[from_node][to_node] +
                data.service_time[from_node];
       });
@@ -197,7 +199,7 @@ void VrpBreaks() {
 }
 }  // namespace operations_research
 
-int main(int /*argc*/, char** argv) {
+int main(int /*argc*/, char* /*argv*/[]) {
   operations_research::VrpBreaks();
   return EXIT_SUCCESS;
 }

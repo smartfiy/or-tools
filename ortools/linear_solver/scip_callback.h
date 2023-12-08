@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,17 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// See go/scip-callbacks for documentation.
 //
 // This file provides a simplified C++ API for using callbacks with SCIP and
 // MPSolver.  It can be used directly by users, although in most cases, the
 // mp_callback.h should be sufficient (in fact, SCIP's mp_callback.h
-// implementation is built on top of this).  See also go/mpsolver-callbacks.
+// implementation is built on top of this).
 
 #ifndef OR_TOOLS_LINEAR_SOLVER_SCIP_CALLBACK_H_
 #define OR_TOOLS_LINEAR_SOLVER_SCIP_CALLBACK_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -114,7 +114,6 @@ struct CallbackRangeConstraint {
   bool local = false;
 };
 
-// See go/scip-callbacks for additional documentation.
 template <typename Constraint>
 class ScipConstraintHandler {
  public:
@@ -257,7 +256,7 @@ void RegisterConstraintHandler(ScipConstraintHandler<ConstraintData>* handler,
                                SCIP* scip) {
   internal::AddConstraintHandlerImpl(
       handler->description(),
-      absl::make_unique<internal::ScipCallbackRunnerImpl<ConstraintData>>(
+      std::make_unique<internal::ScipCallbackRunnerImpl<ConstraintData>>(
           handler),
       scip);
 }

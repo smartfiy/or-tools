@@ -1,7 +1,6 @@
 # Create a virtual environment with all tools installed
 # ref: https://hub.docker.com/_/alpine
 FROM arm64v8/alpine:edge AS env
-LABEL maintainer="corentinl@google.com"
 # Install system build dependencies
 ENV PATH=/usr/local/bin:$PATH
 RUN apk add --no-cache git build-base linux-headers cmake xfce4-dev-tools
@@ -12,8 +11,10 @@ CMD ["/bin/sh"]
 RUN apk add --no-cache swig
 
 # Python
-RUN apk add --no-cache python3-dev py3-pip py3-wheel
-RUN python3 -m pip install absl-py mypy-protobuf
+RUN apk add --no-cache python3-dev py3-pip py3-wheel py3-virtualenv \
+ py3-numpy py3-pandas py3-matplotlib
+RUN rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED \
+&& python3 -m pip install absl-py mypy mypy-protobuf
 
 ################
 ##  OR-TOOLS  ##
@@ -22,7 +23,7 @@ FROM env AS devel
 ENV GIT_URL https://github.com/google/or-tools
 
 ARG GIT_BRANCH
-ENV GIT_BRANCH ${GIT_BRANCH:-master}
+ENV GIT_BRANCH ${GIT_BRANCH:-main}
 ARG GIT_SHA1
 ENV GIT_SHA1 ${GIT_SHA1:-unknown}
 

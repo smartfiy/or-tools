@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -31,13 +31,15 @@
 #define OR_TOOLS_LP_DATA_SPARSE_VECTOR_H_
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/strings/str_format.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"  // for CHECK*
+#include "ortools/base/types.h"
 #include "ortools/graph/iterators.h"
 #include "ortools/lp_data/lp_types.h"
 #include "ortools/lp_data/permutation.h"
@@ -381,8 +383,8 @@ class SparseVector {
   EntryIndex capacity_;
 
   // Pointers to the first elements of the index and coefficient arrays.
-  Index* index_;
-  Fractional* coefficient_;
+  Index* index_ = nullptr;
+  Fractional* coefficient_ = nullptr;
 
   // This is here to speed up the CheckNoDuplicates() methods and is mutable
   // so we can perform checks on const argument.

@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,14 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if defined(USE_GLOP)
+
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/base/attributes.h"
-#include "ortools/base/hash.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/glop/lp_solver.h"
 #include "ortools/glop/parameters.pb.h"
@@ -28,14 +29,13 @@
 #include "ortools/lp_data/lp_types.h"
 #include "ortools/port/proto_utils.h"
 #include "ortools/util/time_limit.h"
-
 namespace operations_research {
 
 namespace {}  // Anonymous namespace
 
 class GLOPInterface : public MPSolverInterface {
  public:
-  explicit GLOPInterface(MPSolver* const solver);
+  explicit GLOPInterface(MPSolver* solver);
   ~GLOPInterface() override;
 
   // ----- Solve -----
@@ -48,13 +48,12 @@ class GLOPInterface : public MPSolverInterface {
   void SetVariableBounds(int index, double lb, double ub) override;
   void SetVariableInteger(int index, bool integer) override;
   void SetConstraintBounds(int index, double lb, double ub) override;
-  void AddRowConstraint(MPConstraint* const ct) override;
-  void AddVariable(MPVariable* const var) override;
-  void SetCoefficient(MPConstraint* const constraint,
-                      const MPVariable* const variable, double new_value,
-                      double old_value) override;
-  void ClearConstraint(MPConstraint* const constraint) override;
-  void SetObjectiveCoefficient(const MPVariable* const variable,
+  void AddRowConstraint(MPConstraint* ct) override;
+  void AddVariable(MPVariable* var) override;
+  void SetCoefficient(MPConstraint* constraint, const MPVariable* variable,
+                      double new_value, double old_value) override;
+  void ClearConstraint(MPConstraint* constraint) override;
+  void SetObjectiveCoefficient(const MPVariable* variable,
                                double coefficient) override;
   void SetObjectiveOffset(double value) override;
   void ClearObjective() override;
@@ -261,8 +260,7 @@ bool GLOPInterface::IsLP() const { return true; }
 bool GLOPInterface::IsMIP() const { return false; }
 
 std::string GLOPInterface::SolverVersion() const {
-  // TODO(user): Decide how to version glop. Add a GetVersion() to LPSolver.
-  return "Glop-0.0";
+  return glop::LPSolver::GlopVersion();
 }
 
 void* GLOPInterface::underlying_solver() { return &lp_solver_; }
@@ -432,3 +430,4 @@ MPSolverInterface* BuildGLOPInterface(MPSolver* const solver) {
 }
 
 }  // namespace operations_research
+#endif  // #if defined(USE_GLOP)

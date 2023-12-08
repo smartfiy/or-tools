@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,15 +13,17 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 #include "ortools/base/hash.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/map_util.h"
+#include "ortools/base/types.h"
 #include "ortools/constraint_solver/constraint_solver.h"
 #include "ortools/constraint_solver/constraint_solveri.h"
 #include "ortools/util/bitset.h"
@@ -282,7 +284,7 @@ bool UnsortedNullableRevBitset::RevAnd(Solver* const solver,
         }
       }
     } else {
-      // Zero the word as the mask is implicitely null.
+      // Zero the word as the mask is implicitly null.
       changed = true;
       bits_.SetValue(solver, index, 0);
       to_remove_.push_back(index);
@@ -512,7 +514,7 @@ class PrintModelVisitor : public ModelVisitor {
     return result;
   }
 
-  void set_prefix(const std::string& prefix) { prefix_ = prefix; }
+  void set_prefix(absl::string_view prefix) { prefix_ = prefix; }
 
   int indent_;
   std::string prefix_;
@@ -672,7 +674,7 @@ class ModelStatisticsVisitor : public ModelVisitor {
   }
 
   bool AlreadyVisited(const BaseObject* const object) {
-    return gtl::ContainsKey(already_visited_, object);
+    return already_visited_.contains(object);
   }
 
   // T should derive from BaseObject
@@ -684,15 +686,15 @@ class ModelStatisticsVisitor : public ModelVisitor {
     }
   }
 
-  void AddConstraintType(const std::string& constraint_type) {
+  void AddConstraintType(absl::string_view constraint_type) {
     constraint_types_[constraint_type]++;
   }
 
-  void AddExpressionType(const std::string& expression_type) {
+  void AddExpressionType(absl::string_view expression_type) {
     expression_types_[expression_type]++;
   }
 
-  void AddExtensionType(const std::string& extension_type) {
+  void AddExtensionType(absl::string_view extension_type) {
     extension_types_[extension_type]++;
   }
 
@@ -723,7 +725,7 @@ class VariableDegreeVisitor : public ModelVisitor {
   void VisitIntegerVariable(const IntVar* const variable,
                             IntExpr* const delegate) override {
     IntVar* const var = const_cast<IntVar*>(variable);
-    if (gtl::ContainsKey(*map_, var)) {
+    if (map_->contains(var)) {
       (*map_)[var]++;
     }
     if (delegate) {
@@ -735,7 +737,7 @@ class VariableDegreeVisitor : public ModelVisitor {
                             const std::string& operation, int64_t value,
                             IntVar* const delegate) override {
     IntVar* const var = const_cast<IntVar*>(variable);
-    if (gtl::ContainsKey(*map_, var)) {
+    if (map_->contains(var)) {
       (*map_)[var]++;
     }
     VisitSubArgument(delegate);

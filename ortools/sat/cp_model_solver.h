@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,13 +18,16 @@
 #include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
+#include "ortools/base/types.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/model.h"
 #include "ortools/sat/sat_parameters.pb.h"
 
 namespace operations_research {
 namespace sat {
+
+/// Returns a string that describes the version of the solver.
+std::string CpSatSolverVersion();
 
 /// Solves the given CpModelProto and returns an instance of CpSolverResponse.
 CpSolverResponse Solve(const CpModelProto& model_proto);
@@ -48,7 +51,7 @@ std::string CpSolverResponseStats(const CpSolverResponse& response,
 /**
  * Solves the given CpModelProto.
  *
- * This advanced API accept a Model* which allows to access more adavanced
+ * This advanced API accept a Model* which allows to access more advanced
  * features by configuring some classes in the Model before solve.
  *
  * For instance:
@@ -102,6 +105,10 @@ std::function<SatParameters(Model*)> NewSatParameters(
 #endif  // !__PORTABLE_PLATFORM__
 std::function<SatParameters(Model*)> NewSatParameters(
     const SatParameters& parameters);
+
+// TODO(user): Clean this up.
+/// Solves a CpModelProto without any processing. Only used for unit tests.
+void LoadAndSolveCpModelForTest(const CpModelProto& model_proto, Model* model);
 
 }  // namespace sat
 }  // namespace operations_research

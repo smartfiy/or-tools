@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -70,14 +70,10 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
-#ifdef HAS_PERF_SUBSYSTEM
-#include "absl/strings/str_replace.h"
-#include "exegesis/exegesis/itineraries/perf_subsystem.h"
-#include "ortools/util/time_limit.h"
-#endif  // HAS_PERF_SUBSYSTEM
-
-#include "ortools/base/macros.h"
+#include "absl/strings/string_view.h"
+#include "absl/time/time.h"
 #include "ortools/base/timer.h"
 
 namespace operations_research {
@@ -92,10 +88,10 @@ class TimeDistribution;
 // Base class for a statistic that can be pretty-printed.
 class Stat {
  public:
-  explicit Stat(const std::string& name) : name_(name) {}
+  explicit Stat(absl::string_view name) : name_(name) {}
 
   // Also add this stat to the given group.
-  Stat(const std::string& name, StatsGroup* group);
+  Stat(absl::string_view name, StatsGroup* group);
   virtual ~Stat() {}
 
   // Only used for display purposes.
@@ -135,8 +131,12 @@ class StatsGroup {
     SORT_BY_NAME = 1,
   };
 
-  explicit StatsGroup(const std::string& name)
+  explicit StatsGroup(absl::string_view name)
       : name_(name), stats_(), time_distributions_() {}
+
+  // This type is neither copyable nor movable.
+  StatsGroup(const StatsGroup&) = delete;
+  StatsGroup& operator=(const StatsGroup&) = delete;
   ~StatsGroup();
 
   // Registers a Stat, which will appear in the string returned by StatString().
@@ -165,8 +165,6 @@ class StatsGroup {
   PrintOrder print_order_ = SORT_BY_PRIORITY_THEN_VALUE;
   std::vector<Stat*> stats_;
   std::map<std::string, TimeDistribution*> time_distributions_;
-
-  DISALLOW_COPY_AND_ASSIGN(StatsGroup);
 };
 
 // Base class to track and compute statistics about the distribution of a
@@ -174,9 +172,9 @@ class StatsGroup {
 // the values are added to the sequence and in the way the stats are printed.
 class DistributionStat : public Stat {
  public:
-  explicit DistributionStat(const std::string& name);
+  explicit DistributionStat(absl::string_view name);
   DistributionStat() : DistributionStat("") {}
-  DistributionStat(const std::string& name, StatsGroup* group);
+  DistributionStat(absl::string_view name, StatsGroup* group);
   ~DistributionStat() override {}
   void Reset() override;
   bool WorthPrinting() const override { return num_ != 0; }
@@ -220,10 +218,10 @@ class DistributionStat : public Stat {
 // if the sum of times reaches 52 days for a 2GHz processor.
 class TimeDistribution : public DistributionStat {
  public:
-  explicit TimeDistribution(const std::string& name)
+  explicit TimeDistribution(absl::string_view name)
       : DistributionStat(name), timer_() {}
   TimeDistribution() : TimeDistribution("") {}
-  TimeDistribution(const std::string& name, StatsGroup* group)
+  TimeDistribution(absl::string_view name, StatsGroup* group)
       : DistributionStat(name, group), timer_() {}
   std::string ValueAsString() const override;
 
@@ -237,6 +235,9 @@ class TimeDistribution : public DistributionStat {
 
   // Adds a time in seconds to this distribution.
   void AddTimeInSec(double seconds);
+  void AddTime(absl::Duration duration) {
+    AddTimeInSec(absl::ToDoubleSeconds(duration));
+  }
 
   // Adds a time in CPU cycles to this distribution.
   void AddTimeInCycles(double cycles);
@@ -262,10 +263,9 @@ class TimeDistribution : public DistributionStat {
 // Statistic on the distribution of a sequence of ratios, displayed as %.
 class RatioDistribution : public DistributionStat {
  public:
-  explicit RatioDistribution(const std::string& name)
-      : DistributionStat(name) {}
+  explicit RatioDistribution(absl::string_view name) : DistributionStat(name) {}
   RatioDistribution() : RatioDistribution("") {}
-  RatioDistribution(const std::string& name, StatsGroup* group)
+  RatioDistribution(absl::string_view name, StatsGroup* group)
       : DistributionStat(name, group) {}
   std::string ValueAsString() const override;
   void Add(double value);
@@ -274,10 +274,10 @@ class RatioDistribution : public DistributionStat {
 // Statistic on the distribution of a sequence of doubles.
 class DoubleDistribution : public DistributionStat {
  public:
-  explicit DoubleDistribution(const std::string& name)
+  explicit DoubleDistribution(absl::string_view name)
       : DistributionStat(name) {}
   DoubleDistribution() : DoubleDistribution("") {}
-  DoubleDistribution(const std::string& name, StatsGroup* group)
+  DoubleDistribution(absl::string_view name, StatsGroup* group)
       : DistributionStat(name, group) {}
   std::string ValueAsString() const override;
   void Add(double value);
@@ -286,10 +286,10 @@ class DoubleDistribution : public DistributionStat {
 // Statistic on the distribution of a sequence of integers.
 class IntegerDistribution : public DistributionStat {
  public:
-  explicit IntegerDistribution(const std::string& name)
+  explicit IntegerDistribution(absl::string_view name)
       : DistributionStat(name) {}
   IntegerDistribution() : IntegerDistribution("") {}
-  IntegerDistribution(const std::string& name, StatsGroup* group)
+  IntegerDistribution(absl::string_view name, StatsGroup* group)
       : DistributionStat(name, group) {}
   std::string ValueAsString() const override;
   void Add(int64_t value);
@@ -316,6 +316,12 @@ class EnabledScopedTimeDistributionUpdater {
       : stat_(stat), also_update_(nullptr) {
     stat->StartTimer();
   }
+
+  // This type is neither copyable nor movable.
+  EnabledScopedTimeDistributionUpdater(
+      const EnabledScopedTimeDistributionUpdater&) = delete;
+  EnabledScopedTimeDistributionUpdater& operator=(
+      const EnabledScopedTimeDistributionUpdater&) = delete;
   ~EnabledScopedTimeDistributionUpdater() {
     const double cycles = stat_->StopTimerAndAddElapsedTime();
     if (also_update_ != nullptr) {
@@ -337,50 +343,23 @@ class EnabledScopedTimeDistributionUpdater {
  private:
   TimeDistribution* stat_;
   TimeDistribution* also_update_;
-  DISALLOW_COPY_AND_ASSIGN(EnabledScopedTimeDistributionUpdater);
 };
 
 class DisabledScopedTimeDistributionUpdater {
  public:
   explicit DisabledScopedTimeDistributionUpdater(TimeDistribution* stat) {}
+
+  // This type is neither copyable nor movable.
+  DisabledScopedTimeDistributionUpdater(
+      const DisabledScopedTimeDistributionUpdater&) = delete;
+  DisabledScopedTimeDistributionUpdater& operator=(
+      const DisabledScopedTimeDistributionUpdater&) = delete;
   void AlsoUpdate(TimeDistribution* also_update) {}
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(DisabledScopedTimeDistributionUpdater);
 };
-
-#ifdef HAS_PERF_SUBSYSTEM
-// Helper classes to count instructions during execution of a block of code and
-// add print the results to logs.
-//
-// Note: To enable instruction counting on machines running Debian, execute the
-// following commands to modify the permissions.
-//   sudo echo "1" > /proc/sys/kernel/perf_event_paranoid
-//   sudo echo "0" > /proc/sys/kernel/kptr_restrict
-class EnabledScopedInstructionCounter {
- public:
-  explicit EnabledScopedInstructionCounter(const std::string& name,
-                                           TimeLimit* time_limit);
-  EnabledScopedInstructionCounter(const EnabledScopedInstructionCounter&) =
-      delete;
-  EnabledScopedInstructionCounter& operator=(
-      const EnabledScopedInstructionCounter&) = delete;
-  ~EnabledScopedInstructionCounter();
-
-  // Used only for testing.
-  double ReadInstructionCount() { return ending_count_ - starting_count_; }
-
- private:
-  TimeLimit* time_limit_;
-  std::string name_;
-  double starting_count_;
-  double ending_count_;
-};
-#endif  // HAS_PERF_SUBSYSTEM
 
 class DisabledScopedInstructionCounter {
  public:
-  explicit DisabledScopedInstructionCounter(const std::string& name) {}
+  explicit DisabledScopedInstructionCounter(absl::string_view) {}
   DisabledScopedInstructionCounter(const DisabledScopedInstructionCounter&) =
       delete;
   DisabledScopedInstructionCounter& operator=(

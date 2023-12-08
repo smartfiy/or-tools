@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -41,7 +41,6 @@ class Status {
 
     // The linear program is invalid or it does not have the required format.
     ERROR_INVALID_PROBLEM = 4,
-
   };
 
   // Creates a "successful" status.
@@ -53,7 +52,7 @@ class Status {
   Status(ErrorCode error_code, std::string error_message);
 
   // Improves readability but identical to 0-arg constructor.
-  static const Status OK() { return Status(); }
+  static Status OK() { return Status(); }
 
   // Accessors.
   ErrorCode error_code() const { return error_code_; }

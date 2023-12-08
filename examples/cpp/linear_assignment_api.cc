@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,9 +12,9 @@
 // limitations under the License.
 
 #include <cstdlib>
+#include <vector>
 
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
+#include "ortools/base/init_google.h"
 #include "ortools/base/logging.h"
 #include "ortools/graph/ebert_graph.h"
 #include "ortools/graph/linear_assignment.h"
@@ -53,24 +53,23 @@ void AnotherAssignment() {
       {{8, 7, 9, 9}, {5, 2, 7, 8}, {6, 1, 4, 9}, {2, 3, 2, 6}});
   const int kSize = matrice.size();
   ForwardStarGraph graph(2 * kSize, kSize * kSize);
-  LinearSumAssignment<ForwardStarGraph> assignement(graph, kSize);
+  LinearSumAssignment<ForwardStarGraph> assignment(graph, kSize);
   for (int i = 0; i < kSize; ++i) {
     CHECK_EQ(kSize, matrice[i].size());
     for (int j = 0; j < kSize; ++j) {
       int arcIndex = graph.AddArc(i, j + kSize);
-      assignement.SetArcCost(arcIndex, matrice[i][j]);
+      assignment.SetArcCost(arcIndex, matrice[i][j]);
     }
   }
 
-  assignement.ComputeAssignment();
-  LOG(INFO) << "Cost : " << assignement.GetCost();
+  assignment.ComputeAssignment();
+  LOG(INFO) << "Cost : " << assignment.GetCost();
 }
 
 }  // namespace operations_research
 
 int main(int argc, char** argv) {
-  google::InitGoogleLogging(argv[0]);
-  absl::ParseCommandLine(argc, argv);
+  InitGoogle(argv[0], &argc, &argv, true);
   operations_research::AssignmentOn4x4Matrix();
   operations_research::AnotherAssignment();
   return EXIT_SUCCESS;

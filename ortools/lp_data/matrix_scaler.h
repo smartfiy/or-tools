@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -60,10 +60,10 @@
 #ifndef OR_TOOLS_LP_DATA_MATRIX_SCALER_H_
 #define OR_TOOLS_LP_DATA_MATRIX_SCALER_H_
 
+#include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
-#include "ortools/base/macros.h"
+#include "ortools/base/types.h"
 #include "ortools/glop/parameters.pb.h"
 #include "ortools/glop/revised_simplex.h"
 #include "ortools/glop/status.h"
@@ -78,6 +78,10 @@ class SparseMatrix;
 class SparseMatrixScaler {
  public:
   SparseMatrixScaler();
+
+  // This type is neither copyable nor movable.
+  SparseMatrixScaler(const SparseMatrixScaler&) = delete;
+  SparseMatrixScaler& operator=(const SparseMatrixScaler&) = delete;
 
   // Initializes the object with the SparseMatrix passed as argument.
   // The row and column scaling factors are all set to 1.0 (i.e. no scaling.)
@@ -183,8 +187,6 @@ class SparseMatrixScaler {
 
   // Array of scaling factors for each column. Indexed by column number.
   DenseRow col_scale_;
-
-  DISALLOW_COPY_AND_ASSIGN(SparseMatrixScaler);
 };
 
 }  // namespace glop

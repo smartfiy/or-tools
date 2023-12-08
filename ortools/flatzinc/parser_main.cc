@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,9 +18,8 @@
 #include <string>
 
 #include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
 #include "ortools/base/commandlineflags.h"
+#include "ortools/base/init_google.h"
 #include "ortools/base/timer.h"
 #include "ortools/flatzinc/model.h"
 #include "ortools/flatzinc/parser.h"
@@ -81,8 +80,6 @@ int main(int argc, char** argv) {
   const char kUsage[] =
       "Parses a flatzinc .fzn file, optionally presolve it, and prints it in "
       "human-readable format";
-  absl::SetFlag(&FLAGS_log_prefix, false);
-  absl::SetFlag(&FLAGS_logtostderr, true);
   absl::SetProgramUsageMessage(kUsage);
   absl::ParseCommandLine(argc, argv);
   google::InitGoogleLogging(argv[0]);

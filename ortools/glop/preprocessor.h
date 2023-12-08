@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,8 +21,12 @@
 #ifndef OR_TOOLS_GLOP_PREPROCESSOR_H_
 #define OR_TOOLS_GLOP_PREPROCESSOR_H_
 
+#include <deque>
 #include <memory>
+#include <string>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "ortools/base/strong_vector.h"
 #include "ortools/glop/parameters.pb.h"
 #include "ortools/glop/revised_simplex.h"
@@ -106,7 +110,7 @@ class MainLpPreprocessor : public Preprocessor {
       : Preprocessor(parameters) {}
   MainLpPreprocessor(const MainLpPreprocessor&) = delete;
   MainLpPreprocessor& operator=(const MainLpPreprocessor&) = delete;
-  ~MainLpPreprocessor() override {}
+  ~MainLpPreprocessor() override = default;
 
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const override;
@@ -122,7 +126,7 @@ class MainLpPreprocessor : public Preprocessor {
   // Runs the given preprocessor and push it on preprocessors_ for the postsolve
   // step when needed.
   void RunAndPushIfRelevant(std::unique_ptr<Preprocessor> preprocessor,
-                            const std::string& name, TimeLimit* time_limit,
+                            absl::string_view name, TimeLimit* time_limit,
                             LinearProgram* lp);
 
   // Stack of preprocessors currently applied to the lp that needs postsolve.
@@ -171,7 +175,7 @@ class ColumnsSaver {
 // Help preprocessors deal with column deletion.
 class ColumnDeletionHelper {
  public:
-  ColumnDeletionHelper() {}
+  ColumnDeletionHelper() = default;
   ColumnDeletionHelper(const ColumnDeletionHelper&) = delete;
   ColumnDeletionHelper& operator=(const ColumnDeletionHelper&) = delete;
 
@@ -227,7 +231,7 @@ class ColumnDeletionHelper {
 // Help preprocessors deal with row deletion.
 class RowDeletionHelper {
  public:
-  RowDeletionHelper() {}
+  RowDeletionHelper() = default;
   RowDeletionHelper(const RowDeletionHelper&) = delete;
   RowDeletionHelper& operator=(const RowDeletionHelper&) = delete;
 
@@ -270,7 +274,7 @@ class EmptyColumnPreprocessor : public Preprocessor {
       : Preprocessor(parameters) {}
   EmptyColumnPreprocessor(const EmptyColumnPreprocessor&) = delete;
   EmptyColumnPreprocessor& operator=(const EmptyColumnPreprocessor&) = delete;
-  ~EmptyColumnPreprocessor() final {}
+  ~EmptyColumnPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -296,7 +300,7 @@ class ProportionalColumnPreprocessor : public Preprocessor {
       delete;
   ProportionalColumnPreprocessor& operator=(
       const ProportionalColumnPreprocessor&) = delete;
-  ~ProportionalColumnPreprocessor() final {}
+  ~ProportionalColumnPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
   void UseInMipContext() final { LOG(FATAL) << "Not implemented."; }
@@ -336,7 +340,7 @@ class ProportionalRowPreprocessor : public Preprocessor {
   ProportionalRowPreprocessor(const ProportionalRowPreprocessor&) = delete;
   ProportionalRowPreprocessor& operator=(const ProportionalRowPreprocessor&) =
       delete;
-  ~ProportionalRowPreprocessor() final {}
+  ~ProportionalRowPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -435,7 +439,7 @@ class SingletonPreprocessor : public Preprocessor {
       : Preprocessor(parameters) {}
   SingletonPreprocessor(const SingletonPreprocessor&) = delete;
   SingletonPreprocessor& operator=(const SingletonPreprocessor&) = delete;
-  ~SingletonPreprocessor() final {}
+  ~SingletonPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -452,8 +456,8 @@ class SingletonPreprocessor : public Preprocessor {
   void DeleteSingletonRow(MatrixEntry e, LinearProgram* lp);
 
   // Internal operation when removing a zero-cost singleton column corresponding
-  // to the given entry. This modifies the constraint bounds to take into acount
-  // the bounds of the corresponding variable.
+  // to the given entry. This modifies the constraint bounds to take into
+  // account the bounds of the corresponding variable.
   void UpdateConstraintBoundsWithVariableBounds(MatrixEntry e,
                                                 LinearProgram* lp);
 
@@ -463,7 +467,7 @@ class SingletonPreprocessor : public Preprocessor {
                                          const LinearProgram& lp) const;
 
   // A singleton column with a cost of zero can always be removed by changing
-  // the corresponding constraint bounds to take into acount the bound of this
+  // the corresponding constraint bounds to take into account the bound of this
   // singleton column.
   void DeleteZeroCostSingletonColumn(const SparseMatrix& matrix_transpose,
                                      MatrixEntry e, LinearProgram* lp);
@@ -525,7 +529,7 @@ class FixedVariablePreprocessor : public Preprocessor {
   FixedVariablePreprocessor(const FixedVariablePreprocessor&) = delete;
   FixedVariablePreprocessor& operator=(const FixedVariablePreprocessor&) =
       delete;
-  ~FixedVariablePreprocessor() final {}
+  ~FixedVariablePreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -562,7 +566,7 @@ class ForcingAndImpliedFreeConstraintPreprocessor : public Preprocessor {
       const ForcingAndImpliedFreeConstraintPreprocessor&) = delete;
   ForcingAndImpliedFreeConstraintPreprocessor& operator=(
       const ForcingAndImpliedFreeConstraintPreprocessor&) = delete;
-  ~ForcingAndImpliedFreeConstraintPreprocessor() final {}
+  ~ForcingAndImpliedFreeConstraintPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -605,7 +609,7 @@ class ImpliedFreePreprocessor : public Preprocessor {
       : Preprocessor(parameters) {}
   ImpliedFreePreprocessor(const ImpliedFreePreprocessor&) = delete;
   ImpliedFreePreprocessor& operator=(const ImpliedFreePreprocessor&) = delete;
-  ~ImpliedFreePreprocessor() final {}
+  ~ImpliedFreePreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -653,7 +657,7 @@ class DoubletonFreeColumnPreprocessor : public Preprocessor {
       delete;
   DoubletonFreeColumnPreprocessor& operator=(
       const DoubletonFreeColumnPreprocessor&) = delete;
-  ~DoubletonFreeColumnPreprocessor() final {}
+  ~DoubletonFreeColumnPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -704,7 +708,7 @@ class UnconstrainedVariablePreprocessor : public Preprocessor {
       delete;
   UnconstrainedVariablePreprocessor& operator=(
       const UnconstrainedVariablePreprocessor&) = delete;
-  ~UnconstrainedVariablePreprocessor() final {}
+  ~UnconstrainedVariablePreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -755,7 +759,7 @@ class FreeConstraintPreprocessor : public Preprocessor {
   FreeConstraintPreprocessor(const FreeConstraintPreprocessor&) = delete;
   FreeConstraintPreprocessor& operator=(const FreeConstraintPreprocessor&) =
       delete;
-  ~FreeConstraintPreprocessor() final {}
+  ~FreeConstraintPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -774,7 +778,7 @@ class EmptyConstraintPreprocessor : public Preprocessor {
   EmptyConstraintPreprocessor(const EmptyConstraintPreprocessor&) = delete;
   EmptyConstraintPreprocessor& operator=(const EmptyConstraintPreprocessor&) =
       delete;
-  ~EmptyConstraintPreprocessor() final {}
+  ~EmptyConstraintPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -800,7 +804,7 @@ class RemoveNearZeroEntriesPreprocessor : public Preprocessor {
       delete;
   RemoveNearZeroEntriesPreprocessor& operator=(
       const RemoveNearZeroEntriesPreprocessor&) = delete;
-  ~RemoveNearZeroEntriesPreprocessor() final {}
+  ~RemoveNearZeroEntriesPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -822,7 +826,7 @@ class SingletonColumnSignPreprocessor : public Preprocessor {
       delete;
   SingletonColumnSignPreprocessor& operator=(
       const SingletonColumnSignPreprocessor&) = delete;
-  ~SingletonColumnSignPreprocessor() final {}
+  ~SingletonColumnSignPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -844,7 +848,7 @@ class DoubletonEqualityRowPreprocessor : public Preprocessor {
       delete;
   DoubletonEqualityRowPreprocessor& operator=(
       const DoubletonEqualityRowPreprocessor&) = delete;
-  ~DoubletonEqualityRowPreprocessor() final {}
+  ~DoubletonEqualityRowPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -852,7 +856,7 @@ class DoubletonEqualityRowPreprocessor : public Preprocessor {
   enum ColChoice {
     DELETED = 0,
     MODIFIED = 1,
-    // For for() loops iterating over the ColChoice values, and/or arrays.
+    // For `for()` loops iterating over the ColChoice values and/or arrays.
     NUM_DOUBLETON_COLS = 2,
   };
   static ColChoice OtherColChoice(ColChoice x) {
@@ -931,7 +935,7 @@ class DualizerPreprocessor : public Preprocessor {
       : Preprocessor(parameters) {}
   DualizerPreprocessor(const DualizerPreprocessor&) = delete;
   DualizerPreprocessor& operator=(const DualizerPreprocessor&) = delete;
-  ~DualizerPreprocessor() final {}
+  ~DualizerPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
   void UseInMipContext() final {
@@ -991,7 +995,7 @@ class ShiftVariableBoundsPreprocessor : public Preprocessor {
       delete;
   ShiftVariableBoundsPreprocessor& operator=(
       const ShiftVariableBoundsPreprocessor&) = delete;
-  ~ShiftVariableBoundsPreprocessor() final {}
+  ~ShiftVariableBoundsPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 
@@ -1019,7 +1023,7 @@ class ScalingPreprocessor : public Preprocessor {
       : Preprocessor(parameters) {}
   ScalingPreprocessor(const ScalingPreprocessor&) = delete;
   ScalingPreprocessor& operator=(const ScalingPreprocessor&) = delete;
-  ~ScalingPreprocessor() final {}
+  ~ScalingPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
   void UseInMipContext() final { LOG(FATAL) << "Not implemented."; }
@@ -1043,7 +1047,7 @@ class ToMinimizationPreprocessor : public Preprocessor {
   ToMinimizationPreprocessor(const ToMinimizationPreprocessor&) = delete;
   ToMinimizationPreprocessor& operator=(const ToMinimizationPreprocessor&) =
       delete;
-  ~ToMinimizationPreprocessor() final {}
+  ~ToMinimizationPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 };
@@ -1074,7 +1078,7 @@ class AddSlackVariablesPreprocessor : public Preprocessor {
   AddSlackVariablesPreprocessor(const AddSlackVariablesPreprocessor&) = delete;
   AddSlackVariablesPreprocessor& operator=(
       const AddSlackVariablesPreprocessor&) = delete;
-  ~AddSlackVariablesPreprocessor() final {}
+  ~AddSlackVariablesPreprocessor() final = default;
   bool Run(LinearProgram* lp) final;
   void RecoverSolution(ProblemSolution* solution) const final;
 

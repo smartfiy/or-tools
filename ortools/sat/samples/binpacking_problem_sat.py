@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2010-2021 Google LLC
+# Copyright 2010-2022 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Solves a binpacking problem using the CP-SAT solver."""
+
 
 from ortools.sat.python import cp_model
 
@@ -36,13 +38,13 @@ def BinpackingProblemSat():
     for i in all_items:
         num_copies = items[i][1]
         for b in all_bins:
-            x[(i, b)] = model.NewIntVar(0, num_copies, 'x_%i_%i' % (i, b))
+            x[(i, b)] = model.NewIntVar(0, num_copies, f"x[{i},{b}]")
 
     # Load variables.
-    load = [model.NewIntVar(0, bin_capacity, 'load_%i' % b) for b in all_bins]
+    load = [model.NewIntVar(0, bin_capacity, f"load[{b}]") for b in all_bins]
 
     # Slack variables.
-    slacks = [model.NewBoolVar('slack_%i' % b) for b in all_bins]
+    slacks = [model.NewBoolVar(f"slack[{b}]") for b in all_bins]
 
     # Links load and x.
     for b in all_bins:
@@ -66,13 +68,13 @@ def BinpackingProblemSat():
     # Solves and prints out the solution.
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
-    print('Solve status: %s' % solver.StatusName(status))
+    print(f"Solve status: {solver.StatusName(status)}")
     if status == cp_model.OPTIMAL:
-        print('Optimal objective value: %i' % solver.ObjectiveValue())
-    print('Statistics')
-    print('  - conflicts : %i' % solver.NumConflicts())
-    print('  - branches  : %i' % solver.NumBranches())
-    print('  - wall time : %f s' % solver.WallTime())
+        print(f"Optimal objective value: {solver.ObjectiveValue()}")
+    print("Statistics")
+    print(f"  - conflicts : {solver.NumConflicts()}")
+    print(f"  - branches  : {solver.NumBranches()}")
+    print(f"  - wall time : {solver.WallTime()}s")
 
 
 BinpackingProblemSat()

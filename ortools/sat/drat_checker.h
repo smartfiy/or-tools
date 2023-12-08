@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,21 +14,26 @@
 #ifndef OR_TOOLS_SAT_DRAT_CHECKER_H_
 #define OR_TOOLS_SAT_DRAT_CHECKER_H_
 
+#include <stddef.h>
+
 #include <cstdint>
+#include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "ortools/base/int_type.h"
 #include "ortools/base/strong_vector.h"
 #include "ortools/sat/sat_base.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
 
 // Index of a clause (>= 0).
-DEFINE_INT_TYPE(ClauseIndex, int);
+DEFINE_STRONG_INDEX_TYPE(ClauseIndex);
 const ClauseIndex kNoClauseIndex(-1);
 
 // DRAT is a SAT proof format that allows a simple program to check that a
@@ -41,7 +46,7 @@ const ClauseIndex kNoClauseIndex(-1);
 class DratChecker {
  public:
   DratChecker();
-  ~DratChecker() {}
+  ~DratChecker() = default;
 
   // Returns the number of Boolean variables used in the problem and infered
   // clauses.
@@ -54,7 +59,7 @@ class DratChecker {
 
   // Adds a clause which is infered from the problem clauses and the previously
   // infered clauses (that are have not been deleted). Infered clauses must be
-  // added after the problem clauses. Clauses with the Reverse Asymetric
+  // added after the problem clauses. Clauses with the Reverse Asymmetric
   // Tautology (RAT) property for literal l must start with this literal. The
   // given clause must not contain a literal and its negation. Must not be
   // called after Check().
@@ -68,7 +73,7 @@ class DratChecker {
   // Checks that the infered clauses form a DRAT proof that the problem clauses
   // are UNSAT. For this the last added infered clause must be the empty clause
   // and each infered clause must have either the Reverse Unit Propagation (RUP)
-  // or the Reverse Asymetric Tautology (RAT) property with respect to the
+  // or the Reverse Asymmetric Tautology (RAT) property with respect to the
   // problem clauses and the previously infered clauses which are not deleted.
   // Returns VALID if the proof is valid, INVALID if it is not, and UNKNOWN if
   // the check timed out.
@@ -159,15 +164,14 @@ class DratChecker {
   struct ClauseHash {
     DratChecker* checker;
     explicit ClauseHash(DratChecker* checker) : checker(checker) {}
-    std::size_t operator()(const ClauseIndex clause_index) const;
+    std::size_t operator()(ClauseIndex clause_index) const;
   };
 
   // Equality function for clauses.
   struct ClauseEquiv {
     DratChecker* checker;
     explicit ClauseEquiv(DratChecker* checker) : checker(checker) {}
-    bool operator()(const ClauseIndex clause_index1,
-                    const ClauseIndex clause_index2) const;
+    bool operator()(ClauseIndex clause_index1, ClauseIndex clause_index2) const;
   };
 
   // Adds a clause and returns its index.

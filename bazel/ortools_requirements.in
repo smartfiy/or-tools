@@ -1,0 +1,14 @@
+# OR-Tools code dependencies
+absl-py==2.0.0
+numpy==1.26.1
+protobuf==4.25.0
+scipy==1.11.3
+
+# OR-Tools build dependencies
+mypy==1.6.1
+mypy-protobuf==3.5.0
+virtualenv==20.24.6
+black==23.10.1
+
+# Example dependencies
+pandas==2.1.2

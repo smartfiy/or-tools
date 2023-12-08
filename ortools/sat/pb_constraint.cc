@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,12 +13,25 @@
 
 #include "ortools/sat/pb_constraint.h"
 
+#include <algorithm>
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/hash/hash.h"
+#include "absl/log/check.h"
 #include "absl/strings/str_format.h"
+#include "absl/types/span.h"
+#include "ortools/base/logging.h"
 #include "ortools/base/strong_vector.h"
-#include "ortools/base/thorough_hash.h"
+#include "ortools/sat/sat_base.h"
+#include "ortools/sat/sat_parameters.pb.h"
+#include "ortools/util/bitset.h"
 #include "ortools/util/saturated_arithmetic.h"
+#include "ortools/util/stats.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
@@ -107,17 +120,17 @@ bool ApplyLiteralMapping(
   int index = 0;
   Coefficient shift_due_to_fixed_variables(0);
   for (const LiteralWithCoeff& entry : *cst) {
-    if (mapping[entry.literal.Index()] >= 0) {
-      (*cst)[index] = LiteralWithCoeff(Literal(mapping[entry.literal.Index()]),
-                                       entry.coefficient);
+    if (mapping[entry.literal] >= 0) {
+      (*cst)[index] =
+          LiteralWithCoeff(Literal(mapping[entry.literal]), entry.coefficient);
       ++index;
-    } else if (mapping[entry.literal.Index()] == kTrueLiteralIndex) {
+    } else if (mapping[entry.literal] == kTrueLiteralIndex) {
       if (!SafeAddInto(-entry.coefficient, &shift_due_to_fixed_variables)) {
         return false;
       }
     } else {
       // Nothing to do if the literal is false.
-      DCHECK_EQ(mapping[entry.literal.Index()], kFalseLiteralIndex);
+      DCHECK_EQ(mapping[entry.literal], kFalseLiteralIndex);
     }
   }
   cst->resize(index);
@@ -424,8 +437,7 @@ UpperBoundedLinearConstraint::UpperBoundedLinearConstraint(
   // Sentinel.
   starts_.push_back(literals_.size());
 
-  hash_ = ThoroughHash(reinterpret_cast<const char*>(cst.data()),
-                       cst.size() * sizeof(LiteralWithCoeff));
+  hash_ = absl::Hash<std::vector<LiteralWithCoeff>>()(cst);
 }
 
 void UpperBoundedLinearConstraint::AddToConflict(
@@ -493,7 +505,7 @@ bool UpperBoundedLinearConstraint::InitializeRhs(
     // The constraint is infeasible provided the current propagated trail.
     if (slack < 0) return false;
 
-    // Cummulative sum.
+    // Cumulative sum.
     for (int i = 1; i < sum_at_previous_level.size(); ++i) {
       sum_at_previous_level[i] += sum_at_previous_level[i - 1];
     }
@@ -692,7 +704,7 @@ void UpperBoundedLinearConstraint::ResolvePBConflict(
     // Use this one instead to start the resolution.
     //
     // TODO(user): Investigate if this is a good idea. It doesn't happen often,
-    // but does happend. Maybe we can detect this before in Propagate()? The
+    // but does happened. Maybe we can detect this before in Propagate()? The
     // setup is:
     // - At a given trail_index, var is propagated and added on the trail.
     // - There is some constraint literals assigned to true with a trail index
@@ -875,7 +887,7 @@ bool PbConstraints::AddConstraint(const std::vector<LiteralWithCoeff>& cst,
   constraints_.emplace_back(c.release());
   for (LiteralWithCoeff term : cst) {
     DCHECK_LT(term.literal.Index(), to_update_.size());
-    to_update_[term.literal.Index()].push_back(ConstraintIndexWithCoeff(
+    to_update_[term.literal].push_back(ConstraintIndexWithCoeff(
         trail->Assignment().VariableIsAssigned(term.literal.Variable()),
         cst_index, term.coefficient));
   }
@@ -902,11 +914,11 @@ bool PbConstraints::PropagateNext(Trail* trail) {
   const Literal true_literal = (*trail)[propagation_trail_index_];
   ++propagation_trail_index_;
 
-  // We need to upate ALL threshold, otherwise the Untrail() will not be
+  // We need to update ALL threshold, otherwise the Untrail() will not be
   // synchronized.
   bool conflict = false;
-  num_threshold_updates_ += to_update_[true_literal.Index()].size();
-  for (ConstraintIndexWithCoeff& update : to_update_[true_literal.Index()]) {
+  num_threshold_updates_ += to_update_[true_literal].size();
+  for (ConstraintIndexWithCoeff& update : to_update_[true_literal]) {
     const Coefficient threshold =
         thresholds_[update.index] - update.coefficient;
     thresholds_[update.index] = threshold;
@@ -946,7 +958,7 @@ void PbConstraints::Untrail(const Trail& trail, int trail_index) {
   while (propagation_trail_index_ > trail_index) {
     --propagation_trail_index_;
     const Literal literal = trail[propagation_trail_index_];
-    for (ConstraintIndexWithCoeff& update : to_update_[literal.Index()]) {
+    for (ConstraintIndexWithCoeff& update : to_update_[literal]) {
       thresholds_[update.index] += update.coefficient;
 
       // Only the constraints which were inspected during Propagate() need

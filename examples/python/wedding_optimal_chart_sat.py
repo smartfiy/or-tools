@@ -1,6 +1,5 @@
-#
-# Copyright 2018 Google.
-#
+#!/usr/bin/env python3
+# Copyright 2010-2022 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Finding an optimal wedding seating chart.
 
 From
@@ -37,6 +37,8 @@ https://github.com/google/or-tools/blob/master/examples/csharp/wedding_optimal_c
 """
 
 import time
+from typing import Sequence
+from absl import app
 from ortools.sat.python import cp_model
 
 
@@ -55,9 +57,10 @@ class WeddingChartPrinter(cp_model.CpSolverSolutionCallback):
     def on_solution_callback(self):
         current_time = time.time()
         objective = self.ObjectiveValue()
-        print("Solution %i, time = %f s, objective = %i" %
-              (self.__solution_count, current_time - self.__start_time,
-               objective))
+        print(
+            "Solution %i, time = %f s, objective = %i"
+            % (self.__solution_count, current_time - self.__start_time, objective)
+        )
         self.__solution_count += 1
 
         for t in range(self.__num_tables):
@@ -70,11 +73,8 @@ class WeddingChartPrinter(cp_model.CpSolverSolutionCallback):
         return self.__solution_count
 
 
-def BuildData():
-    #
-    # Data
-    #
-
+def build_data():
+    """Build the data model."""
     # Easy problem (from the paper)
     # num_tables = 2
     # table_capacity = 10
@@ -87,38 +87,54 @@ def BuildData():
 
     # Connection matrix: who knows who, and how strong
     # is the relation
-    C = [[1, 50, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-          0], [50, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-               0], [1, 1, 1, 50, 1, 1, 1, 1, 10, 0, 0, 0, 0, 0, 0, 0,
-                    0], [1, 1, 50, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-         [1, 1, 1, 1, 1, 50, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-          0], [1, 1, 1, 1, 50, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-               0], [1, 1, 1, 1, 1, 1, 1, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-         [1, 1, 1, 1, 1, 1, 50, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-          0], [1, 1, 10, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-               0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 50, 1, 1, 1, 1, 1, 1],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 1, 1, 1, 1, 1, 1,
-          1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-               1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1], [
-                   0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
-               ], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1], [
-                   0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
-               ], [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]]
+    connections = [
+        [1, 50, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [50, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 50, 1, 1, 1, 1, 10, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 50, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 50, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 50, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1, 50, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 10, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 50, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+    ]
 
     # Names of the guests. B: Bride side, G: Groom side
     names = [
-        "Deb (B)", "John (B)", "Martha (B)", "Travis (B)", "Allan (B)",
-        "Lois (B)", "Jayne (B)", "Brad (B)", "Abby (B)", "Mary Helen (G)",
-        "Lee (G)", "Annika (G)", "Carl (G)", "Colin (G)", "Shirley (G)",
-        "DeAnn (G)", "Lori (G)"
+        "Deb (B)",
+        "John (B)",
+        "Martha (B)",
+        "Travis (B)",
+        "Allan (B)",
+        "Lois (B)",
+        "Jayne (B)",
+        "Brad (B)",
+        "Abby (B)",
+        "Mary Helen (G)",
+        "Lee (G)",
+        "Annika (G)",
+        "Carl (G)",
+        "Colin (G)",
+        "Shirley (G)",
+        "DeAnn (G)",
+        "Lori (G)",
     ]
-    return num_tables, table_capacity, min_known_neighbors, C, names
+    return num_tables, table_capacity, min_known_neighbors, connections, names
 
 
 def solve_with_discrete_model():
-    num_tables, table_capacity, min_known_neighbors, C, names = BuildData()
+    """Discrete approach."""
+    num_tables, table_capacity, min_known_neighbors, connections, names = build_data()
 
-    num_guests = len(C)
+    num_guests = len(connections)
 
     all_tables = range(num_tables)
     all_guests = range(num_guests)
@@ -132,27 +148,32 @@ def solve_with_discrete_model():
     seats = {}
     for t in all_tables:
         for g in all_guests:
-            seats[(t, g)] = model.NewBoolVar("guest %i seats on table %i" % (g,
-                                                                             t))
+            seats[(t, g)] = model.NewBoolVar("guest %i seats on table %i" % (g, t))
 
     colocated = {}
     for g1 in range(num_guests - 1):
         for g2 in range(g1 + 1, num_guests):
             colocated[(g1, g2)] = model.NewBoolVar(
-                "guest %i seats with guest %i" % (g1, g2))
+                "guest %i seats with guest %i" % (g1, g2)
+            )
 
     same_table = {}
     for g1 in range(num_guests - 1):
         for g2 in range(g1 + 1, num_guests):
             for t in all_tables:
                 same_table[(g1, g2, t)] = model.NewBoolVar(
-                    "guest %i seats with guest %i on table %i" % (g1, g2, t))
+                    "guest %i seats with guest %i on table %i" % (g1, g2, t)
+                )
 
     # Objective
     model.Maximize(
-        sum(C[g1][g2] * colocated[g1, g2]
-            for g1 in range(num_guests - 1) for g2 in range(g1 + 1, num_guests)
-            if C[g1][g2] > 0))
+        sum(
+            connections[g1][g2] * colocated[g1, g2]
+            for g1 in range(num_guests - 1)
+            for g2 in range(g1 + 1, num_guests)
+            if connections[g1][g2] > 0
+        )
+    )
 
     #
     # Constraints
@@ -171,30 +192,38 @@ def solve_with_discrete_model():
         for g2 in range(g1 + 1, num_guests):
             for t in all_tables:
                 # Link same_table and seats.
-                model.AddBoolOr([
-                    seats[(t, g1)].Not(), seats[(t, g2)].Not(),
-                    same_table[(g1, g2, t)]
-                ])
+                model.AddBoolOr(
+                    [
+                        seats[(t, g1)].Not(),
+                        seats[(t, g2)].Not(),
+                        same_table[(g1, g2, t)],
+                    ]
+                )
                 model.AddImplication(same_table[(g1, g2, t)], seats[(t, g1)])
                 model.AddImplication(same_table[(g1, g2, t)], seats[(t, g2)])
 
             # Link colocated and same_table.
             model.Add(
-                sum(same_table[(g1, g2, t)]
-                    for t in all_tables) == colocated[(g1, g2)])
+                sum(same_table[(g1, g2, t)] for t in all_tables) == colocated[(g1, g2)]
+            )
 
     # Min known neighbors rule.
     for g in all_guests:
         model.Add(
-            sum(same_table[(g, g2, t)]
+            sum(
+                same_table[(g, g2, t)]
                 for g2 in range(g + 1, num_guests)
                 for t in all_tables
-                if C[g][g2] > 0) +
-            sum(same_table[(g1, g, t)]
+                if connections[g][g2] > 0
+            )
+            + sum(
+                same_table[(g1, g, t)]
                 for g1 in range(g)
                 for t in all_tables
-                if C[g1][g] > 0)
-            >= min_known_neighbors)
+                if connections[g1][g] > 0
+            )
+            >= min_known_neighbors
+        )
 
     # Symmetry breaking. First guest seats on the first table.
     model.Add(seats[(0, 0)] == 1)
@@ -211,4 +240,11 @@ def solve_with_discrete_model():
     print("  - num solutions: %i" % solution_printer.num_solutions())
 
 
-solve_with_discrete_model()
+def main(argv: Sequence[str]) -> None:
+    if len(argv) > 1:
+        raise app.UsageError("Too many command-line arguments.")
+    solve_with_discrete_model()
+
+
+if __name__ == "__main__":
+    app.run(main)

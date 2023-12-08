@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -84,7 +84,7 @@
 // is optimal. The integer cost case is handled by multiplying all the arc costs
 // and the initial value of epsilon by (n+1). When epsilon reaches 1, and
 // the solution is epsilon-optimal, it means: for all residual arc (v,w) in E,
-//    (n+1) * c_p(v,w) >= -1, thus c_p(v,w) >= -1/(n+1) >= 1/n, and the
+//    (n+1) * c_p(v,w) >= -1, thus c_p(v,w) >= -1/(n+1) > -1/n, and the
 // solution is optimal.
 //
 // A node v is said to be *active* if excess(v) > 0.
@@ -174,9 +174,9 @@
 #include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
+#include "absl/strings/string_view.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
+#include "ortools/base/types.h"
 #include "ortools/graph/ebert_graph.h"
 #include "ortools/graph/graph.h"
 #include "ortools/util/stats.h"
@@ -199,6 +199,35 @@ class MinCostFlowBase {
     INFEASIBLE,
     UNBALANCED,
     BAD_RESULT,
+
+    // This is returned when an integer overflow occurred during the algorithm
+    // execution.
+    //
+    // Some details on how to deal with this:
+    // - The sum of all incoming/outgoing capacity at each node should not
+    //   overflow. TODO(user): this is not always properly checked and probably
+    //   deserve a different return status.
+    // - Since we scale cost, each arc unit cost times (num_nodes + 1) should
+    //   not overflow. We detect that at the beginning of the Solve().
+    // - This is however not sufficient as the node potential depends on the
+    //   minimum cost of sending 1 unit of flow through the residual graph. If
+    //   the maximum arc unit cost is smaller than kint64max / (2 * n ^ 2) then
+    //   one shouldn't run into any overflow. But in pratice this bound is quite
+    //   loose. So it is possible to try with higher cost, and the algorithm
+    //   will detect if an overflow actually happen and return BAD_COST_RANGE,
+    //   so we can retry with smaller cost.
+    //
+    // And two remarks:
+    // - Note that the complexity of the algorithm depends on the maximum cost,
+    //   so it is usually a good idea to use unit cost that are as small as
+    //   possible.
+    // - Even if there is no overflow, note that the total cost can easily not
+    //   fit on an int64_t since it is the product of the unit cost times the
+    //   actual amount of flow sent. This is easy to detect since the final
+    //   optimal cost will be set to kint64max. It is also relatively easy to
+    //   deal with since we will still have the proper flow on each arc. It is
+    //   thus possible to recompute the total cost in double or using
+    //   absl::int128 if the need arise.
     BAD_COST_RANGE
   };
 };
@@ -221,6 +250,12 @@ class SimpleMinCostFlow : public MinCostFlowBase {
   // number of nodes and arcs, to potentially gain performance.
   explicit SimpleMinCostFlow(NodeIndex reserve_num_nodes = 0,
                              ArcIndex reserve_num_arcs = 0);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  SimpleMinCostFlow(const SimpleMinCostFlow&) = delete;
+  SimpleMinCostFlow& operator=(const SimpleMinCostFlow&) = delete;
+#endif
 
   // Adds a directed arc from tail to head to the underlying graph with
   // a given capacity and cost per unit of flow.
@@ -280,6 +315,25 @@ class SimpleMinCostFlow : public MinCostFlowBase {
   FlowQuantity Supply(NodeIndex node) const;
   CostValue UnitCost(ArcIndex arc) const;
 
+  // Advanced usage. The default is true.
+  //
+  // Without cost scaling, the algorithm will return a 1-optimal solution to the
+  // given problem. The solution will be an optimal solution to a perturbed
+  // problem where some of the arc unit costs are changed by at most 1.
+  //
+  // If the cost are initially integer and we scale them by (num_nodes + 1),
+  // then we can show that such 1-optimal solution is actually optimal. This
+  // is what happen by default or when SetPriceScaling(true) is called.
+  //
+  // However, if your cost were originally double, you don't really care to
+  // solve optimally a problem where the weights are approximated in the first
+  // place. It is better to multiply your double by a scaling_factor (prefer a
+  // power of 2) so that the maximum rounded arc unit cost is under kint64max /
+  // (num_nodes + 1) to prevent any overflow. You can then solve without any
+  // cost scaling. The final result will be the optimal to a problem were the
+  // unit cost of some arc as been changed by at most 1 / scaling_factor.
+  void SetPriceScaling(bool value) { scale_prices_ = value; }
+
  private:
   typedef ::util::ReverseArcStaticGraph<NodeIndex, ArcIndex> Graph;
   enum SupplyAdjustment { ADJUST, DONT_ADJUST };
@@ -301,7 +355,7 @@ class SimpleMinCostFlow : public MinCostFlowBase {
   CostValue optimal_cost_;
   FlowQuantity maximum_flow_;
 
-  DISALLOW_COPY_AND_ASSIGN(SimpleMinCostFlow);
+  bool scale_prices_ = true;
 };
 
 // Generic MinCostFlow that works with StarGraph and all the graphs handling
@@ -338,6 +392,12 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // initialize the memory of this class.
   explicit GenericMinCostFlow(const Graph* graph);
 
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  GenericMinCostFlow(const GenericMinCostFlow&) = delete;
+  GenericMinCostFlow& operator=(const GenericMinCostFlow&) = delete;
+#endif
+
   // Returns the graph associated to the current object.
   const Graph* graph() const { return graph_; }
 
@@ -371,8 +431,8 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // demands are accessible through FeasibleSupply.
   // Note that CheckFeasibility is called by Solve() when the flag
   // min_cost_flow_check_feasibility is set to true (which is the default.)
-  bool CheckFeasibility(std::vector<NodeIndex>* const infeasible_supply_node,
-                        std::vector<NodeIndex>* const infeasible_demand_node);
+  bool CheckFeasibility(std::vector<NodeIndex>* infeasible_supply_node,
+                        std::vector<NodeIndex>* infeasible_demand_node);
 
   // Makes the min-cost flow problem solvable by truncating supplies and
   // demands to a level acceptable by the network. There may be several ways to
@@ -381,8 +441,12 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // MakeFeasible returns false if CheckFeasibility() was not called before.
   bool MakeFeasible();
 
-  // Returns the cost of the minimum-cost flow found by the algorithm.
-  CostValue GetOptimalCost() const { return total_flow_cost_; }
+  // Returns the cost of the minimum-cost flow found by the algorithm. This
+  // works in O(num_arcs). This will only work if the last Solve() call was
+  // successful and returned true, otherwise it will return 0. Note that the
+  // computation might overflow, in which case we will cap the cost at
+  // std::numeric_limits<CostValue>::max().
+  CostValue GetOptimalCost();
 
   // Returns the flow on the given arc using the equations given in the
   // comment on residual_arc_capacity_.
@@ -407,9 +471,6 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // and demand given as input.
   FlowQuantity FeasibleSupply(NodeIndex node) const;
 
-  // Whether to use the UpdatePrices() heuristic.
-  void SetUseUpdatePrices(bool value) { use_price_update_ = value; }
-
   // Whether to check the feasibility of the problem with a max-flow, prior to
   // solving it. This uses about twice as much memory, but detects infeasible
   // problems (where the flow can't be satisfied) and makes Solve() return
@@ -417,6 +478,10 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // make sure that your problem is feasible, otherwise the code can loop
   // forever.
   void SetCheckFeasibility(bool value) { check_feasibility_ = value; }
+
+  // Algorithm options.
+  void SetUseUpdatePrices(bool value) { use_price_update_ = value; }
+  void SetPriceScaling(bool value) { scale_prices_ = value; }
 
  private:
   // Returns true if the given arc is admissible i.e. if its residual capacity
@@ -437,17 +502,13 @@ class GenericMinCostFlow : public MinCostFlowBase {
 
   // Checks the consistency of the input, i.e., whether the sum of the supplies
   // for all nodes is equal to zero. To be used in a DCHECK.
-  bool CheckInputConsistency() const;
+  bool CheckInputConsistency();
 
   // Checks whether the result is valid, i.e. whether for each arc,
   // residual_arc_capacity_[arc] == 0 || ReducedCost(arc) >= -epsilon_.
   // (A solution is epsilon-optimal if ReducedCost(arc) >= -epsilon.)
   // To be used in a DCHECK.
   bool CheckResult() const;
-
-  // Checks that the cost range fits in the range of int64_t's.
-  // To be used in a DCHECK.
-  bool CheckCostRange() const;
 
   // Checks the relabel precondition (to be used in a DCHECK):
   // - The node must be active, or have a 0 excess (relaxation for the Push
@@ -457,20 +518,22 @@ class GenericMinCostFlow : public MinCostFlowBase {
 
   // Returns context concatenated with information about a given arc
   // in a human-friendly way.
-  std::string DebugString(const std::string& context, ArcIndex arc) const;
+  std::string DebugString(absl::string_view context, ArcIndex arc) const;
 
   // Resets the first_admissible_arc_ array to the first incident arc of each
   // node.
   void ResetFirstAdmissibleArcs();
 
   // Scales the costs, by multiplying them by (graph_->num_nodes() + 1).
-  void ScaleCosts();
+  // Returns false on integer overflow.
+  bool ScaleCosts();
 
   // Unscales the costs, by dividing them by (graph_->num_nodes() + 1).
   void UnscaleCosts();
 
   // Optimizes the cost by dividing epsilon_ by alpha_ and calling Refine().
-  void Optimize();
+  // Returns false on integer overflow.
+  bool Optimize();
 
   // Saturates the admissible arcs, i.e., push as much flow as possible.
   void SaturateAdmissibleArcs();
@@ -489,29 +552,28 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // Implementation of a Scaling Minimum-Cost Flow Algorithm," Journal of
   // Algorithms, (1997) 22:1-29
   // http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.258
-  void UpdatePrices();
+  // Returns false on overflow or infeasibility.
+  bool UpdatePrices();
 
   // Performs an epsilon-optimization step by saturating admissible arcs
   // and discharging the active nodes.
-  void Refine();
+  // Returns false on overflow or infeasibility.
+  bool Refine();
 
   // Discharges an active node by saturating its admissible adjacent arcs,
   // if any, and by relabelling it when it becomes inactive.
-  void Discharge(NodeIndex node);
+  // Returns false on overflow or infeasibility.
+  bool Discharge(NodeIndex node);
 
-  // Part of the Push LookAhead heuristic. When we are about to push on the
-  // in_arc, we check that the head (i.e node here) can accept the flow and
-  // return true if this is the case:
-  // - Returns true if the node excess is < 0.
-  // - Returns true if node is an admissible arc at its current potential.
-  // - If the two conditions above are false, the node can be relabeled. We
-  //   do that and return true if the in_arc is still admissible.
-  bool LookAhead(ArcIndex in_arc, CostValue in_tail_potential, NodeIndex node);
+  // Part of the Push LookAhead heuristic.
+  // Returns true iff the node has admissible arc.
+  bool NodeHasAdmissibleArc(NodeIndex node);
 
   // Relabels node, i.e., decreases its potential while keeping the
   // epsilon-optimality of the pseudo flow. See CheckRelabelPrecondition() for
   // details on the preconditions.
-  void Relabel(NodeIndex node);
+  // Returns false on overflow or infeasibility.
+  bool Relabel(NodeIndex node);
 
   // Handy member functions to make the code more compact.
   NodeIndex Head(ArcIndex arc) const { return graph_->Head(arc); }
@@ -525,11 +587,11 @@ class GenericMinCostFlow : public MinCostFlowBase {
 
   // An array representing the supply (if > 0) or the demand (if < 0)
   // for each node in graph_.
-  QuantityArray node_excess_;
+  std::vector<FlowQuantity> node_excess_;
 
   // An array representing the potential (or price function) for
   // each node in graph_.
-  CostArray node_potential_;
+  std::vector<CostValue> node_potential_;
 
   // An array representing the residual_capacity for each arc in graph_.
   // Residual capacities enable one to represent the capacity and flow for all
@@ -553,7 +615,7 @@ class GenericMinCostFlow : public MinCostFlowBase {
   ZVector<ArcFlowType> residual_arc_capacity_;
 
   // An array representing the first admissible arc for each node in graph_.
-  ArcIndexArray first_admissible_arc_;
+  std::vector<ArcIndex> first_admissible_arc_;
 
   // A stack used for managing active nodes in the algorithm.
   // Note that the papers cited above recommend the use of a queue, but
@@ -561,50 +623,52 @@ class GenericMinCostFlow : public MinCostFlowBase {
   std::stack<NodeIndex> active_nodes_;
 
   // epsilon_ is the tolerance for optimality.
-  CostValue epsilon_;
+  CostValue epsilon_ = 0;
 
   // alpha_ is the factor by which epsilon_ is divided at each iteration of
   // Refine().
   const int64_t alpha_;
 
   // cost_scaling_factor_ is the scaling factor for cost.
-  CostValue cost_scaling_factor_;
+  CostValue cost_scaling_factor_ = 1;
+
+  // Our node potentials should be >= this at all time.
+  // The first time a potential cross this, BAD_COST_RANGE status is returned.
+  CostValue overflow_threshold_;
 
   // An array representing the scaled unit cost for each arc in graph_.
   ZVector<ArcScaledCostType> scaled_arc_unit_cost_;
 
-  // The total cost of the flow.
-  CostValue total_flow_cost_;
-
   // The status of the problem.
-  Status status_;
+  Status status_ = NOT_SOLVED;
 
   // An array containing the initial excesses (i.e. the supplies) for each
   // node. This is used to create the max-flow-based feasibility checker.
-  QuantityArray initial_node_excess_;
+  std::vector<FlowQuantity> initial_node_excess_;
 
   // An array containing the best acceptable excesses for each of the
   // nodes. These excesses are imposed by the result of the max-flow-based
   // feasibility checker for the nodes with an initial supply != 0. For the
   // other nodes, the excess is simply 0.
-  QuantityArray feasible_node_excess_;
+  std::vector<FlowQuantity> feasible_node_excess_;
 
   // Statistics about this class.
   StatsGroup stats_;
 
   // Number of Relabel() since last UpdatePrices().
-  int num_relabels_since_last_price_update_;
+  int num_relabels_since_last_price_update_ = 0;
 
   // A Boolean which is true when feasibility has been checked.
-  bool feasibility_checked_;
+  bool feasibility_checked_ = false;
 
   // Whether to use the UpdatePrices() heuristic.
-  bool use_price_update_;
+  bool use_price_update_ = false;
 
   // Whether to check the problem feasibility with a max-flow.
-  bool check_feasibility_;
+  bool check_feasibility_ = false;
 
-  DISALLOW_COPY_AND_ASSIGN(GenericMinCostFlow);
+  // Whether to scale prices, see SimpleMinCostFlow::SetPriceScaling().
+  bool scale_prices_ = true;
 };
 
 #if !SWIG

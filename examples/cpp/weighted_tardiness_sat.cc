@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,30 +11,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <math.h>
-
+#include <algorithm>
 #include <cstdint>
 #include <numeric>
 #include <string>
 #include <vector>
 
 #include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/strings/match.h"
 #include "absl/strings/numbers.h"
-#include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
-#include "google/protobuf/text_format.h"
-#include "ortools/base/commandlineflags.h"
-#include "ortools/base/filelineiter.h"
+#include "absl/types/span.h"
+#include "ortools/base/init_google.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/timer.h"
 #include "ortools/sat/cp_model.h"
 #include "ortools/sat/model.h"
+#include "ortools/util/filelineiter.h"
 
-ABSL_FLAG(std::string, input, "examples/data/weighted_tardiness/wt40.txt",
-          "wt data file name.");
+ABSL_FLAG(std::string, input, "examples/cpp/wt40.txt", "wt data file name.");
 ABSL_FLAG(int, size, 40, "Size of the problem in the wt file.");
 ABSL_FLAG(int, n, 28, "1-based instance number in the wt file.");
 ABSL_FLAG(std::string, params, "", "Sat parameters in text proto format.");
@@ -44,9 +37,9 @@ namespace operations_research {
 namespace sat {
 
 // Solve a single machine problem with weighted tardiness cost.
-void Solve(const std::vector<int64_t>& durations,
-           const std::vector<int64_t>& due_dates,
-           const std::vector<int64_t>& weights) {
+void Solve(absl::Span<const int64_t> durations,
+           absl::Span<const int64_t> due_dates,
+           absl::Span<const int64_t> weights) {
   const int num_tasks = durations.size();
   CHECK_EQ(due_dates.size(), num_tasks);
   CHECK_EQ(weights.size(), num_tasks);
@@ -171,7 +164,8 @@ void Solve(const std::vector<int64_t>& durations,
   Model model;
   model.Add(NewSatParameters(absl::GetFlag(FLAGS_params)));
   model.GetOrCreate<SatParameters>()->set_log_search_progress(true);
-  model.Add(NewFeasibleSolutionObserver([&](const CpSolverResponse& r) {
+  model.Add(NewFeasibleSolutionObserver([&, due_dates, durations,
+                                         weights](const CpSolverResponse& r) {
     // Note that we compute the "real" cost here and do not use the tardiness
     // variables. This is because in the core based approach, the tardiness
     // variable might be fixed before the end date, and we just have a >=
@@ -252,9 +246,8 @@ void ParseAndSolve() {
 }  // namespace operations_research
 
 int main(int argc, char** argv) {
-  absl::SetFlag(&FLAGS_logtostderr, true);
-  google::InitGoogleLogging(argv[0]);
-  absl::ParseCommandLine(argc, argv);
+  absl::SetFlag(&FLAGS_stderrthreshold, 0);
+  InitGoogle(argv[0], &argc, &argv, true);
   if (absl::GetFlag(FLAGS_input).empty()) {
     LOG(FATAL) << "Please supply a data file with --input=";
   }

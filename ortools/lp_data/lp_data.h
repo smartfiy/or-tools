@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,6 +25,7 @@
 #define OR_TOOLS_LP_DATA_LP_DATA_H_
 
 #include <algorithm>  // for max
+#include <cmath>
 #include <cstdint>
 #include <map>
 #include <string>  // for string
@@ -32,14 +33,14 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/strings/string_view.h"
 #include "ortools/base/hash.h"
-#include "ortools/base/int_type.h"
 #include "ortools/base/logging.h"  // for CHECK*
-#include "ortools/base/macros.h"   // for DISALLOW_COPY_AND_ASSIGN, NULL
 #include "ortools/glop/parameters.pb.h"
 #include "ortools/lp_data/lp_types.h"
 #include "ortools/lp_data/sparse.h"
 #include "ortools/util/fp_utils.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace glop {
@@ -67,11 +68,15 @@ class LinearProgram {
 
   LinearProgram();
 
+  // This type is neither copyable nor movable.
+  LinearProgram(const LinearProgram&) = delete;
+  LinearProgram& operator=(const LinearProgram&) = delete;
+
   // Clears, i.e. reset the object to its initial value.
   void Clear();
 
   // Name setter and getter.
-  void SetName(const std::string& name) { name_ = name; }
+  void SetName(absl::string_view name) { name_ = name; }
   const std::string& name() const { return name_; }
 
   // Creates a new variable and returns its index.
@@ -234,7 +239,7 @@ class LinearProgram {
   }
 
   // Returns a row vector of VariableType representing types of variables.
-  const StrictITIVector<ColIndex, VariableType> variable_types() const {
+  StrictITIVector<ColIndex, VariableType> variable_types() const {
     return variable_types_;
   }
 
@@ -509,7 +514,10 @@ class LinearProgram {
   // - returns false if some coefficient other than the bounds are +/- infinity.
   // Note that these conditions are also guarded by DCHECK on each of the
   // SetXXX() function above.
-  bool IsValid() const;
+  //
+  // This also returns false if any finite value has a magnitude larger than
+  // the given threshold.
+  bool IsValid(Fractional max_valid_magnitude = kInfinity) const;
 
   // Updates the bounds of the variables to the intersection of their original
   // bounds and the bounds specified by variable_lower_bounds and
@@ -561,11 +569,11 @@ class LinearProgram {
 
   // A helper function to format problem statistics. Used by GetProblemStats()
   // and GetPrettyProblemStats().
-  std::string ProblemStatFormatter(const absl::string_view format) const;
+  std::string ProblemStatFormatter(absl::string_view format) const;
 
   // A helper function to format non-zero statistics. Used by GetNonZeroStats()
   // and GetPrettyNonZeroStats().
-  std::string NonZeroStatFormatter(const absl::string_view format) const;
+  std::string NonZeroStatFormatter(absl::string_view format) const;
 
   // Resizes all row vectors to include index 'row'.
   void ResizeRowsIfNeeded(RowIndex row);
@@ -646,8 +654,6 @@ class LinearProgram {
 
   friend void Scale(LinearProgram* lp, SparseMatrixScaler* scaler,
                     GlopParameters::ScalingAlgorithm scaling_method);
-
-  DISALLOW_COPY_AND_ASSIGN(LinearProgram);
 };
 
 // --------------------------------------------------------

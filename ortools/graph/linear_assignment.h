@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,7 +28,6 @@
 // factor could be shaved off the running time bound using the technique
 // described in http://dx.doi.org/10.1137/S0895480194281185
 // (see also http://theory.stanford.edu/~robert/papers/glob_upd.ps).
-//
 //
 // Example usage:
 //
@@ -205,11 +204,10 @@
 #include <utility>
 #include <vector>
 
+#include "absl/flags/declare.h"
 #include "absl/strings/str_format.h"
-#include "ortools/base/commandlineflags.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
+#include "ortools/base/types.h"
 #include "ortools/graph/ebert_graph.h"
 #include "ortools/util/permutation.h"
 #include "ortools/util/zvector.h"
@@ -239,6 +237,10 @@ class LinearSumAssignment {
   // with ForwardStarStaticGraph. In this case, the graph is passed to
   // us later via the SetGraph() method, below.
   LinearSumAssignment(NodeIndex num_left_nodes, ArcIndex num_arcs);
+
+  // This type is neither copyable nor movable.
+  LinearSumAssignment(const LinearSumAssignment&) = delete;
+  LinearSumAssignment& operator=(const LinearSumAssignment&) = delete;
 
   ~LinearSumAssignment() {}
 
@@ -950,8 +952,6 @@ class LinearSumAssignment {
   // Statistics giving the numbers of various operations the algorithm
   // has performed in the current iteration.
   Stats iteration_stats_;
-
-  DISALLOW_COPY_AND_ASSIGN(LinearSumAssignment);
 };
 
 // Implementation of out-of-line LinearSumAssignment template member
@@ -1027,6 +1027,10 @@ class CostValueCycleHandler : public PermutationCycleHandler<ArcIndexType> {
   explicit CostValueCycleHandler(std::vector<CostValue>* cost)
       : temp_(0), cost_(cost) {}
 
+  // This type is neither copyable nor movable.
+  CostValueCycleHandler(const CostValueCycleHandler&) = delete;
+  CostValueCycleHandler& operator=(const CostValueCycleHandler&) = delete;
+
   void SetTempFromIndex(ArcIndexType source) override {
     temp_ = (*cost_)[source];
   }
@@ -1045,8 +1049,6 @@ class CostValueCycleHandler : public PermutationCycleHandler<ArcIndexType> {
  private:
   CostValue temp_;
   std::vector<CostValue>* const cost_;
-
-  DISALLOW_COPY_AND_ASSIGN(CostValueCycleHandler);
 };
 
 // Logically this class should be defined inside OptimizeGraphLayout,

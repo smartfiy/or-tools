@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 namespace operations_research {
 namespace math_opt {
 
-absl::Status CheckScalarNoNanNoInf(const double d);
+absl::Status CheckScalarNoNanNoInf(double d);
 
 struct DoubleOptions {
   bool allow_positive_infinity = true;
@@ -28,7 +28,7 @@ struct DoubleOptions {
 };
 
 // Checks value is not NaN and satisfies the additional conditions in options.
-absl::Status CheckScalar(const double value, const DoubleOptions& options);
+absl::Status CheckScalar(double value, const DoubleOptions& options);
 
 }  // namespace math_opt
 }  // namespace operations_research

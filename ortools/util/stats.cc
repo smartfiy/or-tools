@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,10 +13,16 @@
 
 #include "ortools/util/stats.h"
 
+#include <algorithm>
 #include <cmath>
+#include <string>
+#include <vector>
 
+#include "absl/log/check.h"
 #include "absl/strings/str_format.h"
+#include "ortools/base/logging.h"
 #include "ortools/base/stl_util.h"
+#include "ortools/base/types.h"
 #include "ortools/port/sysinfo.h"
 #include "ortools/port/utf8.h"
 
@@ -39,7 +45,7 @@ std::string MemoryUsage() {
   }
 }
 
-Stat::Stat(const std::string& name, StatsGroup* group) : name_(name) {
+Stat::Stat(absl::string_view name, StatsGroup* group) : name_(name) {
   group->Register(this);
 }
 
@@ -120,7 +126,7 @@ TimeDistribution* StatsGroup::LookupOrCreateTimeDistribution(std::string name) {
   return ref;
 }
 
-DistributionStat::DistributionStat(const std::string& name)
+DistributionStat::DistributionStat(absl::string_view name)
     : Stat(name),
       sum_(0.0),
       average_(0.0),
@@ -129,7 +135,7 @@ DistributionStat::DistributionStat(const std::string& name)
       max_(0.0),
       num_(0) {}
 
-DistributionStat::DistributionStat(const std::string& name, StatsGroup* group)
+DistributionStat::DistributionStat(absl::string_view name, StatsGroup* group)
     : Stat(name, group),
       sum_(0.0),
       average_(0.0),
@@ -234,20 +240,5 @@ std::string IntegerDistribution::ValueAsString() const {
   return absl::StrFormat("%8u [%8.f, %8.f] %8.2f %8.2f %8.f\n", num_, min_,
                          max_, Average(), StdDeviation(), sum_);
 }
-
-#ifdef HAS_PERF_SUBSYSTEM
-EnabledScopedInstructionCounter::EnabledScopedInstructionCounter(
-    const std::string& name, TimeLimit* time_limit)
-    : time_limit_(time_limit), name_(name) {
-  starting_count_ =
-      time_limit_ != nullptr ? time_limit_->ReadInstructionCounter() : 0;
-}
-
-EnabledScopedInstructionCounter::~EnabledScopedInstructionCounter() {
-  ending_count_ =
-      time_limit_ != nullptr ? time_limit_->ReadInstructionCounter() : 0;
-  LOG(INFO) << name_ << ", Instructions: " << ending_count_ - starting_count_;
-}
-#endif  // HAS_PERF_SUBSYSTEM
 
 }  // namespace operations_research

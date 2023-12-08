@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,17 +13,22 @@
 
 // This is the java SWIG wrapper for ../sorted_interval_list.h.  See that file.
 
-%include "ortools/base/base.i"
-
 %include "ortools/util/java/vector.i"
 
 %{
+#include <cstdint>
 #include <vector>
-#include "ortools/base/integral_types.h"
+
 #include "ortools/util/sorted_interval_list.h"
 %}
 
 %module operations_research;
+
+%extend operations_research::SortedDisjointIntervalList {
+  void insertInterval(int64_t start, int64_t end) {
+    $self->InsertInterval(start, end);
+  }
+}
 
 %ignoreall
 
@@ -34,7 +39,6 @@
 %ignore operations_research::SortedDisjointIntervalList::SortedDisjointIntervalList(const std::vector<ClosedInterval>&);
 %unignore operations_research::SortedDisjointIntervalList::~SortedDisjointIntervalList;
 
-%rename (insertInterval) operations_research::SortedDisjointIntervalList::InsertInterval;
 %rename (insertIntervals) operations_research::SortedDisjointIntervalList::InsertIntervals;
 %rename (numIntervals) operations_research::SortedDisjointIntervalList::NumIntervals;
 %rename (buildComplementOnInterval) operations_research::SortedDisjointIntervalList::BuildComplementOnInterval;
@@ -43,7 +47,7 @@
 // Make the SWIG-generated constructor public.
 // This is necessary as it will be called from the sat package.
 SWIG_JAVABODY_PROXY(/*PTRCTOR_VISIBILITY=*/public,
-                    /*CPTR_VISIBILITY=*/protected,
+                    /*CPTR_VISIBILITY=*/public,
                     /*TYPE...=*/SWIGTYPE)
 
 // Wrap the domain class here.

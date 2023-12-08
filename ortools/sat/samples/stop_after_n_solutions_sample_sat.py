@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2010-2021 Google LLC
+# Copyright 2010-2022 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # [START program]
 """Code sample that solves a model and displays a small number of solutions."""
 
@@ -29,10 +30,10 @@ class VarArraySolutionPrinterWithLimit(cp_model.CpSolverSolutionCallback):
     def on_solution_callback(self):
         self.__solution_count += 1
         for v in self.__variables:
-            print('%s=%i' % (v, self.Value(v)), end=' ')
+            print(f"{v}={self.Value(v)}", end=" ")
         print()
         if self.__solution_count >= self.__solution_limit:
-            print('Stop search after %i solutions' % self.__solution_limit)
+            print(f"Stop search after {self.__solution_limit} solutions")
             self.StopSearch()
 
     def solution_count(self):
@@ -45,9 +46,9 @@ def StopAfterNSolutionsSampleSat():
     model = cp_model.CpModel()
     # Creates the variables.
     num_vals = 3
-    x = model.NewIntVar(0, num_vals - 1, 'x')
-    y = model.NewIntVar(0, num_vals - 1, 'y')
-    z = model.NewIntVar(0, num_vals - 1, 'z')
+    x = model.NewIntVar(0, num_vals - 1, "x")
+    y = model.NewIntVar(0, num_vals - 1, "y")
+    z = model.NewIntVar(0, num_vals - 1, "z")
 
     # Create a solver and solve.
     solver = cp_model.CpSolver()
@@ -56,8 +57,8 @@ def StopAfterNSolutionsSampleSat():
     solver.parameters.enumerate_all_solutions = True
     # Solve.
     status = solver.Solve(model, solution_printer)
-    print('Status = %s' % solver.StatusName(status))
-    print('Number of solutions found: %i' % solution_printer.solution_count())
+    print(f"Status = {solver.StatusName(status)}")
+    print(f"Number of solutions found: {solution_printer.solution_count()}")
     assert solution_printer.solution_count() == 5
 
 

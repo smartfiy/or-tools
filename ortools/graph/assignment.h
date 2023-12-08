@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -59,6 +59,13 @@ class SimpleLinearSumAssignment {
   // The constructor takes no size.
   // New node indices will be created lazily by AddArcWithCost().
   SimpleLinearSumAssignment();
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  SimpleLinearSumAssignment(const SimpleLinearSumAssignment&) = delete;
+  SimpleLinearSumAssignment& operator=(const SimpleLinearSumAssignment&) =
+      delete;
+#endif
 
   // Adds an arc from a left node to a right node with a given cost.
   // * Node indices must be non-negative (>= 0). For a perfect
@@ -122,7 +129,6 @@ class SimpleLinearSumAssignment {
   std::vector<CostValue> arc_cost_;
   std::vector<ArcIndex> assignment_arcs_;
   CostValue optimal_cost_;
-  DISALLOW_COPY_AND_ASSIGN(SimpleLinearSumAssignment);
 };
 
 }  // namespace operations_research

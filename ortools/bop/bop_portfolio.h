@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,7 +15,11 @@
 #define OR_TOOLS_BOP_BOP_PORTFOLIO_H_
 
 #include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "ortools/base/strong_vector.h"
 #include "ortools/bop/bop_base.h"
 #include "ortools/bop/bop_lns.h"
@@ -27,12 +31,13 @@
 #include "ortools/sat/sat_solver.h"
 #include "ortools/util/random_engine.h"
 #include "ortools/util/stats.h"
+#include "ortools/util/strong_integers.h"
 #include "ortools/util/time_limit.h"
 
 namespace operations_research {
 namespace bop {
 
-DEFINE_INT_TYPE(OptimizerIndex, int);
+DEFINE_STRONG_INDEX_TYPE(OptimizerIndex);
 const OptimizerIndex kInvalidOptimizerIndex(-1);
 
 // Forward declaration.
@@ -66,7 +71,7 @@ class PortfolioOptimizer : public BopOptimizerBase {
   PortfolioOptimizer(const ProblemState& problem_state,
                      const BopParameters& parameters,
                      const BopSolverOptimizerSet& optimizer_set,
-                     const std::string& name);
+                     absl::string_view name);
   ~PortfolioOptimizer() override;
 
   bool ShouldBeRun(const ProblemState& problem_state) const override {
@@ -170,7 +175,7 @@ class OptimizerSelector {
   void UpdateOrder();
 
   struct RunInfo {
-    RunInfo(OptimizerIndex i, const std::string& n)
+    RunInfo(OptimizerIndex i, absl::string_view n)
         : optimizer_index(i),
           name(n),
           num_successes(0),

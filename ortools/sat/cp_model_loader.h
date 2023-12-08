@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,11 +19,9 @@
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
-#include "ortools/base/int_type.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/map_util.h"
 #include "ortools/base/strong_vector.h"
+#include "ortools/base/types.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_mapping.h"
 #include "ortools/sat/cp_model_utils.h"
@@ -32,6 +30,7 @@
 #include "ortools/sat/linear_relaxation.h"
 #include "ortools/sat/model.h"
 #include "ortools/sat/sat_base.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
@@ -106,8 +105,23 @@ void LoadNoOverlapConstraint(const ConstraintProto& ct, Model* m);
 void LoadNoOverlap2dConstraint(const ConstraintProto& ct, Model* m);
 void LoadCumulativeConstraint(const ConstraintProto& ct, Model* m);
 void LoadCircuitConstraint(const ConstraintProto& ct, Model* m);
+void LoadReservoirConstraint(const ConstraintProto& ct, Model* m);
 void LoadRoutesConstraint(const ConstraintProto& ct, Model* m);
 void LoadCircuitCoveringConstraint(const ConstraintProto& ct, Model* m);
+
+// Part of LoadLinearConstraint() that we reuse to load the objective.
+//
+// We split large constraints into a square root number of parts.
+// This is to avoid a bad complexity while propagating them since our
+// algorithm is not in O(num_changes).
+//
+// TODO(user): Alternatively, we could use a O(num_changes) propagation (a
+// bit tricky to implement), or a decomposition into a tree with more than
+// one level. Both requires experimentations.
+void SplitAndLoadIntermediateConstraints(bool lb_required, bool ub_required,
+                                         std::vector<IntegerVariable>* vars,
+                                         std::vector<int64_t>* coeffs,
+                                         Model* m);
 
 }  // namespace sat
 }  // namespace operations_research

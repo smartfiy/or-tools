@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -34,7 +34,7 @@
 // solver.Init(profits, weights, capacity);
 // bool is_solution_optimal = false;
 // std::unique_ptr<TimeLimit> time_limit =
-//     absl::make_unique<TimeLimit>(time_limit_seconds); // Set the time limit.
+//     std::make_unique<TimeLimit>(time_limit_seconds); // Set the time limit.
 // const double profit = solver.Solve(time_limit.get(), &is_solution_optimal);
 // const int number_of_items(profits.size());
 // for (int item_id(0); item_id < number_of_items; ++item_id) {
@@ -57,8 +57,8 @@
 
 namespace operations_research {
 
-// ----- KnapsackAssignementForCuts -----
-// KnapsackAssignementForCuts is a small struct used to pair an item with
+// ----- KnapsackAssignmentForCuts -----
+// KnapsackAssignmentForCuts is a small struct used to pair an item with
 // its assignment. It is mainly used for search nodes and updates.
 struct KnapsackAssignmentForCuts {
   KnapsackAssignmentForCuts(int item_id, bool is_in)
@@ -96,7 +96,7 @@ using KnapsackItemForCutsPtr = std::unique_ptr<KnapsackItemForCuts>;
 // KnapsackSearchNodeForCuts is a class used to describe a decision in the
 // decision search tree.
 // The node is defined by a pointer to the parent search node and an
-// assignment (see KnapsackAssignementForCuts).
+// assignment (see KnapsackAssignmentForCuts).
 // As the current state is not explicitly stored in a search node, one should
 // go through the search tree to incrementally build a partial solution from
 // a previous search node.
@@ -110,7 +110,7 @@ class KnapsackSearchNodeForCuts {
       delete;
 
   int depth() const { return depth_; }
-  const KnapsackSearchNodeForCuts* const parent() const { return parent_; }
+  const KnapsackSearchNodeForCuts* parent() const { return parent_; }
   const KnapsackAssignmentForCuts& assignment() const { return assignment_; }
 
   double current_profit() const { return current_profit_; }
@@ -296,7 +296,7 @@ class KnapsackPropagatorForCuts {
 // ----- KnapsackSolverForCuts -----
 // KnapsackSolverForCuts is the one-dimensional knapsack solver class.
 // In the current implementation, the next item to assign is given by the
-// master propagator. Using SetMasterPropagator allows changing the default
+// primary propagator. Using SetPrimaryPropagator allows changing the default
 // (propagator of the first dimension).
 class KnapsackSolverForCuts {
  public:
@@ -307,7 +307,7 @@ class KnapsackSolverForCuts {
 
   // Initializes the solver and enters the problem to be solved.
   void Init(const std::vector<double>& profits,
-            const std::vector<double>& weights, const double capacity);
+            const std::vector<double>& weights, double capacity);
   int GetNumberOfItems() const { return state_.GetNumberOfItems(); }
 
   // Gets the lower and the upper bound when the item is in or out of the

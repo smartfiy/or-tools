@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,8 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "absl/strings/str_cat.h"
 #include "ortools/init/init.h"
+
+#include "absl/strings/str_cat.h"
 
 namespace operations_research {
 void TestLogging() {
@@ -24,7 +25,6 @@ void TestLogging() {
 void TestFlags() {
   LOG(INFO) << "Test Flags";
   auto cpp_flags = CppFlags();
-  cpp_flags.logtostderr = true;
   cpp_flags.log_prefix = true;
   cpp_flags.cp_model_dump_prefix = "init";
   cpp_flags.cp_model_dump_models = true;

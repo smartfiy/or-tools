@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,41 +13,32 @@
 
 #include <atomic>
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "ortools/base/hash.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/linear_solver/linear_solver.h"
 #include "ortools/linear_solver/linear_solver.pb.h"
-#include "ortools/linear_solver/sat_proto_solver.h"
+#include "ortools/linear_solver/proto_solver/sat_proto_solver.h"
 #include "ortools/port/proto_utils.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_solver.h"
-#include "ortools/sat/lp_utils.h"
-#include "ortools/sat/model.h"
-#include "ortools/util/time_limit.h"
 
 namespace operations_research {
 
-#if defined(PROTOBUF_INTERNAL_IMPL)
-using google::protobuf::Message;
-#else
-using google::protobuf::Message;
-#endif
-
 class SatInterface : public MPSolverInterface {
  public:
-  explicit SatInterface(MPSolver* const solver);
+  explicit SatInterface(MPSolver* solver);
   ~SatInterface() override;
 
   // ----- Solve -----
   MPSolver::ResultStatus Solve(const MPSolverParameters& param) override;
-  absl::optional<MPSolutionResponse> DirectlySolveProto(
+  std::optional<MPSolutionResponse> DirectlySolveProto(
       const MPModelRequest& request, std::atomic<bool>* interrupt) override;
   bool InterruptSolve() override;
 
@@ -57,13 +48,12 @@ class SatInterface : public MPSolverInterface {
   void SetVariableBounds(int index, double lb, double ub) override;
   void SetVariableInteger(int index, bool integer) override;
   void SetConstraintBounds(int index, double lb, double ub) override;
-  void AddRowConstraint(MPConstraint* const ct) override;
-  void AddVariable(MPVariable* const var) override;
-  void SetCoefficient(MPConstraint* const constraint,
-                      const MPVariable* const variable, double new_value,
-                      double old_value) override;
-  void ClearConstraint(MPConstraint* const constraint) override;
-  void SetObjectiveCoefficient(const MPVariable* const variable,
+  void AddRowConstraint(MPConstraint* ct) override;
+  void AddVariable(MPVariable* var) override;
+  void SetCoefficient(MPConstraint* constraint, const MPVariable* variable,
+                      double new_value, double old_value) override;
+  void ClearConstraint(MPConstraint* constraint) override;
+  void SetObjectiveCoefficient(const MPVariable* variable,
                                double coefficient) override;
   void SetObjectiveOffset(double value) override;
   void ClearObjective() override;
@@ -164,7 +154,7 @@ MPSolver::ResultStatus SatInterface::Solve(const MPSolverParameters& param) {
   return result_status_;
 }
 
-absl::optional<MPSolutionResponse> SatInterface::DirectlySolveProto(
+std::optional<MPSolutionResponse> SatInterface::DirectlySolveProto(
     const MPModelRequest& request, std::atomic<bool>* interrupt) {
   absl::StatusOr<MPSolutionResponse> status_or =
       SatSolveProto(request, interrupt);
@@ -253,7 +243,7 @@ bool SatInterface::IsLP() const { return false; }
 bool SatInterface::IsMIP() const { return true; }
 
 std::string SatInterface::SolverVersion() const {
-  return "SAT Based MIP Solver";
+  return sat::CpSatSolverVersion();
 }
 
 void* SatInterface::underlying_solver() { return nullptr; }
@@ -265,7 +255,8 @@ void SatInterface::ExtractNewConstraints() { NonIncrementalChange(); }
 void SatInterface::ExtractObjective() { NonIncrementalChange(); }
 
 void SatInterface::SetParameters(const MPSolverParameters& param) {
-  parameters_.set_num_search_workers(num_threads_);
+  parameters_.Clear();
+  parameters_.set_num_workers(num_threads_);
   SetCommonParameters(param);
 }
 

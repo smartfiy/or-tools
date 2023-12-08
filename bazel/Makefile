@@ -1,3 +1,16 @@
+# Copyright 2010-2022 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 PROJECT := ortools
 BUILD_SYSTEM := bazel
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
@@ -5,8 +18,8 @@ SHA1 := $(shell git rev-parse --verify HEAD)
 
 # General commands
 .PHONY: help
-BOLD=\e[1m
-RESET=\e[0m
+BOLD:=\e[1m
+RESET:=\e[0m
 
 help:
 	@echo -e "${BOLD}SYNOPSIS${RESET}"
@@ -57,7 +70,7 @@ all: build
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 # Remove some rules from gmake that .SUFFIXES does not remove.
-SUFFIXES =
+SUFFIXES :=
 # Keep all intermediate files
 # ToDo: try to remove it later
 .SECONDARY:
@@ -70,17 +83,16 @@ DOCKER_BUILD_CMD := docker build --no-cache
 else
 DOCKER_BUILD_CMD := docker build
 endif
-
 DOCKER_RUN_CMD := docker run --rm --init --net=host
 
 # Currently supported distro
-DISTROS = alpine archlinux centos debian fedora opensuse ubuntu
+DISTROS := alpine archlinux centos debian fedora opensuse ubuntu
 
 # $* stem
 # $< first prerequist
 # $@ target name
 
-STAGES = env devel build test
+STAGES := env devel build test
 define make-stage-target =
 #$$(info STAGE: $1)
 .PHONY: $1
@@ -108,7 +120,7 @@ sh_targets_$1 = $(addprefix sh_, $(addsuffix _$1, $(DISTROS)))
 $$(sh_targets_$1): sh_%_$1: %_$1
 	${DOCKER_RUN_CMD} -it --name ${PROJECT}_${BUILD_SYSTEM}_$$*_$1 ${IMAGE}:$$*_$1
 
-#$$(info Create targets: $(addprefix clean_, $(addsuffix _$1, $(DISTROS))).)
+#$$(info Create targets: clean_$1 $(addprefix clean_, $(addsuffix _$1, $(DISTROS))).)
 clean_targets_$1 = $(addprefix clean_, $(addsuffix _$1, $(DISTROS)))
 .PHONY: clean_$1 $(clean_targets_$1)
 clean_$1: $$(clean_targets_$1)

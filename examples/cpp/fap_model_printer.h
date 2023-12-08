@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/btree_map.h"
 #include "absl/strings/str_format.h"
 #include "examples/cpp/fap_parser.h"
 
@@ -31,9 +32,9 @@ namespace operations_research {
 // Prints the instance of the Frequency Assignment Problem.
 class FapModelPrinter {
  public:
-  FapModelPrinter(const std::map<int, FapVariable>& variables,
+  FapModelPrinter(const absl::btree_map<int, FapVariable>& variables,
                   const std::vector<FapConstraint>& constraints,
-                  const std::string& objective, const std::vector<int>& values);
+                  absl::string_view objective, const std::vector<int>& values);
   ~FapModelPrinter();
 
   void PrintFapObjective();
@@ -42,16 +43,16 @@ class FapModelPrinter {
   void PrintFapValues();
 
  private:
-  const std::map<int, FapVariable> variables_;
+  const absl::btree_map<int, FapVariable> variables_;
   const std::vector<FapConstraint> constraints_;
   const std::string objective_;
   const std::vector<int> values_;
   DISALLOW_COPY_AND_ASSIGN(FapModelPrinter);
 };
 
-FapModelPrinter::FapModelPrinter(const std::map<int, FapVariable>& variables,
+FapModelPrinter::FapModelPrinter(const absl::btree_map<int, FapVariable>& variables,
                                  const std::vector<FapConstraint>& constraints,
-                                 const std::string& objective,
+                                 absl::string_view objective,
                                  const std::vector<int>& values)
     : variables_(variables),
       constraints_(constraints),

@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,7 @@
 // limitations under the License.
 
 // This .i file exposes the linear programming and integer programming
+// solver. See the C++/Python codelab:  (there isn't
 // a java codelab yet, as of July 2014)
 //
 // The java API is pretty much identical to the C++ API, with methods
@@ -80,16 +81,27 @@ PROTO2_RETURN(
     operations_research::MPSolutionResponse,
     com.google.ortools.linearsolver.MPSolutionResponse);
 
-
 %extend operations_research::MPSolver {
   /**
    * Loads a model and returns the error message, which will be empty iff the
-   * model is valid.
+   * model is valid. Clears all names (see also loadModelFromProtoKeepNames()).
    */
   std::string loadModelFromProto(
       const operations_research::MPModelProto& input_model) {
     std::string error_message;
     $self->LoadModelFromProto(input_model, &error_message);
+    return error_message;
+  }
+
+  /**
+   * Like loadModelFromProto(), but keeps the names and returns an error if
+   * there are duplicate names.
+   */
+  std::string loadModelFromProtoKeepNames(
+      const operations_research::MPModelProto& input_model) {
+    std::string error_message;
+    $self->LoadModelFromProto(input_model, &error_message,
+                              /*clear_names=*/false);
     return error_message;
   }
 
@@ -290,6 +302,7 @@ PROTO2_RETURN(
 %unignore operations_research::MPSolver::~MPSolver;
 %newobject operations_research::MPSolver::CreateSolver;
 %rename (createSolver) operations_research::MPSolver::CreateSolver;
+%rename (solverVersion) operations_research::MPSolver::SolverVersion;
 
 %unignore operations_research::MPConstraint;
 %unignore operations_research::MPVariable;
@@ -301,6 +314,7 @@ PROTO2_RETURN(
 %unignore operations_research::MPSolver::GLOP_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::CLP_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::GLPK_LINEAR_PROGRAMMING;
+%unignore operations_research::MPSolver::PDLP_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::SCIP_MIXED_INTEGER_PROGRAMMING;
 %unignore operations_research::MPSolver::CBC_MIXED_INTEGER_PROGRAMMING;
 %unignore operations_research::MPSolver::GLPK_MIXED_INTEGER_PROGRAMMING;
@@ -314,7 +328,6 @@ PROTO2_RETURN(
 %unignore operations_research::MPSolver::XPRESS_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::XPRESS_MIXED_INTEGER_PROGRAMMING;
 
-
 // Expose the MPSolver::ResultStatus enum.
 %unignore operations_research::MPSolver::ResultStatus;
 %unignore operations_research::MPSolver::OPTIMAL;
@@ -322,6 +335,7 @@ PROTO2_RETURN(
 %unignore operations_research::MPSolver::INFEASIBLE;  // no test
 %unignore operations_research::MPSolver::UNBOUNDED;  // no test
 %unignore operations_research::MPSolver::ABNORMAL;  // no test
+%unignore operations_research::MPSolver::MODEL_INVALID;  // no test
 %unignore operations_research::MPSolver::NOT_SOLVED;  // no test
 
 // Expose the MPSolver's basic API, with some non-trivial renames.

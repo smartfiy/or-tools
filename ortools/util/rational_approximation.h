@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 
 #include <utility>
 
-#include "ortools/base/integral_types.h"
+#include "ortools/base/types.h"
 
 namespace operations_research {
 
@@ -30,7 +30,7 @@ typedef std::pair<int64_t, int64_t> Fraction;
 // output fraction and the input "x" will not exceed "precision".
 // TODO(user): make a parameterized template with integer and floating-point
 // type parameters.
-Fraction RationalApproximation(const double x, const double precision);
+Fraction RationalApproximation(double x, double precision);
 
 }  // namespace operations_research
 #endif  // OR_TOOLS_UTIL_RATIONAL_APPROXIMATION_H_

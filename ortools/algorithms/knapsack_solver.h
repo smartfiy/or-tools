@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,17 +14,12 @@
 #ifndef OR_TOOLS_ALGORITHMS_KNAPSACK_SOLVER_H_
 #define OR_TOOLS_ALGORITHMS_KNAPSACK_SOLVER_H_
 
-#include <math.h>
-
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "absl/memory/memory.h"
-#include "ortools/base/basictypes.h"
-#include "ortools/base/integral_types.h"
-#include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
+#include "absl/strings/string_view.h"
 #include "ortools/util/time_limit.h"
 
 namespace operations_research {
@@ -76,12 +71,12 @@ class BaseKnapsackSolver;
                 ]
       capacities = [ 34, 4 ]
 
-      solver = pywrapknapsack_solver.KnapsackSolver(
-          pywrapknapsack_solver.KnapsackSolver
+      solver = knapsack_solver.KnapsackSolver(
+          knapsack_solver.SolverType
               .KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER,
           'Multi-dimensional solver')
-      solver.Init(profits, weights, capacities)
-      profit = solver.Solve()
+      solver.init(profits, weights, capacities)
+      profit = solver.solve()
   \endcode
 
   \b C++:
@@ -200,6 +195,13 @@ class KnapsackSolver {
 
   explicit KnapsackSolver(const std::string& solver_name);
   KnapsackSolver(SolverType solver_type, const std::string& solver_name);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  KnapsackSolver(const KnapsackSolver&) = delete;
+  KnapsackSolver& operator=(const KnapsackSolver&) = delete;
+#endif
+
   virtual ~KnapsackSolver();
 
   /**
@@ -234,7 +236,7 @@ class KnapsackSolver {
    */
   void set_time_limit(double time_limit_seconds) {
     time_limit_seconds_ = time_limit_seconds;
-    time_limit_ = absl::make_unique<TimeLimit>(time_limit_seconds_);
+    time_limit_ = std::make_unique<TimeLimit>(time_limit_seconds_);
   }
 
  private:
@@ -261,8 +263,6 @@ class KnapsackSolver {
   bool use_reduction_;
   double time_limit_seconds_;
   std::unique_ptr<TimeLimit> time_limit_;
-
-  DISALLOW_COPY_AND_ASSIGN(KnapsackSolver);
 };
 
 #if !defined(SWIG)
@@ -272,12 +272,12 @@ class KnapsackSolver {
 //
 // Constraints are enforced using KnapsackPropagator objects, in the current
 // code there is one propagator per dimension (KnapsackCapacityPropagator).
-// One of those propagators, named master propagator, is used to guide the
+// One of those propagators, named primary propagator, is used to guide the
 // search, i.e. decides which item should be assigned next.
 // Roughly speaking the search algorithm is:
 //  - While not optimal
 //    - Select next search node to expand
-//    - Select next item_i to assign (using master propagator)
+//    - Select next item_i to assign (using primary propagator)
 //    - Generate a new search node where item_i is in the knapsack
 //      - Check validity of this new partial solution (using propagators)
 //      - If valid, add this new search node to the search
@@ -289,8 +289,8 @@ class KnapsackSolver {
 // TODO(user): Add a new propagator class used as a guide when the problem has
 // several dimensions.
 
-// ----- KnapsackAssignement -----
-// KnapsackAssignement is a small struct used to pair an item with its
+// ----- KnapsackAssignment -----
+// KnapsackAssignment is a small struct used to pair an item with its
 // assignment. It is mainly used for search nodes and updates.
 struct KnapsackAssignment {
   KnapsackAssignment(int _item_id, bool _is_in)
@@ -332,16 +332,23 @@ typedef KnapsackItem* KnapsackItemPtr;
 // KnapsackSearchNode is a class used to describe a decision in the decision
 // search tree.
 // The node is defined by a pointer to the parent search node and an
-// assignment (see KnapsackAssignement).
+// assignment (see KnapsackAssignment).
 // As the current state is not explicitly stored in a search node, one should
 // go through the search tree to incrementally build a partial solution from
 // a previous search node.
 class KnapsackSearchNode {
  public:
-  KnapsackSearchNode(const KnapsackSearchNode* const parent,
+  KnapsackSearchNode(const KnapsackSearchNode* parent,
                      const KnapsackAssignment& assignment);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  KnapsackSearchNode(const KnapsackSearchNode&) = delete;
+  KnapsackSearchNode& operator=(const KnapsackSearchNode&) = delete;
+#endif
+
   int depth() const { return depth_; }
-  const KnapsackSearchNode* const parent() const { return parent_; }
+  const KnapsackSearchNode* parent() const { return parent_; }
   const KnapsackAssignment& assignment() const { return assignment_; }
 
   int64_t current_profit() const { return current_profit_; }
@@ -370,8 +377,6 @@ class KnapsackSearchNode {
   // 'next_item_id' field allows to avoid an O(number_of_items) scan to find
   // next item to select. This is done for free by the upper bound computation.
   int next_item_id_;
-
-  DISALLOW_COPY_AND_ASSIGN(KnapsackSearchNode);
 };
 
 // ----- KnapsackSearchPath -----
@@ -394,6 +399,13 @@ class KnapsackSearchPath {
  public:
   KnapsackSearchPath(const KnapsackSearchNode& from,
                      const KnapsackSearchNode& to);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  KnapsackSearchPath(const KnapsackSearchPath&) = delete;
+  KnapsackSearchPath& operator=(const KnapsackSearchPath&) = delete;
+#endif
+
   void Init();
   const KnapsackSearchNode& from() const { return from_; }
   const KnapsackSearchNode& via() const { return *via_; }
@@ -405,8 +417,6 @@ class KnapsackSearchPath {
   const KnapsackSearchNode& from_;
   const KnapsackSearchNode* via_;  // Computed in 'Init'.
   const KnapsackSearchNode& to_;
-
-  DISALLOW_COPY_AND_ASSIGN(KnapsackSearchPath);
 };
 
 // ----- KnapsackState -----
@@ -414,6 +424,12 @@ class KnapsackSearchPath {
 class KnapsackState {
  public:
   KnapsackState();
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  KnapsackState(const KnapsackState&) = delete;
+  KnapsackState& operator=(const KnapsackState&) = delete;
+#endif
 
   // Initializes vectors with number_of_items set to false (i.e. not bound yet).
   void Init(int number_of_items);
@@ -433,8 +449,6 @@ class KnapsackState {
   // the absence (false) of item_i in the current solution.
   std::vector<bool> is_bound_;
   std::vector<bool> is_in_;
-
-  DISALLOW_COPY_AND_ASSIGN(KnapsackState);
 };
 
 // ----- KnapsackPropagator -----
@@ -448,6 +462,13 @@ class KnapsackState {
 class KnapsackPropagator {
  public:
   explicit KnapsackPropagator(const KnapsackState& state);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  KnapsackPropagator(const KnapsackPropagator&) = delete;
+  KnapsackPropagator& operator=(const KnapsackPropagator&) = delete;
+#endif
+
   virtual ~KnapsackPropagator();
 
   // Initializes data structure and then calls InitPropagator.
@@ -507,8 +528,6 @@ class KnapsackPropagator {
   int64_t profit_lower_bound_;
   int64_t profit_upper_bound_;
   const KnapsackState& state_;
-
-  DISALLOW_COPY_AND_ASSIGN(KnapsackPropagator);
 };
 
 // ----- KnapsackCapacityPropagator -----
@@ -534,6 +553,14 @@ class KnapsackPropagator {
 class KnapsackCapacityPropagator : public KnapsackPropagator {
  public:
   KnapsackCapacityPropagator(const KnapsackState& state, int64_t capacity);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  KnapsackCapacityPropagator(const KnapsackCapacityPropagator&) = delete;
+  KnapsackCapacityPropagator& operator=(const KnapsackCapacityPropagator&) =
+      delete;
+#endif
+
   ~KnapsackCapacityPropagator() override;
   void ComputeProfitBounds() override;
   int GetNextItemId() const override { return break_item_id_; }
@@ -566,17 +593,15 @@ class KnapsackCapacityPropagator : public KnapsackPropagator {
   int break_item_id_;
   std::vector<KnapsackItemPtr> sorted_items_;
   int64_t profit_max_;
-
-  DISALLOW_COPY_AND_ASSIGN(KnapsackCapacityPropagator);
 };
 
 // ----- BaseKnapsackSolver -----
 // This is the base class for knapsack solvers.
 class BaseKnapsackSolver {
  public:
-  explicit BaseKnapsackSolver(const std::string& solver_name)
+  explicit BaseKnapsackSolver(absl::string_view solver_name)
       : solver_name_(solver_name) {}
-  virtual ~BaseKnapsackSolver() {}
+  virtual ~BaseKnapsackSolver() = default;
 
   // Initializes the solver and enters the problem to be solved.
   virtual void Init(const std::vector<int64_t>& profits,
@@ -605,7 +630,7 @@ class BaseKnapsackSolver {
 // ----- KnapsackGenericSolver -----
 // KnapsackGenericSolver is the multi-dimensional knapsack solver class.
 // In the current implementation, the next item to assign is given by the
-// master propagator. Using SetMasterPropagator allows changing the default
+// primary propagator. Using SetPrimaryPropagator allows changing the default
 // (propagator of the first dimension), and selecting another dimension when
 // more constrained.
 // TODO(user): In the case of a multi-dimensional knapsack problem, implement
@@ -614,6 +639,13 @@ class BaseKnapsackSolver {
 class KnapsackGenericSolver : public BaseKnapsackSolver {
  public:
   explicit KnapsackGenericSolver(const std::string& solver_name);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  KnapsackGenericSolver(const KnapsackGenericSolver&) = delete;
+  KnapsackGenericSolver& operator=(const KnapsackGenericSolver&) = delete;
+#endif
+
   ~KnapsackGenericSolver() override;
 
   // Initializes the solver and enters the problem to be solved.
@@ -626,10 +658,10 @@ class KnapsackGenericSolver : public BaseKnapsackSolver {
                                      int64_t* upper_bound) override;
 
   // Sets which propagator should be used to guide the search.
-  // 'master_propagator_id' should be in 0..p-1 with p the number of
+  // 'primary_propagator_id' should be in 0..p-1 with p the number of
   // propagators.
-  void set_master_propagator_id(int master_propagator_id) {
-    master_propagator_id_ = master_propagator_id;
+  void set_primary_propagator_id(int primary_propagator_id) {
+    primary_propagator_id_ = primary_propagator_id;
   }
 
   // Solves the problem and returns the profit of the optimal solution.
@@ -662,20 +694,18 @@ class KnapsackGenericSolver : public BaseKnapsackSolver {
   int64_t GetAggregatedProfitUpperBound() const;
   bool HasOnePropagator() const { return propagators_.size() == 1; }
   int64_t GetCurrentProfit() const {
-    return propagators_.at(master_propagator_id_)->current_profit();
+    return propagators_.at(primary_propagator_id_)->current_profit();
   }
   int64_t GetNextItemId() const {
-    return propagators_.at(master_propagator_id_)->GetNextItemId();
+    return propagators_.at(primary_propagator_id_)->GetNextItemId();
   }
 
   std::vector<KnapsackPropagator*> propagators_;
-  int master_propagator_id_;
+  int primary_propagator_id_;
   std::vector<KnapsackSearchNode*> search_nodes_;
   KnapsackState state_;
   int64_t best_solution_profit_;
   std::vector<bool> best_solution_;
-
-  DISALLOW_COPY_AND_ASSIGN(KnapsackGenericSolver);
 };
 #endif  // SWIG
 }  // namespace operations_research

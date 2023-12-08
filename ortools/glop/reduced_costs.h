@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,6 +13,9 @@
 
 #ifndef OR_TOOLS_GLOP_REDUCED_COSTS_H_
 #define OR_TOOLS_GLOP_REDUCED_COSTS_H_
+
+#include <string>
+#include <vector>
 
 #include "absl/random/bit_gen_ref.h"
 #include "ortools/glop/basis_representation.h"
@@ -54,6 +57,10 @@ class ReducedCosts {
                const VariablesInfo& variables_info,
                const BasisFactorization& basis_factorization,
                absl::BitGenRef random);
+
+  // This type is neither copyable nor movable.
+  ReducedCosts(const ReducedCosts&) = delete;
+  ReducedCosts& operator=(const ReducedCosts&) = delete;
 
   // If this is true, then the caller must re-factorize the basis before the
   // next call to GetReducedCosts().
@@ -160,12 +167,12 @@ class ReducedCosts {
   // for non-basic columns, this is the classic reduced cost. If it is false,
   // then this is defined only for the columns in
   // variables_info_.GetIsRelevantBitRow().
-  const DenseRow& GetReducedCosts();
+  DenseRow::ConstView GetReducedCosts();
 
   // Same as GetReducedCosts() but trigger a recomputation if not already done
   // to have access to the reduced costs on all positions, not just the relevant
   // one.
-  const DenseRow& GetFullReducedCosts();
+  DenseRow::ConstView GetFullReducedCosts();
 
   // Returns the dual values associated to the current basis.
   const DenseColumn& GetDualValues();
@@ -283,8 +290,6 @@ class ReducedCosts {
   std::vector<bool*> watchers_;
 
   double deterministic_time_ = 0.0;
-
-  DISALLOW_COPY_AND_ASSIGN(ReducedCosts);
 };
 
 // Maintains the list of dual infeasible positions and their associated prices.

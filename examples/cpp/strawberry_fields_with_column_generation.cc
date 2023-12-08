@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -55,14 +55,15 @@
 #include <cstring>  // strlen
 #include <map>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
 #include "absl/strings/str_format.h"
+#include "absl/types/span.h"
 #include "ortools/base/commandlineflags.h"
+#include "ortools/base/init_google.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/macros.h"
 #include "ortools/linear_solver/linear_solver.h"
@@ -246,7 +247,7 @@ class Box {
   static constexpr int kAreaCost = 1;
   static constexpr int kFixedCost = 10;
 
-  Box() {}
+  Box() = default;
   Box(int x_min, int x_max, int y_min, int y_max)
       : x_min_(x_min), x_max_(x_max), y_min_(y_min), y_max_(y_max) {
     CHECK_GE(x_max, x_min);
@@ -512,7 +513,7 @@ class CoveringProblem {
   }
 
   // Gets 2d array element, returning 0 if out-of-bounds.
-  double zero_access(const std::vector<double>& array, int x, int y) const {
+  double zero_access(absl::Span<const double> array, int x, int y) const {
     if (x < 0 || y < 0) {
       return 0;
     }
@@ -604,8 +605,8 @@ int main(int argc, char** argv) {
   usage += "  --colgen_max_iterations <n>  max columns to generate\n";
   usage += "  --colgen_complete            generate all columns at start\n";
 
-  google::InitGoogleLogging(usage.c_str());
-  absl::ParseCommandLine(argc, argv);
+  absl::SetFlag(&FLAGS_stderrthreshold, 0);
+  InitGoogle(usage.c_str(), &argc, &argv, true);
 
   operations_research::MPSolver::OptimizationProblemType solver_type;
   bool found = false;
@@ -615,12 +616,12 @@ int main(int argc, char** argv) {
     found = true;
   }
 #endif  // USE_CLP
-#if defined(USE_GLOP)
+  //#if defined(USE_GLOP)
   if (absl::GetFlag(FLAGS_colgen_solver) == "glop") {
     solver_type = operations_research::MPSolver::GLOP_LINEAR_PROGRAMMING;
     found = true;
   }
-#endif  // USE_GLOP
+  //#endif  // USE_GLOP
 #if defined(USE_XPRESS)
   if (absl::GetFlag(FLAGS_colgen_solver) == "xpress") {
     solver_type = operations_research::MPSolver::XPRESS_LINEAR_PROGRAMMING;
@@ -634,7 +635,6 @@ int main(int argc, char** argv) {
     found = true;
   }
 #endif
-
   if (!found) {
     LOG(ERROR) << "Unknown solver " << absl::GetFlag(FLAGS_colgen_solver);
     return 1;

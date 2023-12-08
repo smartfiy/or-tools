@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,11 +15,15 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
+#include <functional>
 #include <limits>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "ortools/base/map_util.h"
 #include "ortools/flatzinc/model.h"
 #include "ortools/util/logging.h"
 
@@ -335,38 +339,118 @@ bool CheckCumulative(const Constraint& ct,
   return true;
 }
 
-bool CheckDiffn(const Constraint& ct,
-                const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckCumulativeOpt(const Constraint& ct,
+                        const std::function<int64_t(Variable*)>& evaluator) {
+  // TODO: Improve complexity for large durations.
+  const int64_t capacity = Eval(ct.arguments[4], evaluator);
+  const int size = Size(ct.arguments[0]);
+  CHECK_EQ(size, Size(ct.arguments[1]));
+  CHECK_EQ(size, Size(ct.arguments[2]));
+  CHECK_EQ(size, Size(ct.arguments[3]));
+  absl::flat_hash_map<int64_t, int64_t> usage;
+  for (int i = 0; i < size; ++i) {
+    if (EvalAt(ct.arguments[0], i, evaluator) == 0) continue;
+    const int64_t start = EvalAt(ct.arguments[1], i, evaluator);
+    const int64_t duration = EvalAt(ct.arguments[2], i, evaluator);
+    const int64_t requirement = EvalAt(ct.arguments[3], i, evaluator);
+    for (int64_t t = start; t < start + duration; ++t) {
+      usage[t] += requirement;
+      if (usage[t] > capacity) {
+        return false;
+      }
+    }
+  }
   return true;
 }
 
-bool CheckDiffnK(const Constraint& ct,
-                 const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckDiffn(const Constraint& /*ct*/,
+                const std::function<int64_t(Variable*)>& /*evaluator*/) {
   return true;
 }
 
-bool CheckDiffnNonStrict(const Constraint& ct,
-                         const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckDiffnK(const Constraint& /*ct*/,
+                 const std::function<int64_t(Variable*)>& /*evaluator*/) {
   return true;
 }
 
-bool CheckDiffnNonStrictK(const Constraint& ct,
-                          const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckDiffnNonStrict(
+    const Constraint& /*ct*/,
+    const std::function<int64_t(Variable*)>& /*evaluator*/) {
+  return true;
+}
+
+bool CheckDiffnNonStrictK(
+    const Constraint& /*ct*/,
+    const std::function<int64_t(Variable*)>& /*evaluator*/) {
   return true;
 }
 
 bool CheckDisjunctive(const Constraint& ct,
                       const std::function<int64_t(Variable*)>& evaluator) {
+  const int size = Size(ct.arguments[0]);
+  CHECK_EQ(size, Size(ct.arguments[1]));
+  std::vector<std::pair<int64_t, int64_t>> start_durations_pairs;
+  start_durations_pairs.reserve(size);
+  for (int i = 0; i + 1 < size; ++i) {
+    const int64_t duration = EvalAt(ct.arguments[1], i, evaluator);
+    if (duration == 0) continue;
+    const int64_t start = EvalAt(ct.arguments[0], i, evaluator);
+    start_durations_pairs.push_back({start, duration});
+  }
+  std::sort(start_durations_pairs.begin(), start_durations_pairs.end());
+  int64_t previous_end = std::numeric_limits<int64_t>::min();
+  for (const auto& pair : start_durations_pairs) {
+    if (pair.first < previous_end) return false;
+    previous_end = pair.first + pair.second;
+  }
   return true;
 }
 
 bool CheckDisjunctiveStrict(
     const Constraint& ct, const std::function<int64_t(Variable*)>& evaluator) {
+  const int size = Size(ct.arguments[0]);
+  CHECK_EQ(size, Size(ct.arguments[1]));
+  std::vector<std::pair<int64_t, int64_t>> start_durations_pairs;
+  start_durations_pairs.reserve(size);
+  for (int i = 0; i + 1 < size; ++i) {
+    const int64_t start = EvalAt(ct.arguments[0], i, evaluator);
+    const int64_t duration = EvalAt(ct.arguments[1], i, evaluator);
+    start_durations_pairs.push_back({start, duration});
+  }
+  std::sort(start_durations_pairs.begin(), start_durations_pairs.end());
+  int64_t previous_end = std::numeric_limits<int64_t>::min();
+  for (const auto& pair : start_durations_pairs) {
+    if (pair.first < previous_end) return false;
+    previous_end = pair.first + pair.second;
+  }
   return true;
 }
 
-bool CheckFalseConstraint(const Constraint& ct,
-                          const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckDisjunctiveStrictOpt(
+    const Constraint& ct, const std::function<int64_t(Variable*)>& evaluator) {
+  const int size = Size(ct.arguments[0]);
+  CHECK_EQ(size, Size(ct.arguments[1]));
+  CHECK_EQ(size, Size(ct.arguments[2]));
+  std::vector<std::pair<int64_t, int64_t>> start_durations_pairs;
+  start_durations_pairs.reserve(size);
+  for (int i = 0; i + 1 < size; ++i) {
+    if (EvalAt(ct.arguments[0], i, evaluator) == 0) continue;
+    const int64_t start = EvalAt(ct.arguments[1], i, evaluator);
+    const int64_t duration = EvalAt(ct.arguments[2], i, evaluator);
+    start_durations_pairs.push_back({start, duration});
+  }
+  std::sort(start_durations_pairs.begin(), start_durations_pairs.end());
+  int64_t previous_end = std::numeric_limits<int64_t>::min();
+  for (const auto& pair : start_durations_pairs) {
+    if (pair.first < previous_end) return false;
+    previous_end = pair.first + pair.second;
+  }
+  return true;
+}
+
+bool CheckFalseConstraint(
+    const Constraint& /*ct*/,
+    const std::function<int64_t(Variable*)>& /*evaluator*/) {
   return false;
 }
 
@@ -959,13 +1043,13 @@ bool CheckNvalue(const Constraint& ct,
   return count == all_values.size();
 }
 
-bool CheckRegular(const Constraint& ct,
-                  const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckRegular(const Constraint& /*ct*/,
+                  const std::function<int64_t(Variable*)>& /*evaluator*/) {
   return true;
 }
 
-bool CheckRegularNfa(const Constraint& ct,
-                     const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckRegularNfa(const Constraint& /*ct*/,
+                     const std::function<int64_t(Variable*)>& /*evaluator*/) {
   return true;
 }
 
@@ -1062,8 +1146,8 @@ bool CheckSubCircuit(const Constraint& ct,
   return visited.size() == Size(ct.arguments[0]);
 }
 
-bool CheckTableInt(const Constraint& ct,
-                   const std::function<int64_t(Variable*)>& evaluator) {
+bool CheckTableInt(const Constraint& /*ct*/,
+                   const std::function<int64_t(Variable*)>& /*evaluator*/) {
   return true;
 }
 
@@ -1150,12 +1234,14 @@ CallMap CreateCallMap() {
   m["var_cumulative"] = CheckCumulative;
   m["variable_cumulative"] = CheckCumulative;
   m["fixed_cumulative"] = CheckCumulative;
+  m["ortools_cumulative_opt"] = CheckCumulativeOpt;
   m["fzn_diffn"] = CheckDiffn;
   m["diffn_k_with_sizes"] = CheckDiffnK;
   m["fzn_diffn_nonstrict"] = CheckDiffnNonStrict;
   m["diffn_nonstrict_k_with_sizes"] = CheckDiffnNonStrictK;
-  m["disjunctive"] = CheckDisjunctive;
-  m["disjunctive_strict"] = CheckDisjunctiveStrict;
+  m["fzn_disjunctive"] = CheckDisjunctive;
+  m["fzn_disjunctive_strict"] = CheckDisjunctiveStrict;
+  m["ortools_disjunctive_strict_opt"] = CheckDisjunctiveStrictOpt;
   m["false_constraint"] = CheckFalseConstraint;
   m["global_cardinality"] = CheckGlobalCardinality;
   m["global_cardinality_closed"] = CheckGlobalCardinalityClosed;
@@ -1240,7 +1326,7 @@ bool CheckSolution(const Model& model,
   const CallMap call_map = CreateCallMap();
   for (Constraint* ct : model.constraints()) {
     if (!ct->active) continue;
-    const auto& checker = gtl::FindOrDie(call_map, ct->type);
+    const auto& checker = call_map.at(ct->type);
     if (!checker(*ct, evaluator)) {
       SOLVER_LOG(logger, "Failing constraint ", ct->DebugString());
       ok = false;

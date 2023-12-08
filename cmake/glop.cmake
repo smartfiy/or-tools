@@ -1,3 +1,16 @@
+# Copyright 2010-2022 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 if(NOT BUILD_GLOP)
   return()
 endif()
@@ -42,6 +55,12 @@ foreach(PROTO_FILE IN LISTS proto_files)
   list(APPEND PROTO_SRCS ${PROTO_SRC})
 endforeach()
 
+list(APPEND GLOP_COMPILE_DEFINITIONS
+  "-DOR_TOOLS_MAJOR=${PROJECT_VERSION_MAJOR}"
+  "-DOR_TOOLS_MINOR=${PROJECT_VERSION_MINOR}"
+  "-DOR_TOOLS_PATCH=${PROJECT_VERSION_PATCH}"
+)
+
 add_library(glop_proto OBJECT ${PROTO_SRCS} ${PROTO_HDRS})
 set_target_properties(glop_proto PROPERTIES
   POSITION_INDEPENDENT_CODE ON
@@ -60,20 +79,23 @@ target_link_libraries(glop_proto PRIVATE protobuf::libprotobuf)
 # Main Target
 add_library(glop)
 target_sources(glop PRIVATE
+  ortools/base/accurate_sum.h
+  ortools/base/basictypes.h
   ortools/base/commandlineflags.h
   ortools/base/file.cc
   ortools/base/file.h
-  ortools/base/integral_types.h
-  ortools/base/log_severity.h
-  ortools/base/logging.cc
+  ortools/base/gzipstring.h
+  ortools/base/hash.h
+  ortools/base/int_type.h
   ortools/base/logging.h
-  ortools/base/logging_utilities.cc
-  ortools/base/logging_utilities.h
   ortools/base/macros.h
-  ortools/base/raw_logging.cc
-  ortools/base/raw_logging.h
   ortools/base/sysinfo.cc
   ortools/base/sysinfo.h
+  ortools/base/timer.h
+  ortools/base/types.h
+  ortools/base/version.cc
+  ortools/base/version.h
+  ortools/base/vlog.h
   ortools/base/vlog_is_on.cc
   ortools/base/vlog_is_on.h
   ortools/glop/basis_representation.cc
@@ -137,6 +159,7 @@ target_sources(glop PRIVATE
   ortools/util/rational_approximation.h
   ortools/util/stats.cc
   ortools/util/stats.h
+  ortools/util/strong_integers.h
   ortools/util/time_limit.cc
   ortools/util/time_limit.h
   )
@@ -227,9 +250,15 @@ target_sources(glop PRIVATE $<TARGET_OBJECTS:glop_proto>)
 add_dependencies(glop glop_proto)
 
 target_link_libraries(glop PUBLIC
+  ZLIB::ZLIB
   absl::memory
   absl::hash
   absl::flags
+  absl::log
+  absl::log_globals
+  absl::log_initialize
+  absl::check
+  absl::die_if_null
   absl::status
   absl::time
   absl::strings
@@ -277,19 +306,19 @@ install(FILES
   ortools/base/basictypes.h
   ortools/base/commandlineflags.h
   ortools/base/file.h
+  ortools/base/gzipstring.h
   ortools/base/hash.h
   ortools/base/int_type.h
-  ortools/base/strong_vector.h
-  ortools/base/integral_types.h
-  ortools/base/log_severity.h
   ortools/base/logging.h
-  ortools/base/logging_export.h
-  ortools/base/logging_utilities.h
   ortools/base/macros.h
-  ortools/base/raw_logging.h
   ortools/base/recordio.h
+  ortools/base/strong_int.h
+  ortools/base/strong_vector.h
   ortools/base/sysinfo.h
   ortools/base/timer.h
+  ortools/base/types.h
+  ortools/base/version.h
+  ortools/base/vlog.h
   ortools/base/vlog_is_on.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ortools/base
   COMPONENT Devel)
@@ -327,6 +356,7 @@ install(FILES
   ortools/util/return_macros.h
   ortools/util/running_stat.h
   ortools/util/stats.h
+  ortools/util/strong_integers.h
   ortools/util/time_limit.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ortools/util
   COMPONENT Devel)
@@ -360,6 +390,3 @@ install(
   "${PROJECT_BINARY_DIR}/glopConfigVersion.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/glop"
   COMPONENT Devel)
-
-# Build glop samples
-add_subdirectory(ortools/glop/samples)

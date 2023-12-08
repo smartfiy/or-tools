@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,6 +13,9 @@
 
 #ifndef OR_TOOLS_GLOP_PRICING_H_
 #define OR_TOOLS_GLOP_PRICING_H_
+
+#include <random>
+#include <string>
 
 #include "absl/random/bit_gen_ref.h"
 #include "absl/random/random.h"
@@ -50,7 +53,7 @@ namespace glop {
 // this case, which is not even the biggest size we can tackle.
 //
 // Note(user): This could be moved to util/ as a general class if someone wants
-// to reuse it, it is however tunned for use in Glop pricing step and might
+// to reuse it, it is however tuned for use in Glop pricing step and might
 // becomes even more specific in the future.
 template <typename Index>
 class DynamicMaximum {
@@ -123,7 +126,7 @@ class DynamicMaximum {
   // In particular, the threshold only increase until the heap becomes empty and
   // is recomputed from scratch by GetMaximum().
   struct HeapElement {
-    HeapElement() {}
+    HeapElement() = default;
     HeapElement(Index i, Fractional v) : index(i), value(v) {}
 
     Index index;
@@ -131,7 +134,7 @@ class DynamicMaximum {
 
     // We want a min-heap: tops_.top() actually represents the k-th value, not
     // the max.
-    const double operator<(const HeapElement& other) const {
+    double operator<(const HeapElement& other) const {
       return value > other.value;
     }
   };
@@ -243,8 +246,9 @@ inline Index DynamicMaximum<Index>::GetMaximum() {
   // We need to iterate over all the candidates.
   threshold_ = -kInfinity;
   DCHECK(tops_.empty());
+  const auto values = values_.const_view();
   for (const Index position : is_candidate_) {
-    const Fractional value = values_[position];
+    const Fractional value = values[position];
 
     // TODO(user): Add a mode when we do not maintain the TopK for small sizes
     // (like n < 1000) ? The gain might not be worth the extra code though.

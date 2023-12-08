@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #ifndef OR_TOOLS_UTIL_AFFINE_RELATION_H_
 #define OR_TOOLS_UTIL_AFFINE_RELATION_H_
 
+#include <algorithm>
 #include <vector>
 
 #include "ortools/base/iterator_adaptors.h"
@@ -82,7 +83,7 @@ class AffineRelation {
         : representative(r), coeff(c), offset(o) {}
     explicit Relation(int r) : representative(r) {}
 
-    const bool operator==(const Relation& other) const {
+    bool operator==(const Relation& other) const {
       return representative == other.representative && coeff == other.coeff &&
              offset == other.offset;
     }

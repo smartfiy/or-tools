@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,7 +26,7 @@ namespace glop {
 RandomAccessSparseColumn::RandomAccessSparseColumn(RowIndex num_rows)
     : column_(num_rows, 0.0), changed_(num_rows, false), row_change_() {}
 
-RandomAccessSparseColumn::~RandomAccessSparseColumn() {}
+RandomAccessSparseColumn::~RandomAccessSparseColumn() = default;
 
 void RandomAccessSparseColumn::Clear() {
   const size_t num_changes = row_change_.size();
