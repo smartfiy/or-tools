@@ -155,7 +155,7 @@ archive_all: archive_cpp archive_dotnet archive_go archive_java archive_python a
 	@echo Or-tools has been built and archived for "$(BUILT_LANGUAGES)"
 
 .PHONY: test_archive_all
-test_archive_all: test_archive_cpp test_archive_dotnet test_archive_go test_archive_java test_archive_python
+test_archive_all: test_archive_cpp test_archive_dotnet test_archive_java test_archive_python
 	@echo Or-tools archives have been checked for "$(BUILT_LANGUAGES)"
 
 .PHONY: clean_all

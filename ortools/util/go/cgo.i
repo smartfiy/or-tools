@@ -13,5 +13,5 @@
 
 // Define CGO LDFLAGS
 %insert(cgo_comment_typedefs) %{
-#cgo LDFLAGS: -L../../../lib -lgoortools
+#cgo LDFLAGS: -lgoortools
 %}

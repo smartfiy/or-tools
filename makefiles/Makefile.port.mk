@@ -161,6 +161,12 @@ ifneq ($(PLATFORM),WIN64)
   ifndef DOTNET_BIN
     HAS_DOTNET=OFF
   endif
+
+  HAS_GO ?= ON
+  GO_BIN := $(shell $(WHICH) go 2> /dev/null)
+  ifndef GO_BIN
+    HAS_GO=OFF
+  endif
 else # Windows specific part.
   # Check 64 bit.
   ifneq ("$(Platform)","x64")  # Visual Studio 2019/2022 64 bit
@@ -274,6 +280,12 @@ else # Windows specific part.
   ifndef DOTNET_BIN
     HAS_DOTNET=OFF
   endif
+
+  HAS_GO ?= ON
+  GO_BIN := $(shell $(WHICH) go 2> /dev/null)
+  ifndef GO_BIN
+    HAS_GO=OFF
+  endif
 endif  # ($(PLATFORM),WIN64)
 
 # C++ relevant directory
@@ -312,10 +324,12 @@ endif
 #FZ_INSTALL_NAME := or-tools_$(CPU)_$(PORT)_flatzinc_v$(OR_TOOLS_VERSION)
 INSTALL_CPP_NAME := or-tools_$(CPU)_$(PORT)_cpp_v$(OR_TOOLS_VERSION)
 INSTALL_DOTNET_NAME := or-tools_$(CPU)_$(PORT)_dotnet_v$(OR_TOOLS_VERSION)
+INSTALL_GO_NAME := or-tools_$(CPU)_$(PORT)_go_v$(OR_TOOLS_VERSION)
 INSTALL_JAVA_NAME := or-tools_$(CPU)_$(PORT)_java_v$(OR_TOOLS_VERSION)
 INSTALL_PYTHON_NAME := or-tools_$(CPU)_$(PORT)_python$(PYTHON_VERSION)_v$(OR_TOOLS_VERSION)
 
 BUILD_DOTNET ?= OFF
+BUILD_GO ?= OFF
 BUILD_JAVA ?= OFF
 BUILD_PYTHON ?= OFF
 
@@ -337,6 +351,7 @@ detect_port:
 	@echo CMAKE = $(CMAKE)
 	@echo CMAKE_PLATFORM = $(CMAKE_PLATFORM)
 	@echo HAS_DOTNET = $(HAS_DOTNET)
+	@echo HAS_GO = $(HAS_GO)
 	@echo HAS_JAVA = $(HAS_JAVA)
 	@echo HAS_PYTHON = $(HAS_PYTHON)
 ifeq ($(PLATFORM),WIN64)

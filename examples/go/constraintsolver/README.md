@@ -9,7 +9,10 @@ The following examples showcase how to use the `constraintsolver` go pkg.
 
 # Execution
 Running the examples will involve building them, then running them.
-You can run the following command from the **top** directory:
+You can run the following command from the **top** directory after building Go
+examples via cmake:
 ```shell
-make go_test
+make go_constraintsolver_vrppd_test
+make go_constraintsolver_vrptw_test
+make go_constraintsolver_pdptw_test
 ```

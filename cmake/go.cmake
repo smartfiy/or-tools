@@ -73,19 +73,10 @@ elseif(UNIX)
   set_target_properties(goortools PROPERTIES INSTALL_RPATH "$ORIGIN")
 endif()
 
-# CMake will remove all '-D' prefix (i.e. -DUSE_FOO become USE_FOO)
-#get_target_property(FLAGS ${PROJECT_NAMESPACE}::ortools COMPILE_DEFINITIONS)
-set(FLAGS -DUSE_BOP -DUSE_GLOP -DABSL_MUST_USE_RESULT)
-if(USE_COINOR)
-  list(APPEND FLAGS "-DUSE_CBC" "-DUSE_CLP")
-endif()
-if(USE_GLPK)
-  list(APPEND FLAGS "-DUSE_GLPK")
-endif()
-if(USE_SCIP)
-  list(APPEND FLAGS "-DUSE_SCIP")
-endif()
-list(APPEND CMAKE_SWIG_FLAGS ${FLAGS} "-I${PROJECT_SOURCE_DIR}")
+###################
+##  GO WRAPPERS  ##
+###################
+list(APPEND CMAKE_SWIG_FLAGS "-I${PROJECT_SOURCE_DIR}")
 
 # Swig wrap all libraries
 set(WRAPPED_GOS)
@@ -197,28 +188,28 @@ function(add_go_example FILE_NAME)
   add_custom_command(
     OUTPUT ${GO_EXAMPLE_DIR}/${EXAMPLE_NAME}.go
     COMMAND ${CMAKE_COMMAND} -E make_directory ${GO_EXAMPLE_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy
-      ${FILE_NAME}
-      ${GO_EXAMPLE_DIR}/
+    COMMAND ${CMAKE_COMMAND} -E copy ${FILE_NAME} ${GO_EXAMPLE_DIR}/
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${COMPONENT_DIR}/README.md ${GO_EXAMPLE_DIR}/
     MAIN_DEPENDENCY ${FILE_NAME}
     VERBATIM
   )
 
   if(APPLE)
+    set(CGO_ENVS CGO_LDFLAGS=-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     set(LD_ENVS DYLD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   elseif(UNIX)
+    set(CGO_ENVS CGO_LDFLAGS=-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     set(LD_ENVS LD_LIBRARY_PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   endif()
   add_custom_command(
     OUTPUT ${GO_EXAMPLE_DIR}/${EXAMPLE_NAME}.run
-    COMMAND ${GO_EXECUTABLE} test -exec "env ${LD_ENVS}" ./... -run /${EXAMPLE_NAME}/i -race -v
+    COMMAND ${CGO_ENVS} ${GO_EXECUTABLE} test -exec "env ${LD_ENVS}" ./... -run /${EXAMPLE_NAME}/i -race -v
     DEPENDS
       ${GO_EXAMPLE_DIR}/${EXAMPLE_NAME}.go
       go_package
     COMMENT "Compiling Go ${COMPONENT_NAME}/${EXAMPLE_NAME}.go (${GO_EXAMPLE_DIR}/${EXAMPLE_NAME}.run)"
     WORKING_DIRECTORY ${GO_EXAMPLE_DIR})
   set_source_files_properties(${GO_EXAMPLE_DIR}/${EXAMPLE_NAME}.run PROPERTIES SYMBOLIC "true")
- 
 
   add_custom_target(go_${COMPONENT_NAME}_${EXAMPLE_NAME} ALL
     DEPENDS

@@ -21,7 +21,8 @@ export PROJECT=or-tools
 #export TARGET=x86_64
 #export TARGET=mips64
 #export TARGET=ppc64
-export TARGET=aarch64-unknown-linux-gnu
+# export TARGET=aarch64
+export TARGET=arm64
 
 # for m1 mac
 # NOTE: aarch64 and arm64 are equivalent
@@ -32,3 +33,14 @@ export GOARCH=arm64
 ./tools/cross_compile.sh build
 # ./tools/cross_compile.sh qemu
 #./tools/cross_compile.sh test
+
+PROJECT_DIR=$(pwd -P)
+BUILD_DIR=${PROJECT_DIR}/build_cross/${TARGET}
+HOST=$(uname -m)
+
+# make archive
+INSTALL_GO_NAME=$(make print-INSTALL_GO_NAME 2> /dev/null | cut -d' ' -f3 | tr -d \' | sed 's/'${HOST}'/'${TARGET}'/g')
+LIBS=$(cd ${BUILD_DIR} && ls lib*/libgoortools.* lib*/libortools.*)
+echo -n "Archiving..."
+mkdir -p "${PROJECT_DIR}/export"
+tar czvf export/${INSTALL_GO_NAME}.tar.gz --no-same-owner -C ${BUILD_DIR} ${LIBS}

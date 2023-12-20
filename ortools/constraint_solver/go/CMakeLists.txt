@@ -1,13 +1,12 @@
 set_property(SOURCE routing.i PROPERTY CPLUSPLUS ON)
 set_property(SOURCE routing.i PROPERTY SWIG_MODULE_NAME gowrap_constraint_solver)
 set_property(SOURCE routing.i PROPERTY COMPILE_DEFINITIONS
-  ${OR_TOOLS_COMPILE_DEFINITIONS} ABSL_MUST_USE_RESULT)
+  ${OR_TOOLS_COMPILE_DEFINITIONS} ABSL_MUST_USE_RESULT=)
 set_property(SOURCE routing.i PROPERTY COMPILE_OPTIONS
   -package constraintsolver -use-shlib)
 swig_add_library(go_constraint_solver
   TYPE OBJECT
   LANGUAGE go
-  # OUTPUT_DIR ${GO_PROJECT_DIR}/constraintsolver
   OUTPUT_DIR ./wrap
   SOURCES routing.i)
 

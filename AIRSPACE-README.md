@@ -5,9 +5,9 @@ It has Go bindings and binaries for use with Go projects.
 
 ## Install OR-tools for Go (Mac)
  1. Download binaries for Mac:
-    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v9.2-go1.17.6/or-tools_MacOsX-11.2.3_v9.2.9074.tar.gz`
+    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v9.8-go1.21.0/or-tools_universal_macOS-12.5.1_go_v9.8.3330.tar.gz`
  1. Install/extract to rpath:
-    `sudo tar -xf or-tools_MacOsX-11.2.3_v9.2.9074.tar.gz --strip 1 -C /usr/local`
+    `sudo tar -xf or-tools_universal_macOS-12.5.1_go_v9.8.3330.tar.gz --strip 1 -C /usr/local/lib`
  1. Export `DYLD_LIBRARY_PATH` if necessary:
     `export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/lib`
  1. Clean module download cache if necessary:
@@ -23,29 +23,26 @@ It has Go bindings and binaries for use with Go projects.
      `xcode-select install`
   1. Install C++ tools:
      `brew install cmake wget pkg-config`
-  1. Install SWIG 4.0.1:
-     `brew install swig`
+  1. Install SWIG 4.1.1:
+     `brew install swig@4.1.1`
   1. Install protobuf for Go:
-     `go get -u github.com/golang/protobuf/protoc-gen-go@v1.5.2`
+     `$ go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28`
   1. Clone Airspace OR-tools:
      `git clone git@github.com:AirspaceTechnologies/or-tools.git`
 </details>
 
-### Build
-  1. Make third party:
-     `make clean clean_third_party third_party`
-  1. Make go:
-     `make clean_go go`
-  1. Make go tests:
-     `make test_go`
+### Build and Release
+  1. For native host machine (e.g. MacOS x86_64):
+     `sh native.sh`
+  1. Cross-compile for Mac arm64 (e.g. Mac M1, M2):
+     `sh arm.sh`
+  1. Create universal Mac binaries:
+     `sh universal.sh -a [arm64 tar ball] -x [x86_64 tar ball] -o [output tar ball]`
 
-### Release
- 1. Follow `Build` steps above
- 1. Make Debian binary archive (takes ~45 mins, uses Docker to build everything from scratch):
-    `make --directory=makefiles debian_go_export`
- 1. Make local Mac binary archive:
-    `make golib_archive`
- 1. Log into Github and create a release with the resulting binaries
+     For example: `sh universal.sh -a export/or-tools_arm64_macOS-12.5.1_go_v9.8.3330.tar.gz -x export/or-tools_x86_64_macOS-12.5.1_go_v9.8.3330.tar.gz -o export/or-tools_universal_macOS-12.5.1_go_v9.8.3330.tar.gz`
+  1. For Linux x86_64 (takes ~45 mins, uses Docker to build everything from scratch):
+     `sh tools/release/build_delivery_airspace.sh`
+  1. Log into Github and create a release with the resulting binaries in the `export` directory
 
 ### Update Fork from Upstream
  1. Configure git remote pointing to upstream or-tools repo:

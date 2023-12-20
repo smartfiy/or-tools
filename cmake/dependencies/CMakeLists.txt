@@ -74,6 +74,7 @@ endif()
 # ##############################################################################
 # ABSEIL-CPP
 # ##############################################################################
+set(CMAKE_CXX_STANDARD 17)
 if(BUILD_absl)
   message(CHECK_START "Fetching Abseil-cpp")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
