@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,19 +13,30 @@
 
 #include "ortools/sat/probing.h"
 
+#include <algorithm>
 #include <cstdint>
-#include <set>
+#include <functional>
+#include <utility>
+#include <vector>
 
-#include "ortools/base/iterator_adaptors.h"
+#include "absl/container/inlined_vector.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
+#include "ortools/base/logging.h"
 #include "ortools/base/strong_vector.h"
 #include "ortools/base/timer.h"
 #include "ortools/sat/clause.h"
 #include "ortools/sat/implied_bounds.h"
 #include "ortools/sat/integer.h"
+#include "ortools/sat/model.h"
 #include "ortools/sat/sat_base.h"
+#include "ortools/sat/sat_parameters.pb.h"
 #include "ortools/sat/sat_solver.h"
 #include "ortools/sat/util.h"
+#include "ortools/util/bitset.h"
 #include "ortools/util/logging.h"
+#include "ortools/util/sorted_interval_list.h"
+#include "ortools/util/strong_integers.h"
 #include "ortools/util/time_limit.h"
 
 namespace operations_research {
@@ -36,6 +47,7 @@ Prober::Prober(Model* model)
       assignment_(model->GetOrCreate<SatSolver>()->Assignment()),
       integer_trail_(model->GetOrCreate<IntegerTrail>()),
       implied_bounds_(model->GetOrCreate<ImpliedBounds>()),
+      product_detector_(model->GetOrCreate<ProductDetector>()),
       sat_solver_(model->GetOrCreate<SatSolver>()),
       time_limit_(model->GetOrCreate<TimeLimit>()),
       implication_graph_(model->GetOrCreate<BinaryImplicationGraph>()),
@@ -43,8 +55,10 @@ Prober::Prober(Model* model)
 
 bool Prober::ProbeBooleanVariables(const double deterministic_time_limit) {
   const int num_variables = sat_solver_->NumVariables();
+  const VariablesAssignment& assignment = sat_solver_->Assignment();
   std::vector<BooleanVariable> bool_vars;
   for (BooleanVariable b(0); b < num_variables; ++b) {
+    if (assignment.VariableIsAssigned(b)) continue;
     const Literal literal(b, true);
     if (implication_graph_->RepresentativeOf(literal) != literal) {
       continue;
@@ -60,15 +74,20 @@ bool Prober::ProbeOneVariableInternal(BooleanVariable b) {
   for (const Literal decision : {Literal(b, true), Literal(b, false)}) {
     if (assignment_.LiteralIsAssigned(decision)) continue;
 
+    ++num_decisions_;
     CHECK_EQ(sat_solver_->CurrentDecisionLevel(), 0);
     const int saved_index = trail_.Index();
     sat_solver_->EnqueueDecisionAndBackjumpOnConflict(decision);
     sat_solver_->AdvanceDeterministicTime(time_limit_);
 
-    if (sat_solver_->IsModelUnsat()) return false;
+    if (sat_solver_->ModelIsUnsat()) return false;
     if (sat_solver_->CurrentDecisionLevel() == 0) continue;
+    if (trail_.Index() > saved_index) {
+      if (callback_ != nullptr) callback_(decision);
+    }
 
-    implied_bounds_->ProcessIntegerTrail(decision);
+    if (!implied_bounds_->ProcessIntegerTrail(decision)) return false;
+    product_detector_->ProcessTrailAtLevelOne();
     integer_trail_->AppendNewBounds(&new_integer_bounds_);
     for (int i = saved_index + 1; i < trail_.Index(); ++i) {
       const Literal l = trail_[i];
@@ -77,7 +96,7 @@ bool Prober::ProbeOneVariableInternal(BooleanVariable b) {
       if (decision.IsPositive()) {
         propagated_.Set(l.Index());
       } else {
-        if (propagated_[l.Index()]) {
+        if (propagated_[l]) {
           to_fix_at_true_.push_back(l);
         }
       }
@@ -94,7 +113,7 @@ bool Prober::ProbeOneVariableInternal(BooleanVariable b) {
     // Fix variable and add new binary clauses.
     if (!sat_solver_->RestoreSolverToAssumptionLevel()) return false;
     for (const Literal l : to_fix_at_true_) {
-      sat_solver_->AddUnitClause(l);
+      if (!sat_solver_->AddUnitClause(l)) return false;
     }
     to_fix_at_true_.clear();
     if (!sat_solver_->FinishPropagation()) return false;
@@ -179,11 +198,6 @@ bool Prober::ProbeOneVariableInternal(BooleanVariable b) {
 }
 
 bool Prober::ProbeOneVariable(BooleanVariable b) {
-  // Reset statistics.
-  num_new_binary_ = 0;
-  num_new_holes_ = 0;
-  num_new_integer_bounds_ = 0;
-
   // Resize the propagated sparse bitset.
   const int num_variables = sat_solver_->NumVariables();
   propagated_.ClearAndResize(LiteralIndex(2 * num_variables));
@@ -192,7 +206,13 @@ bool Prober::ProbeOneVariable(BooleanVariable b) {
   sat_solver_->SetAssumptionLevel(0);
   if (!sat_solver_->RestoreSolverToAssumptionLevel()) return false;
 
-  return ProbeOneVariableInternal(b);
+  const int initial_num_fixed = sat_solver_->LiteralTrail().Index();
+  if (!ProbeOneVariableInternal(b)) return false;
+
+  // Statistics
+  const int num_fixed = sat_solver_->LiteralTrail().Index();
+  num_new_literals_fixed_ += num_fixed - initial_num_fixed;
+  return true;
 }
 
 bool Prober::ProbeBooleanVariables(
@@ -202,9 +222,11 @@ bool Prober::ProbeBooleanVariables(
   wall_timer.Start();
 
   // Reset statistics.
+  num_decisions_ = 0;
   num_new_binary_ = 0;
   num_new_holes_ = 0;
   num_new_integer_bounds_ = 0;
+  num_new_literals_fixed_ = 0;
 
   // Resize the propagated sparse bitset.
   const int num_variables = sat_solver_->NumVariables();
@@ -243,19 +265,22 @@ bool Prober::ProbeBooleanVariables(
     }
   }
 
+  // Update stats.
+  const int num_fixed = sat_solver_->LiteralTrail().Index();
+  num_new_literals_fixed_ = num_fixed - initial_num_fixed;
+
   // Display stats.
   if (logger_->LoggingIsEnabled()) {
     const double time_diff =
         time_limit_->GetElapsedDeterministicTime() - initial_deterministic_time;
-    const int num_fixed = sat_solver_->LiteralTrail().Index();
-    const int num_newly_fixed = num_fixed - initial_num_fixed;
     SOLVER_LOG(logger_, "[Probing] deterministic_time: ", time_diff,
                " (limit: ", deterministic_time_limit,
                ") wall_time: ", wall_timer.Get(), " (",
                (limit_reached ? "Aborted " : ""), num_probed, "/",
                bool_vars.size(), ")");
-    if (num_newly_fixed > 0) {
-      SOLVER_LOG(logger_, "[Probing]  - new fixed Boolean: ", num_newly_fixed,
+    if (num_new_literals_fixed_ > 0) {
+      SOLVER_LOG(logger_,
+                 "[Probing]  - new fixed Boolean: ", num_new_literals_fixed_,
                  " (", num_fixed, "/", sat_solver_->NumVariables(), ")");
     }
     if (num_new_holes_ > 0) {
@@ -273,9 +298,13 @@ bool Prober::ProbeBooleanVariables(
   return true;
 }
 
-bool LookForTrivialSatSolution(double deterministic_time_limit, Model* model) {
+bool LookForTrivialSatSolution(double deterministic_time_limit, Model* model,
+                               SolverLogger* logger) {
   WallTimer wall_timer;
   wall_timer.Start();
+
+  // Hack to not have empty logger.
+  if (logger == nullptr) logger = model->GetOrCreate<SolverLogger>();
 
   // Reset the solver in case it was already used.
   auto* sat_solver = model->GetOrCreate<SatSolver>();
@@ -284,7 +313,6 @@ bool LookForTrivialSatSolution(double deterministic_time_limit, Model* model) {
 
   auto* time_limit = model->GetOrCreate<TimeLimit>();
   const int initial_num_fixed = sat_solver->LiteralTrail().Index();
-  auto* logger = model->GetOrCreate<SolverLogger>();
 
   // Note that this code do not care about the non-Boolean part and just try to
   // assign the existing Booleans.
@@ -342,7 +370,7 @@ bool LookForTrivialSatSolution(double deterministic_time_limit, Model* model) {
     const int num_fixed = sat_solver->LiteralTrail().Index();
     const int num_newly_fixed = num_fixed - initial_num_fixed;
     const int num_variables = sat_solver->NumVariables();
-    SOLVER_LOG(logger, "Random exploration.", " num_fixed: +", num_newly_fixed,
+    SOLVER_LOG(logger, "[Random exploration]", " num_fixed: +", num_newly_fixed,
                " (", num_fixed, "/", num_variables, ")",
                " dtime: ", elapsed_dtime, "/", deterministic_time_limit,
                " wtime: ", wall_timer.Get(),
@@ -451,16 +479,15 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
       const int saved_queue_size = queue.size();
       for (const Literal l : list) {
         const Literal candidate = l.Negated();
-        if (processed[candidate.Index()]) continue;
-        if (position_in_order[candidate.Index()] == -1) continue;
+        if (processed[candidate]) continue;
+        if (position_in_order[candidate] == -1) continue;
         if (assignment.LiteralIsAssigned(candidate)) {
           if (assignment.LiteralIsFalse(candidate)) {
             to_fix.push_back(Literal(candidate.Negated()));
           }
           continue;
         }
-        queue.push_back(
-            {candidate.Index(), -position_in_order[candidate.Index()]});
+        queue.push_back({candidate.Index(), -position_in_order[candidate]});
       }
       std::sort(queue.begin() + saved_queue_size, queue.end());
 
@@ -475,7 +502,7 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
           continue;
         }
         const Literal candidate(index);
-        if (processed[candidate.Index()]) continue;
+        if (processed[candidate]) continue;
         if (assignment.LiteralIsAssigned(candidate)) {
           if (assignment.LiteralIsFalse(candidate)) {
             to_fix.push_back(Literal(candidate.Negated()));
@@ -492,7 +519,7 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
       for (const Literal literal : to_fix) {
         if (!assignment.LiteralIsTrue(literal)) {
           ++num_explicit_fix;
-          sat_solver->AddUnitClause(literal);
+          if (!sat_solver->AddUnitClause(literal)) return false;
         }
       }
       to_fix.clear();
@@ -501,7 +528,7 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
       // Probe an unexplored node.
       for (; order_index < probing_order.size(); ++order_index) {
         const Literal candidate(probing_order[order_index]);
-        if (processed[candidate.Index()]) continue;
+        if (processed[candidate]) continue;
         if (assignment.LiteralIsAssigned(candidate)) continue;
         next_decision = candidate.Index();
         break;
@@ -523,7 +550,7 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
       for (int i = 0; i < list.size(); ++i, ++j) {
         j %= list.size();
         const Literal candidate = Literal(list[j]).Negated();
-        if (processed[candidate.Index()]) continue;
+        if (processed[candidate]) continue;
         if (assignment.LiteralIsFalse(candidate)) {
           // candidate => previous => not(candidate), so we can fix it.
           to_fix.push_back(Literal(candidate.Negated()));
@@ -552,7 +579,7 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
             Literal(next_decision));
     const int new_level = sat_solver->CurrentDecisionLevel();
     sat_solver->AdvanceDeterministicTime(time_limit);
-    if (sat_solver->IsModelUnsat()) return false;
+    if (sat_solver->ModelIsUnsat()) return false;
     if (new_level <= level) {
       ++num_conflicts;
 
@@ -570,20 +597,20 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
         }
       }
 
-      // Fix next_decision to false if not already done.
+      // Fix `next_decision` to `false` if not already done.
       //
-      // Even if we fixed something at evel zero, next_decision might not be
+      // Even if we fixed something at level zero, next_decision might not be
       // fixed! But we can fix it. It can happen because when we propagate
-      // with clauses, we might have a => b but not not(b) => not(a). Like a
-      // => b and clause (not(a), not(b), c), propagating a will set c, but
-      // propagating not(c) will not do anything.
+      // with clauses, we might have `a => b` but not `not(b) => not(a)`. Like
+      // `a => b` and clause `(not(a), not(b), c)`, propagating `a` will set
+      // `c`, but propagating `not(c)` will not do anything.
       //
       // We "delay" the fixing if we are not at level zero so that we can
       // still reuse the current propagation work via tree look.
       //
       // TODO(user): Can we be smarter here? Maybe we can still fix the
-      // literal without going back to level zero by simply enqueing it with
-      // no reason? it will be bactracked over, but we will still lazily fix
+      // literal without going back to level zero by simply enqueuing it with
+      // no reason? it will be backtracked over, but we will still lazily fix
       // it later.
       if (sat_solver->CurrentDecisionLevel() != 0 ||
           assignment.LiteralIsFalse(Literal(next_decision))) {
@@ -723,7 +750,7 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
   if (!sat_solver->ResetToLevelZero()) return false;
   for (const Literal literal : to_fix) {
     ++num_explicit_fix;
-    sat_solver->AddUnitClause(literal);
+    if (!sat_solver->AddUnitClause(literal)) return false;
   }
   to_fix.clear();
   if (!sat_solver->FinishPropagation()) return false;

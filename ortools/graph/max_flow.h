@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -128,9 +128,9 @@
 #include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
+#include "absl/strings/string_view.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
+#include "ortools/base/types.h"
 #include "ortools/graph/ebert_graph.h"
 #include "ortools/graph/flow_problem.pb.h"
 #include "ortools/graph/graph.h"
@@ -154,6 +154,12 @@ class SimpleMaxFlow {
   // The constructor takes no size.
   // New node indices will be created lazily by AddArcWithCapacity().
   SimpleMaxFlow();
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  SimpleMaxFlow(const SimpleMaxFlow&) = delete;
+  SimpleMaxFlow& operator=(const SimpleMaxFlow&) = delete;
+#endif
 
   // Adds a directed arc with the given capacity from tail to head.
   // * Node indices and capacity must be non-negative (>= 0).
@@ -242,8 +248,6 @@ class SimpleMaxFlow {
   typedef ::util::ReverseArcStaticGraph<NodeIndex, ArcIndex> Graph;
   std::unique_ptr<Graph> underlying_graph_;
   std::unique_ptr<GenericMaxFlow<Graph> > underlying_max_flow_;
-
-  DISALLOW_COPY_AND_ASSIGN(SimpleMaxFlow);
 };
 
 // Specific but efficient priority queue implementation. The priority type must
@@ -264,6 +268,14 @@ template <typename Element, typename IntegerPriority>
 class PriorityQueueWithRestrictedPush {
  public:
   PriorityQueueWithRestrictedPush() : even_queue_(), odd_queue_() {}
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  PriorityQueueWithRestrictedPush(const PriorityQueueWithRestrictedPush&) =
+      delete;
+  PriorityQueueWithRestrictedPush& operator=(
+      const PriorityQueueWithRestrictedPush&) = delete;
+#endif
 
   // Is the queue empty?
   bool IsEmpty() const;
@@ -289,8 +301,6 @@ class PriorityQueueWithRestrictedPush {
   // both vectors are always sorted by increasing priority.
   std::vector<std::pair<Element, IntegerPriority> > even_queue_;
   std::vector<std::pair<Element, IntegerPriority> > odd_queue_;
-
-  DISALLOW_COPY_AND_ASSIGN(PriorityQueueWithRestrictedPush);
 };
 
 // We want an enum for the Status of a max flow run, and we want this
@@ -332,6 +342,13 @@ class GenericMaxFlow : public MaxFlowStatusClass {
   // the memory of this class. source and sink must also be valid node of
   // graph.
   GenericMaxFlow(const Graph* graph, NodeIndex source, NodeIndex sink);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  GenericMaxFlow(const GenericMaxFlow&) = delete;
+  GenericMaxFlow& operator=(const GenericMaxFlow&) = delete;
+#endif
+
   virtual ~GenericMaxFlow() {}
 
   // Returns the graph associated to the current object.
@@ -451,7 +468,7 @@ class GenericMaxFlow : public MaxFlowStatusClass {
 
   // Returns context concatenated with information about arc
   // in a human-friendly way.
-  std::string DebugString(const std::string& context, ArcIndex arc) const;
+  std::string DebugString(absl::string_view context, ArcIndex arc) const;
 
   // Initializes the container active_nodes_.
   void InitializeActiveNodeContainer();
@@ -639,9 +656,6 @@ class GenericMaxFlow : public MaxFlowStatusClass {
 
   // Statistics about this class.
   mutable StatsGroup stats_;
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(GenericMaxFlow);
 };
 
 #if !SWIG

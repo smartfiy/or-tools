@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,6 +18,9 @@
 #include <string>
 #include <vector>
 
+#if !defined(__PORTABLE_PLATFORM__)
+#include "ortools/base/file.h"
+#endif  // !defined(__PORTABLE_PLATFORM__)
 #include "absl/types/span.h"
 #include "ortools/base/strong_vector.h"
 #include "ortools/sat/drat_checker.h"
@@ -46,7 +49,7 @@ class DratProofHandler {
   // store it in memory as well (in which case the proof can be checked with
   // Check() when it is complete).
   DratProofHandler(bool in_binary_format, File* output, bool check = false);
-  ~DratProofHandler() {}
+  ~DratProofHandler() = default;
 
   // During the presolve step, variable get deleted and the set of non-deleted
   // variable is remaped in a dense set. This allows to keep track of that and

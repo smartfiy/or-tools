@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,13 +14,12 @@
 #ifndef OR_TOOLS_CONSTRAINT_SOLVER_ROUTING_TYPES_H_
 #define OR_TOOLS_CONSTRAINT_SOLVER_ROUTING_TYPES_H_
 
+#include <cstdint>
 #include <functional>
 #include <utility>
 #include <vector>
 
-#include "absl/strings/string_view.h"
 #include "ortools/base/int_type.h"
-#include "ortools/base/integral_types.h"
 
 namespace operations_research {
 
@@ -39,11 +38,15 @@ DEFINE_INT_TYPE(RoutingDimensionIndex, int);
 DEFINE_INT_TYPE(RoutingDisjunctionIndex, int);
 DEFINE_INT_TYPE(RoutingVehicleClassIndex, int);
 
+/// Pickup and delivery pair representation, including alternatives for pickups
+/// and deliveries respectively.
+struct PickupDeliveryPair {
+  std::vector<int64_t> pickup_alternatives;
+  std::vector<int64_t> delivery_alternatives;
+};
+
 typedef std::function<int64_t(int64_t)> RoutingTransitCallback1;
 typedef std::function<int64_t(int64_t, int64_t)> RoutingTransitCallback2;
-// NOTE(user): keep the "> >" for SWIG.
-typedef std::pair<std::vector<int64_t>, std::vector<int64_t> > RoutingIndexPair;
-typedef std::vector<RoutingIndexPair> RoutingIndexPairs;
 
 }  // namespace operations_research
 

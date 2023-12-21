@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,6 +13,12 @@
 
 #include "ortools/gscip/gscip_ext.h"
 
+#include <cmath>
+#include <limits>
+#include <string>
+#include <vector>
+
+#include "absl/strings/string_view.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/status_macros.h"
 
@@ -20,8 +26,8 @@ namespace operations_research {
 
 namespace {
 
-std::string MaybeExtendName(const std::string& base_name,
-                            const std::string& extension) {
+std::string MaybeExtendName(absl::string_view base_name,
+                            absl::string_view extension) {
   if (base_name.empty()) {
     return "";
   }
@@ -67,7 +73,7 @@ GScipLinearRange GScipLe(const GScipLinearExpr left,
 }
 
 absl::Status GScipCreateAbs(GScip* gscip, SCIP_Var* x, SCIP_Var* abs_x,
-                            const std::string& name) {
+                            absl::string_view name) {
   return GScipCreateMaximum(
       gscip, GScipLinearExpr(abs_x),
       {GScipLinearExpr(x), GScipNegate(GScipLinearExpr(x))}, name);
@@ -75,7 +81,7 @@ absl::Status GScipCreateAbs(GScip* gscip, SCIP_Var* x, SCIP_Var* abs_x,
 
 absl::Status GScipCreateMaximum(GScip* gscip, const GScipLinearExpr& resultant,
                                 const std::vector<GScipLinearExpr>& terms,
-                                const std::string& name) {
+                                absl::string_view name) {
   // TODO(user): it may be better to write this in terms of the disjuntive
   // constraint, we need to support disjunctions in gscip.h to do this.
   //
@@ -131,7 +137,7 @@ absl::Status GScipCreateMaximum(GScip* gscip, const GScipLinearExpr& resultant,
 
 absl::Status GScipCreateMinimum(GScip* gscip, const GScipLinearExpr& resultant,
                                 const std::vector<GScipLinearExpr>& terms,
-                                const std::string& name) {
+                                absl::string_view name) {
   std::vector<GScipLinearExpr> negated_terms;
   negated_terms.reserve(terms.size());
   for (const GScipLinearExpr& e : terms) {
@@ -143,7 +149,7 @@ absl::Status GScipCreateMinimum(GScip* gscip, const GScipLinearExpr& resultant,
 absl::Status GScipAddQuadraticObjectiveTerm(
     GScip* gscip, std::vector<SCIP_Var*> quadratic_variables1,
     std::vector<SCIP_Var*> quadratic_variables2,
-    std::vector<double> quadratic_coefficients, const std::string& name) {
+    std::vector<double> quadratic_coefficients, absl::string_view name) {
   constexpr double kInf = std::numeric_limits<double>::infinity();
   auto obj_term =
       gscip->AddVariable(-kInf, kInf, 1.0, GScipVarType::kContinuous,
@@ -172,7 +178,7 @@ absl::Status GScipAddQuadraticObjectiveTerm(
 
 absl::Status GScipCreateIndicatorRange(
     GScip* gscip, const GScipIndicatorRangeConstraint& indicator_range,
-    const std::string& name, const GScipConstraintOptions& options) {
+    absl::string_view name, const GScipConstraintOptions& options) {
   if (std::isfinite(indicator_range.range.upper_bound)) {
     GScipIndicatorConstraint ub_constraint;
     ub_constraint.upper_bound = indicator_range.range.upper_bound;

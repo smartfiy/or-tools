@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,7 +25,7 @@
 
 // Expose the flags structure.
 %unignore operations_research::CppFlags;
-%unignore operations_research::CppFlags::logtostderr;
+%unignore operations_research::CppFlags::stderrthreshold;
 %unignore operations_research::CppFlags::log_prefix;
 %unignore operations_research::CppFlags::cp_model_dump_prefix;
 %unignore operations_research::CppFlags::cp_model_dump_models;

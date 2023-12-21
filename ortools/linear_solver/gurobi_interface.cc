@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -42,32 +42,35 @@
 // poorly tested, proceed with caution.
 //
 
+#include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
 #include "ortools/base/commandlineflags.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/map_util.h"
 #include "ortools/base/timer.h"
 #include "ortools/gurobi/environment.h"
-#include "ortools/linear_solver/gurobi_proto_solver.h"
 #include "ortools/linear_solver/linear_solver.h"
 #include "ortools/linear_solver/linear_solver_callback.h"
+#include "ortools/linear_solver/proto_solver/gurobi_proto_solver.h"
 #include "ortools/util/time_limit.h"
 
-ABSL_FLAG(int, num_gurobi_threads, 4,
+ABSL_FLAG(int, num_gurobi_threads, 0,
           "Number of threads available for Gurobi.");
 
 namespace operations_research {
@@ -75,7 +78,7 @@ namespace operations_research {
 class GurobiInterface : public MPSolverInterface {
  public:
   // Constructor that takes a name for the underlying GRB solver.
-  explicit GurobiInterface(MPSolver* const solver, bool mip);
+  explicit GurobiInterface(MPSolver* solver, bool mip);
   ~GurobiInterface() override;
 
   // Sets the optimization direction (min/max).
@@ -84,7 +87,7 @@ class GurobiInterface : public MPSolverInterface {
   // ----- Solve -----
   // Solves the problem using the parameter values specified.
   MPSolver::ResultStatus Solve(const MPSolverParameters& param) override;
-  absl::optional<MPSolutionResponse> DirectlySolveProto(
+  std::optional<MPSolutionResponse> DirectlySolveProto(
       const MPModelRequest& request, std::atomic<bool>* interrupt) override;
   // Writes the model.
   void Write(const std::string& filename) override;
@@ -99,18 +102,17 @@ class GurobiInterface : public MPSolverInterface {
   void SetConstraintBounds(int row_index, double lb, double ub) override;
 
   // Adds Constraint incrementally.
-  void AddRowConstraint(MPConstraint* const ct) override;
-  bool AddIndicatorConstraint(MPConstraint* const ct) override;
+  void AddRowConstraint(MPConstraint* ct) override;
+  bool AddIndicatorConstraint(MPConstraint* ct) override;
   // Adds variable incrementally.
-  void AddVariable(MPVariable* const var) override;
+  void AddVariable(MPVariable* var) override;
   // Changes a coefficient in a constraint.
-  void SetCoefficient(MPConstraint* const constraint,
-                      const MPVariable* const variable, double new_value,
-                      double old_value) override;
+  void SetCoefficient(MPConstraint* constraint, const MPVariable* variable,
+                      double new_value, double old_value) override;
   // Clears a constraint from all its terms.
-  void ClearConstraint(MPConstraint* const constraint) override;
+  void ClearConstraint(MPConstraint* constraint) override;
   // Changes a coefficient in the linear objective
-  void SetObjectiveCoefficient(const MPVariable* const variable,
+  void SetObjectiveCoefficient(const MPVariable* variable,
                                double coefficient) override;
   // Changes the constant term in the linear objective.
   void SetObjectiveOffset(double value) override;
@@ -264,9 +266,10 @@ class GurobiInterface : public MPSolverInterface {
 
 namespace {
 
+constexpr int kGurobiOkCode = 0;
 void CheckedGurobiCall(int err, GRBenv* const env) {
-  CHECK_EQ(0, err) << "Fatal error with code " << err << ", due to "
-                   << GRBgeterrormsg(env);
+  CHECK_EQ(kGurobiOkCode, err)
+      << "Fatal error with code " << err << ", due to " << GRBgeterrormsg(env);
 }
 
 // For interacting directly with the Gurobi C API for callbacks.
@@ -1204,7 +1207,7 @@ MPSolver::ResultStatus GurobiInterface::Solve(const MPSolverParameters& param) {
   if (callback_ == nullptr) {
     CheckedGurobiCall(GRBsetcallbackfunc(model_, nullptr, nullptr));
   } else {
-    gurobi_context = absl::make_unique<GurobiMPCallbackContext>(
+    gurobi_context = std::make_unique<GurobiMPCallbackContext>(
         env_, &mp_var_to_gurobi_var_, num_gurobi_vars_,
         callback_->might_add_cuts(), callback_->might_add_lazy_constraints());
     mp_callback_with_context.context = gurobi_context.get();
@@ -1318,10 +1321,10 @@ MPSolver::ResultStatus GurobiInterface::Solve(const MPSolverParameters& param) {
   return result_status_;
 }
 
-absl::optional<MPSolutionResponse> GurobiInterface::DirectlySolveProto(
+std::optional<MPSolutionResponse> GurobiInterface::DirectlySolveProto(
     const MPModelRequest& request, std::atomic<bool>* interrupt) {
   // Interruption via atomic<bool> is not directly supported by Gurobi.
-  if (interrupt != nullptr) return absl::nullopt;
+  if (interrupt != nullptr) return std::nullopt;
 
   // Here we reuse the Gurobi environment to support single-use license that
   // forbids creating a second environment if one already exists.
@@ -1329,7 +1332,7 @@ absl::optional<MPSolutionResponse> GurobiInterface::DirectlySolveProto(
   if (status_or.ok()) return status_or.value();
   // Special case: if something is not implemented yet, fall back to solving
   // through MPSolver.
-  if (absl::IsUnimplemented(status_or.status())) return absl::nullopt;
+  if (absl::IsUnimplemented(status_or.status())) return std::nullopt;
 
   if (request.enable_internal_solver_output()) {
     LOG(INFO) << "Invalid Gurobi status: " << status_or.status();

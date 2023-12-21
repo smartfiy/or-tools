@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,10 +23,12 @@
 //     problem creation are thus not supported.
 //   * gSCIP uses std::numeric_limits<double>::infinity(), rather than SCIPs
 //     infinity (a default value of 1e20). Doubles with absolute value >= 1e20
-//     are automatically converting to std::numeric_limits<double>::infinity()
-//     by gSCIP. Changing the underlying SCIP's infinity is not supported.
+//     but < inf result in an error. Changing the underlying SCIP's infinity is
+//     not supported.
 //   * absl::Status and absl::StatusOr are used to propagate SCIP errors (and on
-//     a best effort basis, also filter out bad input to gSCIP functions).
+//     a best effort basis, also filter out bad input to gSCIP functions). In
+//     constraint handlers, we also use absl::Status and absl::StatusOr for
+//     error propagation and not SCIP_RETCODE.
 //
 // A note on error propagation and reliability:
 //   Many methods on SCIP return an error code. Errors can be triggered by
@@ -55,11 +57,13 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
 #include "ortools/gscip/gscip.pb.h"
 #include "ortools/gscip/gscip_message_handler.h"  // IWYU pragma: export
@@ -105,7 +109,7 @@ struct GScipLinearRange {
 // A variable is implied integer if the integrality constraint is not required
 // for the model to be valid, but the variable takes an integer value in any
 // optimal solution to the problem.
-enum class GScipVarType { kContinuous, kInteger, kImpliedInteger };
+enum class GScipVarType { kContinuous, kBinary, kInteger, kImpliedInteger };
 
 struct GScipIndicatorConstraint;
 struct GScipLogicalConstraintData;
@@ -123,7 +127,8 @@ enum class GScipHintResult;
 
 // A thin wrapper around the SCIP solver that provides C++ bindings that are
 // idiomatic for Google. Unless callbacks are used, the SCIP stage is always
-// PROBLEM.
+// PROBLEM. If any GScip function returns an absl::Status error, then the GScip
+// object should be considered to be in an error state.
 class GScip {
  public:
   // Create a new GScip (the constructor is private). The default objective
@@ -140,11 +145,12 @@ class GScip {
   // The returned StatusOr will contain an error only if an:
   //   * An underlying function from SCIP fails.
   //   * There is an I/O error with managing SCIP output.
+  //   * A user-defined callback function fails.
   // The above cases are not mutually exclusive. If the problem is infeasible,
   // this will be reflected in the value of GScipResult::gscip_output::status.
   absl::StatusOr<GScipResult> Solve(
       const GScipParameters& params = GScipParameters(),
-      const std::string& legacy_params = "",
+      absl::string_view legacy_params = "",
       GScipMessageHandler message_handler = nullptr);
 
   // ///////////////////////////////////////////////////////////////////////////
@@ -159,6 +165,9 @@ class GScip {
   // returned variable will have the same lifetime as GScip (if instead,
   // GScipVariableOptions::keep_alive is false, SCIP may free the variable at
   // any time, see GScipVariableOptions::keep_alive for details).
+  //
+  // Note that SCIP will internally convert a variable of type `kInteger` with
+  // bounds of [0, 1] to a variable of type `kBinary`.
   absl::StatusOr<SCIP_VAR*> AddVariable(
       double lb, double ub, double obj_coef, GScipVarType var_type,
       const std::string& var_name = "",
@@ -185,6 +194,7 @@ class GScip {
   double Lb(SCIP_VAR* var);
   double Ub(SCIP_VAR* var);
   double ObjCoef(SCIP_VAR* var);
+  // NOTE: The returned type may differ from the type passed to `AddVariable()`.
   GScipVarType VarType(SCIP_VAR* var);
   absl::string_view Name(SCIP_VAR* var);
   const absl::flat_hash_set<SCIP_VAR*>& variables() { return variables_; }
@@ -203,7 +213,13 @@ class GScip {
   // ///////////////////////////////////////////////////////////////////////////
   // Model Updates (needed for incrementalism)
   // ///////////////////////////////////////////////////////////////////////////
+  // TODO(b/246342145): A crash may occur if you attempt to set a lb <= -1.0 on
+  // a binary variable. SCIP can also silently change the vartype of a variable
+  // after construction, so you should check it via `VarType()`.
   absl::Status SetLb(SCIP_VAR* var, double lb);
+  // TODO(b/246342145): A crash may occur if you attempt to set an ub >= 2.0 on
+  // a binary variable. SCIP can also silently change the vartype of a variable
+  // after construction, so you should check it via `VarType()`.
   absl::Status SetUb(SCIP_VAR* var, double ub);
   absl::Status SetObjCoef(SCIP_VAR* var, double obj_coef);
   absl::Status SetVarType(SCIP_VAR* var, GScipVarType var_type);
@@ -211,12 +227,12 @@ class GScip {
   // Warning: you need to ensure that no constraint has a reference to this
   // variable before deleting it, or undefined behavior will occur. For linear
   // constraints, you can set the coefficient of this variable to zero to remove
-  // the variable from the constriant.
+  // the variable from the constraint.
   absl::Status DeleteVariable(SCIP_VAR* var);
 
   // Checks if SafeBulkDelete will succeed for vars, and returns a description
   // the problematic variables/constraints on a failure (the returned status
-  // will not contain a propagated SCIP error). Will not modify the underyling
+  // will not contain a propagated SCIP error). Will not modify the underlying
   // SCIP, it is safe to continue using this if an error is returned.
   absl::Status CanSafeBulkDelete(const absl::flat_hash_set<SCIP_VAR*>& vars);
 
@@ -232,6 +248,8 @@ class GScip {
   absl::Status SetLinearConstraintLb(SCIP_CONS* constraint, double lb);
   absl::Status SetLinearConstraintUb(SCIP_CONS* constraint, double ub);
   absl::Status SetLinearConstraintCoef(SCIP_CONS* constraint, SCIP_VAR* var,
+                                       double value);
+  absl::Status AddLinearConstraintCoef(SCIP_CONS* constraint, SCIP_VAR* var,
                                        double value);
 
   // Works on all constraint types. Unlike DeleteVariable, no special action is
@@ -322,10 +340,11 @@ class GScip {
   // more useful.
   absl::Status SetBranchingPriority(SCIP_VAR* var, int priority);
 
-  // Doubles with absolute value of at least this value are replaced by this
-  // value before giving them SCIP. SCIP considers values at least this large to
-  // be infinite. When querying gSCIP, if an absolute value exceeds ScipInf, it
-  // is replaced by std::numeric_limits<double>::infinity().
+  // Doubles with absolute value of at least this value are invalid and result
+  // in errors. Floating point actual infinities are replaced by this value in
+  // SCIP calls. SCIP considers values at least this large to be infinite. When
+  // querying gSCIP, if an absolute value exceeds ScipInf, it is replaced by
+  // std::numeric_limits<double>::infinity().
   double ScipInf();
   static constexpr double kDefaultScipInf = 1e20;
 
@@ -349,18 +368,36 @@ class GScip {
   absl::StatusOr<std::string> DefaultStringParamValue(
       const std::string& parameter_name);
 
+  // Returns true if GScip is in an error state. Currently only checks if a
+  // callback has failed, but in the future it may check for other failures.
+  bool InErrorState();
+
+  // Internal use. Used by constraint handlers to propagate user-returned Status
+  // errors to GSCIP. Interrupts a solve and passes an error status that
+  // GScip::Solve() must return after SCIP finishes interrupting the solve. Does
+  // not do anything if previously called with a (non-OK) status (i.e. the first
+  // status error is returned by SCIP).
+  //
+  // CHECK fails if status is OK.
+  void InterruptSolveFromCallback(absl::Status error_status);
+
  private:
   explicit GScip(SCIP* scip);
   // Releases SCIP memory.
   absl::Status CleanUp();
 
   absl::Status SetParams(const GScipParameters& params,
-                         const std::string& legacy_params);
+                         absl::string_view legacy_params);
   absl::Status FreeTransform();
-  // Clamps d to [-ScipInf(), ScipInf()].
-  double ScipInfClamp(double d);
+
+  // Replaces +/- inf by +/- ScipInf(), fails when |d| is in [ScipInf(), inf).
+  absl::StatusOr<double> ScipInfClamp(double d);
+
   // Returns +/- inf if |d| >= ScipInf(), otherwise returns d.
   double ScipInfUnclamp(double d);
+
+  // Returns an error if |d| >= ScipInf().
+  absl::Status CheckScipFinite(double d);
 
   absl::Status MaybeKeepConstraintAlive(SCIP_CONS* constraint,
                                         const GScipConstraintOptions& options);
@@ -368,6 +405,8 @@ class GScip {
   SCIP* scip_;
   absl::flat_hash_set<SCIP_VAR*> variables_;
   absl::flat_hash_set<SCIP_CONS*> constraints_;
+  absl::Mutex callback_status_mutex_;
+  absl::Status callback_status_ ABSL_GUARDED_BY(callback_status_mutex_);
 };
 
 // Advanced features below
@@ -429,7 +468,7 @@ struct GScipSOSData {
 // Models the constraint z = 1 => a * x <= b
 // If negate_indicator, then instead: z = 0 => a * x <= b
 struct GScipIndicatorConstraint {
-  // The z variable above.
+  // The z variable above. The vartype must be kBinary.
   SCIP_VAR* indicator_variable = nullptr;
   bool negate_indicator = false;
   // The x variable above.

@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,11 +20,14 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
-#include "ortools/base/integral_types.h"
-#include "ortools/base/macros.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
+#include "ortools/base/logging.h"
+#include "ortools/base/types.h"
 #include "ortools/sat/integer.h"
 #include "ortools/sat/model.h"
 #include "ortools/sat/sat_base.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
@@ -152,6 +155,11 @@ class AllDifferentBoundsPropagator : public PropagatorInterface {
   AllDifferentBoundsPropagator(const std::vector<AffineExpression>& expressions,
                                IntegerTrail* integer_trail);
 
+  // This type is neither copyable nor movable.
+  AllDifferentBoundsPropagator(const AllDifferentBoundsPropagator&) = delete;
+  AllDifferentBoundsPropagator& operator=(const AllDifferentBoundsPropagator&) =
+      delete;
+
   bool Propagate() final;
   void RegisterWith(GenericLiteralWatcher* watcher);
 
@@ -172,7 +180,7 @@ class AllDifferentBoundsPropagator : public PropagatorInterface {
   // them.
   bool PropagateLowerBounds();
   bool PropagateLowerBoundsInternal(IntegerValue min_lb,
-                                    absl::Span<CachedBounds> vars);
+                                    absl::Span<CachedBounds> bounds);
 
   // Internally, we will maintain a set of non-consecutive integer intervals of
   // the form [start, end]. Each point (i.e. IntegerValue) of such interval will
@@ -219,8 +227,6 @@ class AllDifferentBoundsPropagator : public PropagatorInterface {
 
   // Temporary integer reason.
   std::vector<IntegerLiteral> integer_reason_;
-
-  DISALLOW_COPY_AND_ASSIGN(AllDifferentBoundsPropagator);
 };
 
 }  // namespace sat

@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,7 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdint.h>
+#include <stdlib.h>
+
+#include <vector>
+
+#include "absl/types/span.h"
+#include "ortools/base/logging.h"
 #include "ortools/sat/cp_model.h"
+#include "ortools/sat/cp_model.pb.h"
+#include "ortools/sat/cp_model_solver.h"
+#include "ortools/util/sorted_interval_list.h"
 
 namespace operations_research {
 namespace sat {
@@ -21,9 +31,9 @@ void RankingSampleSat() {
   const int kHorizon = 100;
   const int kNumTasks = 4;
 
-  auto add_task_ranking = [&cp_model](const std::vector<IntVar>& starts,
-                                      const std::vector<BoolVar>& presences,
-                                      const std::vector<IntVar>& ranks) {
+  auto add_task_ranking = [&cp_model](absl::Span<const IntVar> starts,
+                                      absl::Span<const BoolVar> presences,
+                                      absl::Span<const IntVar> ranks) {
     const int num_tasks = starts.size();
 
     // Creates precedence variables between pairs of intervals.
@@ -51,7 +61,7 @@ void RankingSampleSat() {
         // Makes sure that if j is not performed, all precedences are
         // false.
         cp_model.AddImplication(Not(presences[j]), Not(precedences[i][j]));
-        cp_model.AddImplication(Not(presences[i]), Not(precedences[j][i]));
+        cp_model.AddImplication(Not(presences[j]), Not(precedences[j][i]));
         //  The following bool_or will enforce that for any two intervals:
         //    i precedes j or j precedes i or at least one interval is not
         //        performed.

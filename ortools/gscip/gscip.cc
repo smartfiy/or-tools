@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <functional>
 #include <limits>
 #include <memory>
 #include <string>
@@ -26,13 +25,16 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "absl/synchronization/mutex.h"
 #include "absl/types/span.h"
+#include "lpi/lpi.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/status_macros.h"
 #include "ortools/gscip/gscip.pb.h"
@@ -40,16 +42,29 @@
 #include "ortools/gscip/legacy_scip_params.h"
 #include "ortools/linear_solver/scip_helper_macros.h"
 #include "ortools/port/proto_utils.h"
+#include "ortools/util/status_macros.h"
 #include "scip/cons_linear.h"
 #include "scip/cons_quadratic.h"
+#include "scip/def.h"
 #include "scip/scip.h"
+#include "scip/scip_cons.h"
 #include "scip/scip_general.h"
+#include "scip/scip_message.h"
+#include "scip/scip_numerics.h"
 #include "scip/scip_param.h"
 #include "scip/scip_prob.h"
+#include "scip/scip_sol.h"
+#include "scip/scip_solve.h"
 #include "scip/scip_solvingstats.h"
+#include "scip/scip_var.h"
 #include "scip/scipdefplugins.h"
 #include "scip/type_cons.h"
+#include "scip/type_paramset.h"
+#include "scip/type_retcode.h"
 #include "scip/type_scip.h"
+#include "scip/type_set.h"
+#include "scip/type_sol.h"
+#include "scip/type_stat.h"
 #include "scip/type_var.h"
 
 namespace operations_research {
@@ -67,6 +82,8 @@ SCIP_VARTYPE ConvertVarType(const GScipVarType var_type) {
   switch (var_type) {
     case GScipVarType::kContinuous:
       return SCIP_VARTYPE_CONTINUOUS;
+    case GScipVarType::kBinary:
+      return SCIP_VARTYPE_BINARY;
     case GScipVarType::kImpliedInteger:
       return SCIP_VARTYPE_IMPLINT;
     case GScipVarType::kInteger:
@@ -81,8 +98,9 @@ GScipVarType ConvertVarType(const SCIP_VARTYPE var_type) {
     case SCIP_VARTYPE_IMPLINT:
       return GScipVarType::kImpliedInteger;
     case SCIP_VARTYPE_INTEGER:
-    case SCIP_VARTYPE_BINARY:
       return GScipVarType::kInteger;
+    case SCIP_VARTYPE_BINARY:
+      return GScipVarType::kBinary;
   }
 }
 
@@ -171,6 +189,29 @@ SCIP_PARAMSETTING ConvertMetaParamValue(
   }
 }
 
+absl::Status CheckSolutionsInOrder(const GScipResult& result,
+                                   const bool is_maximize) {
+  auto objective_as_good_as = [is_maximize](double left, double right) {
+    if (is_maximize) {
+      return left >= right;
+    }
+    return left <= right;
+  };
+  for (int i = 1; i < result.objective_values.size(); ++i) {
+    const double previous = result.objective_values[i - 1];
+    const double current = result.objective_values[i];
+    if (!objective_as_good_as(previous, current)) {
+      return util::InternalErrorBuilder()
+             << "Expected SCIP solutions to be in best objective order "
+                "first, but for "
+             << (is_maximize ? "maximization" : "minimization")
+             << " problem, the " << i - 1 << " objective is " << previous
+             << " and the " << i << " objective is " << current;
+    }
+  }
+  return absl::OkStatus();
+}
+
 }  // namespace
 
 const GScipVariableOptions& DefaultGScipVariableOptions() {
@@ -184,7 +225,7 @@ const GScipConstraintOptions& DefaultGScipConstraintOptions() {
 }
 
 absl::Status GScip::SetParams(const GScipParameters& params,
-                              const std::string& legacy_params) {
+                              absl::string_view legacy_params) {
   if (params.has_silence_output()) {
     SCIPsetMessagehdlrQuiet(scip_, params.silence_output());
   }
@@ -277,6 +318,18 @@ bool GScip::InterruptSolve() {
   return SCIPinterruptSolve(scip_) == SCIP_OKAY;
 }
 
+void GScip::InterruptSolveFromCallback(absl::Status error_status) {
+  CHECK(!error_status.ok());
+  {
+    const absl::MutexLock lock(&callback_status_mutex_);
+    if (!callback_status_.ok()) {
+      return;
+    }
+    callback_status_ = std::move(error_status);
+  }
+  InterruptSolve();
+}
+
 absl::Status GScip::CleanUp() {
   if (scip_ != nullptr) {
     for (SCIP_VAR* variable : variables_) {
@@ -303,8 +356,12 @@ absl::StatusOr<SCIP_VAR*> GScip::AddVariable(
     double lb, double ub, double obj_coef, GScipVarType var_type,
     const std::string& var_name, const GScipVariableOptions& options) {
   SCIP_VAR* var = nullptr;
-  lb = ScipInfClamp(lb);
-  ub = ScipInfClamp(ub);
+  OR_ASSIGN_OR_RETURN3(lb, ScipInfClamp(lb),
+                       _ << "invalid lower bound for variable: " << var_name);
+  OR_ASSIGN_OR_RETURN3(ub, ScipInfClamp(ub),
+                       _ << "invalid upper bound for variable: " << var_name);
+  RETURN_IF_ERROR(CheckScipFinite(obj_coef))
+      << "invalid objective coefficient for variable: " << var_name;
   RETURN_IF_SCIP_ERROR(SCIPcreateVarBasic(scip_, /*var=*/&var,
                                           /*name=*/var_name.c_str(),
                                           /*lb=*/lb, /*ub=*/ub,
@@ -337,11 +394,19 @@ absl::StatusOr<SCIP_CONS*> GScip::AddLinearConstraint(
   SCIP_CONS* constraint = nullptr;
   RETURN_ERROR_UNLESS(range.variables.size() == range.coefficients.size())
       << "Error adding constraint: " << name << ".";
+  OR_ASSIGN_OR_RETURN3(const double lb, ScipInfClamp(range.lower_bound),
+                       _ << "invalid lower bound for constraint: " << name);
+  OR_ASSIGN_OR_RETURN3(const double ub, ScipInfClamp(range.upper_bound),
+                       _ << "invalid upper bound for constraint: " << name);
+  for (int i = 0; i < range.coefficients.size(); ++i) {
+    RETURN_IF_ERROR(CheckScipFinite(range.coefficients[i]))
+        << "invalid coefficient at index " << i << " of constraint: " << name;
+  }
   RETURN_IF_SCIP_ERROR(SCIPcreateConsLinear(
       scip_, &constraint, name.c_str(), range.variables.size(),
       const_cast<SCIP_VAR**>(range.variables.data()),
       const_cast<double*>(range.coefficients.data()),
-      ScipInfClamp(range.lower_bound), ScipInfClamp(range.upper_bound),
+      /*lhs=*/lb, /*rhs=*/ub,
       /*initial=*/options.initial,
       /*separate=*/options.separate,
       /*enforce=*/options.enforce,
@@ -369,6 +434,20 @@ absl::StatusOr<SCIP_CONS*> GScip::AddQuadraticConstraint(
       << "Error adding quadratic constraint: " << name << " in quadratic term.";
   RETURN_ERROR_UNLESS(num_quad_vars == range.quadratic_coefficients.size())
       << "Error adding quadratic constraint: " << name << " in quadratic term.";
+  OR_ASSIGN_OR_RETURN3(const double lb, ScipInfClamp(range.lower_bound),
+                       _ << "invalid lower bound for constraint: " << name);
+  OR_ASSIGN_OR_RETURN3(const double ub, ScipInfClamp(range.upper_bound),
+                       _ << "invalid upper bound for constraint: " << name);
+  for (int i = 0; i < range.linear_coefficients.size(); ++i) {
+    RETURN_IF_ERROR(CheckScipFinite(range.linear_coefficients[i]))
+        << "invalid linear coefficient at index " << i
+        << " of constraint: " << name;
+  }
+  for (int i = 0; i < range.quadratic_coefficients.size(); ++i) {
+    RETURN_IF_ERROR(CheckScipFinite(range.quadratic_coefficients[i]))
+        << "invalid quadratic coefficient at index " << i
+        << " of constraint: " << name;
+  }
   RETURN_IF_SCIP_ERROR(SCIPcreateConsQuadratic(
       scip_, &constraint, name.c_str(), num_lin_vars,
       const_cast<SCIP_Var**>(range.linear_variables.data()),
@@ -376,7 +455,7 @@ absl::StatusOr<SCIP_CONS*> GScip::AddQuadraticConstraint(
       const_cast<SCIP_Var**>(range.quadratic_variables1.data()),
       const_cast<SCIP_Var**>(range.quadratic_variables2.data()),
       const_cast<double*>(range.quadratic_coefficients.data()),
-      ScipInfClamp(range.lower_bound), ScipInfClamp(range.upper_bound),
+      /*lhs=*/lb, /*rhs=*/ub,
       /*initial=*/options.initial,
       /*separate=*/options.separate,
       /*enforce=*/options.enforce,
@@ -405,12 +484,19 @@ absl::StatusOr<SCIP_CONS*> GScip::AddIndicatorConstraint(
   RETURN_ERROR_UNLESS(indicator_constraint.variables.size() ==
                       indicator_constraint.coefficients.size())
       << "Error adding indicator constraint: " << name << ".";
+  OR_ASSIGN_OR_RETURN3(const double ub,
+                       ScipInfClamp(indicator_constraint.upper_bound),
+                       _ << "invalid upper bound for constraint: " << name);
+  for (int i = 0; i < indicator_constraint.coefficients.size(); ++i) {
+    RETURN_IF_ERROR(CheckScipFinite(indicator_constraint.coefficients[i]))
+        << "invalid coefficient at index " << i << " of constraint: " << name;
+  }
   RETURN_IF_SCIP_ERROR(SCIPcreateConsIndicator(
       scip_, &constraint, name.c_str(), indicator,
       indicator_constraint.variables.size(),
       const_cast<SCIP_Var**>(indicator_constraint.variables.data()),
       const_cast<double*>(indicator_constraint.coefficients.data()),
-      ScipInfClamp(indicator_constraint.upper_bound),
+      /*rhs=*/ub,
       /*initial=*/options.initial,
       /*separate=*/options.separate,
       /*enforce=*/options.enforce,
@@ -478,7 +564,7 @@ absl::StatusOr<SCIP_CONS*> GScip::AddOrConstraint(
 namespace {
 
 absl::Status ValidateSOSData(const GScipSOSData& sos_data,
-                             const std::string& name) {
+                             absl::string_view name) {
   RETURN_ERROR_UNLESS(!sos_data.variables.empty())
       << "Error adding SOS constraint: " << name << ".";
   if (!sos_data.weights.empty()) {
@@ -557,6 +643,7 @@ absl::Status GScip::SetMaximize(bool is_maximize) {
 }
 
 absl::Status GScip::SetObjectiveOffset(double offset) {
+  RETURN_IF_ERROR(CheckScipFinite(offset)) << "invalid objective offset";
   double old_offset = SCIPgetOrigObjoffset(scip_);
   double delta_offset = offset - old_offset;
   RETURN_IF_SCIP_ERROR(SCIPaddOrigObjoffset(scip_, delta_offset));
@@ -575,18 +662,19 @@ absl::Status GScip::SetBranchingPriority(SCIP_VAR* var, int priority) {
 }
 
 absl::Status GScip::SetLb(SCIP_VAR* var, double lb) {
-  lb = ScipInfClamp(lb);
+  OR_ASSIGN_OR_RETURN3(lb, ScipInfClamp(lb), _ << "invalid lower bound");
   RETURN_IF_SCIP_ERROR(SCIPchgVarLb(scip_, var, lb));
   return absl::OkStatus();
 }
 
 absl::Status GScip::SetUb(SCIP_VAR* var, double ub) {
-  ub = ScipInfClamp(ub);
+  OR_ASSIGN_OR_RETURN3(ub, ScipInfClamp(ub), _ << "invalid upper bound");
   RETURN_IF_SCIP_ERROR(SCIPchgVarUb(scip_, var, ub));
   return absl::OkStatus();
 }
 
 absl::Status GScip::SetObjCoef(SCIP_VAR* var, double obj_coef) {
+  RETURN_IF_ERROR(CheckScipFinite(obj_coef)) << "invalid objective coefficient";
   RETURN_IF_SCIP_ERROR(SCIPchgVarObj(scip_, var, obj_coef));
   return absl::OkStatus();
 }
@@ -610,6 +698,9 @@ absl::Status GScip::DeleteVariable(SCIP_VAR* var) {
 
 absl::Status GScip::CanSafeBulkDelete(
     const absl::flat_hash_set<SCIP_VAR*>& vars) {
+  if (vars.empty()) {
+    return absl::OkStatus();
+  }
   for (SCIP_CONS* constraint : constraints_) {
     if (!IsConstraintLinear(constraint)) {
       return absl::InvalidArgumentError(absl::StrCat(
@@ -621,6 +712,9 @@ absl::Status GScip::CanSafeBulkDelete(
 
 absl::Status GScip::SafeBulkDelete(const absl::flat_hash_set<SCIP_VAR*>& vars) {
   RETURN_IF_ERROR(CanSafeBulkDelete(vars));
+  if (vars.empty()) {
+    return absl::OkStatus();
+  }
   // Now, we can assume that all constraints are linear.
   for (SCIP_CONS* constraint : constraints_) {
     const absl::Span<SCIP_VAR* const> nonzeros =
@@ -688,13 +782,13 @@ absl::string_view GScip::Name(SCIP_CONS* constraint) {
 }
 
 absl::Status GScip::SetLinearConstraintLb(SCIP_CONS* constraint, double lb) {
-  lb = ScipInfClamp(lb);
+  OR_ASSIGN_OR_RETURN3(lb, ScipInfClamp(lb), _ << "invalid lower bound");
   RETURN_IF_SCIP_ERROR(SCIPchgLhsLinear(scip_, constraint, lb));
   return absl::OkStatus();
 }
 
 absl::Status GScip::SetLinearConstraintUb(SCIP_CONS* constraint, double ub) {
-  ub = ScipInfClamp(ub);
+  OR_ASSIGN_OR_RETURN3(ub, ScipInfClamp(ub), _ << "invalid upper bound");
   RETURN_IF_SCIP_ERROR(SCIPchgRhsLinear(scip_, constraint, ub));
   return absl::OkStatus();
 }
@@ -711,7 +805,16 @@ absl::Status GScip::SetLinearConstraintCoef(SCIP_CONS* constraint,
   // TODO(user): this operation is slow (linear in the nnz in the constraint).
   // It would be better to just use a bulk operation, but there doesn't appear
   // to be any?
+  RETURN_IF_ERROR(CheckScipFinite(value)) << "invalid coefficient";
   RETURN_IF_SCIP_ERROR(SCIPchgCoefLinear(scip_, constraint, var, value));
+  return absl::OkStatus();
+}
+
+absl::Status GScip::AddLinearConstraintCoef(SCIP_CONS* const constraint,
+                                            SCIP_VAR* const var,
+                                            const double value) {
+  RETURN_IF_ERROR(CheckScipFinite(value)) << "invalid coefficient";
+  RETURN_IF_SCIP_ERROR(SCIPaddCoefLinear(scip_, constraint, var, value));
   return absl::OkStatus();
 }
 
@@ -753,8 +856,13 @@ absl::StatusOr<GScipHintResult> GScip::SuggestHint(
 }
 
 absl::StatusOr<GScipResult> GScip::Solve(
-    const GScipParameters& params, const std::string& legacy_params,
+    const GScipParameters& params, absl::string_view legacy_params,
     const GScipMessageHandler message_handler) {
+  if (InErrorState()) {
+    return absl::InvalidArgumentError(
+        "GScip is in an error state due to a previous GScip::Solve()");
+  }
+
   // A four step process:
   //  1. Apply parameters.
   //  2. Solve the problem.
@@ -778,6 +886,12 @@ absl::StatusOr<GScipResult> GScip::Solve(
   if (!params.scip_model_filename().empty()) {
     RETURN_IF_SCIP_ERROR(SCIPwriteOrigProblem(
         scip_, params.scip_model_filename().c_str(), "cip", FALSE));
+  }
+  if (params.has_objective_limit()) {
+    OR_ASSIGN_OR_RETURN3(const double scip_obj_limit,
+                         ScipInfClamp(params.objective_limit()),
+                         _ << "invalid objective_limit");
+    RETURN_IF_SCIP_ERROR(SCIPsetObjlimit(scip_, scip_obj_limit));
   }
 
   // Install the message handler if necessary. We do this after setting the
@@ -812,7 +926,7 @@ absl::StatusOr<GScipResult> GScip::Solve(
       stage != SCIP_STAGE_SOLVED) {
     result.gscip_output.set_status(GScipOutput::UNKNOWN);
     result.gscip_output.set_status_detail(
-        absl::StrCat("Unpexpected SCIP final stage= ", stage,
+        absl::StrCat("Unexpected SCIP final stage= ", stage,
                      " was expected to be either SCIP_STAGE_PRESOLVING, "
                      "SCIP_STAGE_SOLVING, or SCIP_STAGE_SOLVED"));
     return result;
@@ -836,6 +950,22 @@ absl::StatusOr<GScipResult> GScip::Solve(
           " when writing solve stats."));
     }
   }
+  absl::Status callback_status;
+  {
+    const absl::MutexLock callback_status_lock(&callback_status_mutex_);
+    callback_status = util::StatusBuilder(callback_status_)
+                      << "error in a callback that interrupted the solve";
+  }
+  if (!callback_status.ok()) {
+    const absl::Status status = FreeTransform();
+    if (status.ok()) {
+      return callback_status;
+    }
+    LOG(ERROR) << "GScip::FreeTransform() failed after interrupting "
+                  "the solve due to an error in a callback: "
+               << callback_status;
+    return status;
+  }
   // Step 3: Extract solution information.
   // Some outputs are available unconditionally, and some are only ready if at
   // least presolve succeeded.
@@ -855,6 +985,7 @@ absl::StatusOr<GScipResult> GScip::Solve(
     result.solutions.push_back(solution);
     result.objective_values.push_back(obj_value);
   }
+  RETURN_IF_ERROR(CheckSolutionsInOrder(result, ObjectiveIsMaximize()));
   // Can only check for primal ray if we made it past presolve.
   if (stage != SCIP_STAGE_PRESOLVING && SCIPhasPrimalRay(scip_)) {
     for (SCIP_VAR* v : variables_) {
@@ -888,6 +1019,9 @@ absl::StatusOr<GScipResult> GScip::Solve(
     // resetting it, the last new_handler_disabler would disable the handler and
     // the remainder of the buffer content would be lost.
     new_handler.reset();
+  }
+  if (params.has_objective_limit()) {
+    RETURN_IF_SCIP_ERROR(SCIPsetObjlimit(scip_, SCIP_INVALID));
   }
 
   RETURN_IF_SCIP_ERROR(SCIPresetParams(scip_));
@@ -948,10 +1082,20 @@ absl::StatusOr<std::string> GScip::DefaultStringParamValue(
   return std::string(result);
 }
 
-double GScip::ScipInfClamp(double d) {
+absl::StatusOr<double> GScip::ScipInfClamp(const double d) {
   const double kScipInf = ScipInf();
-  if (d > kScipInf) return kScipInf;
-  if (d < -kScipInf) return -kScipInf;
+  if (d == std::numeric_limits<double>::infinity()) {
+    return kScipInf;
+  }
+  if (d == -std::numeric_limits<double>::infinity()) {
+    return -kScipInf;
+  }
+  // NaN is considered finite here.
+  if (d >= kScipInf || d <= -kScipInf) {
+    return util::InvalidArgumentErrorBuilder()
+           << d << " is not in SCIP's finite range: (" << -kScipInf << ", "
+           << kScipInf << ")";
+  }
   return d;
 }
 
@@ -960,6 +1104,22 @@ double GScip::ScipInfUnclamp(double d) {
   if (d >= kScipInf) return std::numeric_limits<double>::infinity();
   if (d <= -kScipInf) return -std::numeric_limits<double>::infinity();
   return d;
+}
+
+absl::Status GScip::CheckScipFinite(double d) {
+  const double kScipInf = ScipInf();
+  // NaN is considered finite here.
+  if (d >= kScipInf || d <= -kScipInf) {
+    return util::InvalidArgumentErrorBuilder()
+           << d << " is not in SCIP's finite range: (" << -kScipInf << ", "
+           << kScipInf << ")";
+  }
+  return absl::OkStatus();
+}
+
+bool GScip::InErrorState() {
+  const absl::MutexLock lock(&callback_status_mutex_);
+  return !callback_status_.ok();
 }
 
 #undef RETURN_ERROR_UNLESS

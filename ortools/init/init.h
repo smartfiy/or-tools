@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,10 +14,14 @@
 #ifndef OR_TOOLS_OPEN_SOURCE_INIT_INIT_H_
 #define OR_TOOLS_OPEN_SOURCE_INIT_INIT_H_
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include "absl/flags/flag.h"
+#include "absl/flags/usage.h"
+#include "absl/log/globals.h"
+#include "absl/log/initialize.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/version.h"
 #include "ortools/gurobi/environment.h"
@@ -27,6 +31,7 @@ ABSL_DECLARE_FLAG(std::string, cp_model_dump_prefix);
 ABSL_DECLARE_FLAG(bool, cp_model_dump_models);
 ABSL_DECLARE_FLAG(bool, cp_model_dump_lns);
 ABSL_DECLARE_FLAG(bool, cp_model_dump_response);
+ABSL_DECLARE_FLAG(int, stderrthreshold);
 
 namespace operations_research {
 
@@ -35,12 +40,18 @@ namespace operations_research {
  */
 struct CppFlags {
   /**
-   * If true, all logging message will be sent to stderr.
+   * @brief Controls the logging level shown on stderr.
+   *
+   * By default, the logger will only display ERROR and FATAL logs (value 2 and
+   * 3) to stderr. To display INFO and WARNING logs (value 0 and 1), change the
+   * threshold to the min value of the message that should be printed.
+   *
    */
-  bool logtostderr = false;
+  int stderrthreshold = 2;
 
   /**
-   * Controls is time and source code info are used to prefix logging messages.
+   * @brief Controls if time and source code info are used to prefix logging
+   * messages.
    */
   bool log_prefix = false;
 
@@ -86,8 +97,9 @@ class CppBridge {
    *
    * This must be called once before any other library from OR-Tools are used.
    */
-  static void InitLogging(const std::string& program_name) {
-    google::InitGoogleLogging(program_name.c_str());
+  static void InitLogging(const std::string& usage) {
+    absl::SetProgramUsageMessage(usage);
+    absl::InitializeLog();
   }
 
   /**
@@ -95,15 +107,17 @@ class CppBridge {
    *
    * This can be called to shutdown the C++ logging layer from OR-Tools.
    * It should only be called once.
+   *
+   * Deprecated: this is a no-op.
    */
-  static void ShutdownLogging() { google::ShutdownGoogleLogging(); }
+  static void ShutdownLogging() {}
 
   /**
    * Sets all the C++ flags contained in the CppFlags structure.
    */
   static void SetFlags(const CppFlags& flags) {
-    absl::SetFlag(&FLAGS_logtostderr, flags.logtostderr);
-    absl::SetFlag(&FLAGS_log_prefix, flags.log_prefix);
+    absl::SetFlag(&FLAGS_stderrthreshold, flags.stderrthreshold);
+    absl::EnableLogPrefix(flags.log_prefix);
     if (!flags.cp_model_dump_prefix.empty()) {
       absl::SetFlag(&FLAGS_cp_model_dump_prefix, flags.cp_model_dump_prefix);
     }
@@ -123,6 +137,11 @@ class CppBridge {
   static bool LoadGurobiSharedLibrary(const std::string& full_library_path) {
     return LoadGurobiDynamicLibrary({full_library_path}).ok();
   }
+
+  /**
+   * Delete a temporary C++ byte array.
+   */
+  static void DeleteByteArray(uint8_t* buffer) { delete[] buffer; }
 };
 
 class OrToolsVersion {

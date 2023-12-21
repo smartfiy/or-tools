@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,11 +14,14 @@
 #include "ortools/gscip/legacy_scip_params.h"
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 #include "absl/status/status.h"
 #include "absl/strings/numbers.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
+#include "absl/strings/string_view.h"
 #include "ortools/base/logging.h"
 #include "ortools/linear_solver/scip_helper_macros.h"
 #include "scip/scip.h"
@@ -29,8 +32,8 @@
 
 namespace operations_research {
 
-absl::Status LegacyScipSetSolverSpecificParameters(
-    const std::string& parameters, SCIP* scip) {
+absl::Status LegacyScipSetSolverSpecificParameters(absl::string_view parameters,
+                                                   SCIP* scip) {
   for (const auto parameter : absl::StrSplit(parameters, absl::ByAnyChar(",\n"),
                                              absl::SkipWhitespace())) {
     std::vector<std::string> key_value = absl::StrSplit(

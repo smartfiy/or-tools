@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -56,11 +56,11 @@ using MessageHandlerPtr =
 
 // Captures the input handler and returns a unique pointer that will release it
 // when destroyed.
-MessageHandlerPtr CaptureMessageHandlerPtr(SCIP_MESSAGEHDLR* const handler);
+MessageHandlerPtr CaptureMessageHandlerPtr(SCIP_MESSAGEHDLR* handler);
 
 // Make a message handler for SCIP that calls the input function.
 absl::StatusOr<MessageHandlerPtr> MakeSCIPMessageHandler(
-    const GScipMessageHandler gscip_message_handler);
+    GScipMessageHandler gscip_message_handler);
 
 // Object to be instantiated on stack that, when destroyed, will disable the
 // custom handler so that it does not call the GScipMessageHandler.

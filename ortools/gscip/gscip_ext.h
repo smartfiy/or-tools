@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,7 +26,11 @@
 #ifndef OR_TOOLS_GSCIP_GSCIP_EXT_H_
 #define OR_TOOLS_GSCIP_GSCIP_EXT_H_
 
+#include <string>
+#include <vector>
+
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "ortools/gscip/gscip.h"
 #include "scip/scip.h"
 #include "scip/scip_prob.h"
@@ -39,7 +43,7 @@ namespace operations_research {
 // Adds the constraint y = abs(x). May create auxiliary variables. Supports
 // unbounded x.
 absl::Status GScipCreateAbs(GScip* gscip, SCIP_Var* x, SCIP_Var* abs_x,
-                            const std::string& name = "");
+                            absl::string_view name = "");
 
 // TODO(user): delete this type and the methods below, use a generic version
 // templated on the variable type that supports operator overloads.
@@ -61,20 +65,19 @@ GScipLinearExpr GScipNegate(GScipLinearExpr expr);
 
 // Returns the range -inf <= left.terms - right.terms <= right.offset -
 // left.offset
-GScipLinearRange GScipLe(const GScipLinearExpr left,
-                         const GScipLinearExpr& right);
+GScipLinearRange GScipLe(GScipLinearExpr left, const GScipLinearExpr& right);
 
 // Adds the constraint resultant = maximum(terms). Supports unbounded variables
 // in terms.
 absl::Status GScipCreateMaximum(GScip* gscip, const GScipLinearExpr& resultant,
                                 const std::vector<GScipLinearExpr>& terms,
-                                const std::string& name = "");
+                                absl::string_view name = "");
 
 // Adds the constraint resultant = minimum(terms). Supports unbounded variables
 // in terms.
 absl::Status GScipCreateMinimum(GScip* gscip, const GScipLinearExpr& resultant,
                                 const std::vector<GScipLinearExpr>& terms,
-                                const std::string& name = "");
+                                absl::string_view name = "");
 
 // Models the constraint z = 1 => lb <= ax <= ub
 // If negate_indicator, then instead: z = 0 => lb <= ax <= ub
@@ -87,7 +90,7 @@ struct GScipIndicatorRangeConstraint {
 // Supports unbounded variables in indicator_range.range.variables.
 absl::Status GScipCreateIndicatorRange(
     GScip* gscip, const GScipIndicatorRangeConstraint& indicator_range,
-    const std::string& name = "",
+    absl::string_view name = "",
     const GScipConstraintOptions& options = GScipConstraintOptions());
 
 // WARNING: DO NOT CHANGE THE OBJECTIVE DIRECTION AFTER CALLING THIS METHOD.
@@ -99,7 +102,7 @@ absl::Status GScipCreateIndicatorRange(
 absl::Status GScipAddQuadraticObjectiveTerm(
     GScip* gscip, std::vector<SCIP_Var*> quadratic_variables1,
     std::vector<SCIP_Var*> quadratic_variables2,
-    std::vector<double> quadratic_coefficients, const std::string& name = "");
+    std::vector<double> quadratic_coefficients, absl::string_view name = "");
 
 }  // namespace operations_research
 

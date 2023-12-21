@@ -1,3 +1,16 @@
+# Copyright 2010-2022 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 if(NOT BUILD_JAVA)
   return()
 endif()
@@ -45,9 +58,17 @@ set(JAVA_ARTIFACT "ortools")
 
 set(JAVA_PACKAGE "${JAVA_GROUP}.${JAVA_ARTIFACT}")
 if(APPLE)
-  set(NATIVE_IDENTIFIER darwin-x86-64)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)")
+    set(NATIVE_IDENTIFIER darwin-aarch64)
+  else()
+    set(NATIVE_IDENTIFIER darwin-x86-64)
+  endif()
 elseif(UNIX)
-  set(NATIVE_IDENTIFIER linux-x86-64)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)")
+    set(NATIVE_IDENTIFIER linux-aarch64)
+  else()
+    set(NATIVE_IDENTIFIER linux-x86-64)
+  endif()
 elseif(WIN32)
   set(NATIVE_IDENTIFIER win32-x86-64)
 else()
@@ -63,28 +84,24 @@ message(STATUS "Java project: ${JAVA_PROJECT}")
 set(JAVA_PROJECT_DIR ${PROJECT_BINARY_DIR}/java/${JAVA_PROJECT})
 message(STATUS "Java project build path: ${JAVA_PROJECT_DIR}")
 
-# CMake will remove all '-D' prefix (i.e. -DUSE_FOO become USE_FOO)
-#get_target_property(FLAGS ${PROJECT_NAMESPACE}::ortools COMPILE_DEFINITIONS)
-set(FLAGS -DUSE_BOP -DUSE_GLOP -DABSL_MUST_USE_RESULT)
-if(USE_COINOR)
-  list(APPEND FLAGS "-DUSE_CBC" "-DUSE_CLP")
-endif()
-if(USE_GLPK)
-  list(APPEND FLAGS "-DUSE_GLPK")
-endif()
-if(USE_SCIP)
-  list(APPEND FLAGS "-DUSE_SCIP")
-endif()
-list(APPEND CMAKE_SWIG_FLAGS ${FLAGS} "-I${PROJECT_SOURCE_DIR}")
-
+##################
+##  PROTO FILE  ##
+##################
 # Generate Protobuf java sources
 set(PROTO_JAVAS)
 file(GLOB_RECURSE proto_java_files RELATIVE ${PROJECT_SOURCE_DIR}
+  "ortools/bop/*.proto"
   "ortools/constraint_solver/*.proto"
+  "ortools/glop/*.proto"
+  "ortools/graph/*.proto"
   "ortools/linear_solver/*.proto"
   "ortools/sat/*.proto"
   "ortools/util/*.proto"
   )
+if(USE_PDLP)
+  file(GLOB_RECURSE pdlp_proto_java_files RELATIVE ${PROJECT_SOURCE_DIR} "ortools/pdlp/*.proto")
+  list(APPEND proto_java_files ${pdlp_proto_java_files})
+endif()
 list(REMOVE_ITEM proto_java_files "ortools/constraint_solver/demon_profiler.proto")
 list(REMOVE_ITEM proto_java_files "ortools/constraint_solver/assignment.proto")
 foreach(PROTO_FILE IN LISTS proto_java_files)
@@ -135,14 +152,84 @@ elseif(UNIX)
   set_target_properties(jni${JAVA_ARTIFACT} PROPERTIES INSTALL_RPATH "$ORIGIN")
 endif()
 
-# Swig wrap all libraries
 set(JAVA_SRC_PATH src/main/java/${JAVA_DOMAIN_EXTENSION}/${JAVA_DOMAIN_NAME}/${JAVA_ARTIFACT})
 set(JAVA_TEST_PATH src/test/java/${JAVA_DOMAIN_EXTENSION}/${JAVA_DOMAIN_NAME}/${JAVA_ARTIFACT})
 set(JAVA_RESSOURCES_PATH src/main/resources)
+
+#################
+##  Java Test  ##
+#################
+if(BUILD_TESTING)
+  # add_java_test()
+  # CMake function to generate and build java test.
+  # Parameters:
+  #  the java filename
+  # e.g.:
+  # add_java_test(FooTests.java)
+  function(add_java_test FILE_NAME)
+    message(STATUS "Configuring test ${FILE_NAME}: ...")
+    get_filename_component(TEST_NAME ${FILE_NAME} NAME_WE)
+    get_filename_component(WRAPPER_DIR ${FILE_NAME} DIRECTORY)
+    get_filename_component(COMPONENT_DIR ${WRAPPER_DIR} DIRECTORY)
+    get_filename_component(COMPONENT_NAME ${COMPONENT_DIR} NAME)
+
+    set(JAVA_TEST_DIR ${PROJECT_BINARY_DIR}/java/${COMPONENT_NAME}/${TEST_NAME})
+    message(STATUS "build path: ${JAVA_TEST_DIR}")
+
+    add_custom_command(
+      OUTPUT ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}/${TEST_NAME}.java
+      COMMAND ${CMAKE_COMMAND} -E make_directory
+      ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}
+      COMMAND ${CMAKE_COMMAND} -E copy
+      ${FILE_NAME}
+      ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}/
+      MAIN_DEPENDENCY ${FILE_NAME}
+      VERBATIM
+      )
+
+    string(TOLOWER ${TEST_NAME} JAVA_TEST_PROJECT)
+    configure_file(
+      ${PROJECT_SOURCE_DIR}/ortools/java/pom-test.xml.in
+      ${JAVA_TEST_DIR}/pom.xml
+      @ONLY)
+
+    add_custom_command(
+      OUTPUT ${JAVA_TEST_DIR}/timestamp
+      COMMAND ${MAVEN_EXECUTABLE} compile -B
+      COMMAND ${CMAKE_COMMAND} -E touch ${JAVA_TEST_DIR}/timestamp
+      DEPENDS
+      ${JAVA_TEST_DIR}/pom.xml
+      ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}/${TEST_NAME}.java
+      java_package
+      BYPRODUCTS
+      ${JAVA_TEST_DIR}/target
+      COMMENT "Compiling Java ${COMPONENT_NAME}/${TEST_NAME}.java (${JAVA_TEST_DIR}/timestamp)"
+      WORKING_DIRECTORY ${JAVA_TEST_DIR})
+
+    add_custom_target(java_${COMPONENT_NAME}_${TEST_NAME} ALL
+      DEPENDS
+      ${JAVA_TEST_DIR}/timestamp
+      WORKING_DIRECTORY ${JAVA_TEST_DIR})
+
+    add_test(
+      NAME java_${COMPONENT_NAME}_${TEST_NAME}
+      COMMAND ${MAVEN_EXECUTABLE} test
+      WORKING_DIRECTORY ${JAVA_TEST_DIR})
+    message(STATUS "Configuring test ${FILE_NAME}: ...DONE")
+  endfunction()
+endif()
+
+#####################
+##  JAVA WRAPPERS  ##
+#####################
+list(APPEND CMAKE_SWIG_FLAGS "-I${PROJECT_SOURCE_DIR}")
+
+# Swig wrap all libraries
 foreach(SUBPROJECT IN ITEMS algorithms graph init linear_solver constraint_solver sat util)
   add_subdirectory(ortools/${SUBPROJECT}/java)
   target_link_libraries(jni${JAVA_ARTIFACT} PRIVATE jni${SUBPROJECT})
 endforeach()
+target_link_libraries(jni${JAVA_ARTIFACT} PRIVATE jnimodelbuilder)
 
 #################################
 ##  Java Native Maven Package  ##
@@ -176,6 +263,11 @@ add_custom_target(java_native_package
     ${JAVA_NATIVE_PROJECT_DIR}/timestamp
   WORKING_DIRECTORY ${JAVA_NATIVE_PROJECT_DIR})
 
+add_custom_target(java_native_deploy
+  COMMAND ${MAVEN_EXECUTABLE} deploy
+  WORKING_DIRECTORY ${JAVA_NATIVE_PROJECT_DIR})
+add_dependencies(java_native_deploy java_native_package)
+
 ##########################
 ##  Java Maven Package  ##
 ##########################
@@ -199,7 +291,7 @@ file(GLOB_RECURSE java_files RELATIVE ${PROJECT_SOURCE_DIR}/ortools/java
 set(JAVA_SRCS)
 foreach(JAVA_FILE IN LISTS java_files)
   #message(STATUS "java: ${JAVA_FILE}")
-  set(JAVA_OUT ${JAVA_PROJECT_DIR}/${JAVA_SRC_PATH}/${JAVA_FILE})
+  set(JAVA_OUT ${JAVA_PROJECT_DIR}/src/main/java/${JAVA_FILE})
   #message(STATUS "java out: ${JAVA_OUT}")
   add_custom_command(
     OUTPUT ${JAVA_OUT}
@@ -222,7 +314,8 @@ add_custom_command(
     ${JAVA_PROJECT_DIR}/pom.xml
     ${JAVA_SRCS}
     Java${PROJECT_NAME}_proto
-  java_native_package
+    ${JAVA_NATIVE_PROJECT_DIR}/timestamp
+    java_native_package
   BYPRODUCTS
     ${JAVA_PROJECT_DIR}/target
   COMMENT "Generate Java package ${JAVA_PROJECT} (${JAVA_PROJECT_DIR}/timestamp)"
@@ -233,67 +326,59 @@ add_custom_target(java_package ALL
     ${JAVA_PROJECT_DIR}/timestamp
   WORKING_DIRECTORY ${JAVA_PROJECT_DIR})
 
-#################
-##  Java Test  ##
-#################
-# add_java_test()
-# CMake function to generate and build java test.
-# Parameters:
-#  the java filename
-# e.g.:
-# add_java_test(FooTests.java)
-function(add_java_test FILE_NAME)
-  message(STATUS "Configuring test ${FILE_NAME}: ...")
-  get_filename_component(TEST_NAME ${FILE_NAME} NAME_WE)
-  get_filename_component(COMPONENT_DIR ${FILE_NAME} DIRECTORY)
-  get_filename_component(COMPONENT_NAME ${COMPONENT_DIR} NAME)
+add_custom_target(java_deploy
+  COMMAND ${MAVEN_EXECUTABLE} deploy
+  WORKING_DIRECTORY ${JAVA_PROJECT_DIR})
+add_dependencies(java_deploy java_package)
 
-  set(JAVA_TEST_DIR ${PROJECT_BINARY_DIR}/java/${COMPONENT_NAME}/${TEST_NAME})
-  message(STATUS "build path: ${JAVA_TEST_DIR}")
-
-  add_custom_command(
-    OUTPUT ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}/${TEST_NAME}.java
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-      ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}
-    COMMAND ${CMAKE_COMMAND} -E copy
-      ${FILE_NAME}
-      ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}/
-    MAIN_DEPENDENCY ${FILE_NAME}
-    VERBATIM
-  )
-
-  string(TOLOWER ${TEST_NAME} JAVA_TEST_PROJECT)
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/ortools/java/pom-test.xml.in
-    ${JAVA_TEST_DIR}/pom.xml
-    @ONLY)
-
-  add_custom_command(
-    OUTPUT ${JAVA_TEST_DIR}/timestamp
-    COMMAND ${MAVEN_EXECUTABLE} compile -B
-    COMMAND ${CMAKE_COMMAND} -E touch ${JAVA_TEST_DIR}/timestamp
-    DEPENDS
-      ${JAVA_TEST_DIR}/pom.xml
-      ${JAVA_TEST_DIR}/${JAVA_TEST_PATH}/${TEST_NAME}.java
-      java_package
-    BYPRODUCTS
-      ${JAVA_TEST_DIR}/target
-    COMMENT "Compiling Java ${COMPONENT_NAME}/${TEST_NAME}.java (${JAVA_TEST_DIR}/timestamp)"
-    WORKING_DIRECTORY ${JAVA_TEST_DIR})
-
-  add_custom_target(java_${COMPONENT_NAME}_${TEST_NAME} ALL
-    DEPENDS
-      ${JAVA_TEST_DIR}/timestamp
-    WORKING_DIRECTORY ${JAVA_TEST_DIR})
-
-  if(BUILD_TESTING)
-    add_test(
-      NAME java_${COMPONENT_NAME}_${TEST_NAME}
-      COMMAND ${MAVEN_EXECUTABLE} test
-      WORKING_DIRECTORY ${JAVA_TEST_DIR})
+###############
+## Doc rules ##
+###############
+if(BUILD_JAVA_DOC)
+  # add a target to generate API documentation with Doxygen
+  find_package(Doxygen)
+  if(DOXYGEN_FOUND)
+    configure_file(${PROJECT_SOURCE_DIR}/ortools/java/Doxyfile.in ${PROJECT_BINARY_DIR}/java/Doxyfile @ONLY)
+    file(DOWNLOAD
+      https://raw.githubusercontent.com/jothepro/doxygen-awesome-css/v2.1.0/doxygen-awesome.css
+      ${PROJECT_BINARY_DIR}/java/doxygen-awesome.css
+      SHOW_PROGRESS
+    )
+    add_custom_target(${PROJECT_NAME}_java_doc ALL
+      #COMMAND ${CMAKE_COMMAND} -E rm -rf ${PROJECT_BINARY_DIR}/docs/java
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/docs/java
+      COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/java/Doxyfile
+      DEPENDS
+        java_package
+        ${PROJECT_BINARY_DIR}/java/Doxyfile
+        ${PROJECT_BINARY_DIR}/java/doxygen-awesome.css
+        ${PROJECT_SOURCE_DIR}/ortools/java/stylesheet.css
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+      COMMENT "Generating Java API documentation with Doxygen"
+      VERBATIM)
+  else()
+    message(WARNING "cmd `doxygen` not found, Java doc generation is disable!")
   endif()
-  message(STATUS "Configuring test ${FILE_NAME}: ...DONE")
-endfunction()
+
+  # Java doc
+  find_program(JAR_PRG NAMES jar)
+  if (JAR_PRG)
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/docs/javadoc)
+    add_custom_target(${PROJECT_NAME}_javadoc_doc ALL
+      #COMMAND ${CMAKE_COMMAND} -E rm -rf ${PROJECT_BINARY_DIR}/docs/javadoc
+      #COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/docs/javadoc
+      COMMAND jar xvf
+      "${PROJECT_BINARY_DIR}/java/ortools-java/target/ortools-java-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}-javadoc.jar"
+      DEPENDS
+        java_package
+        ${PROJECT_BINARY_DIR}/docs/javadoc
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/docs/javadoc
+      COMMENT "Generating Java API documentation with Doxygen"
+      VERBATIM)
+  else()
+    message(WARNING "cmd `jar` not found, Javadoc doc generation is disable!")
+  endif()
+endif()
 
 ###################
 ##  Java Sample  ##

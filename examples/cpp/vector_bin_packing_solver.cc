@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,16 +12,18 @@
 // limitations under the License.
 
 #include <numeric>
+#include <string>
 
 #include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
 #include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
+#include "absl/strings/string_view.h"
 #include "ortools/base/commandlineflags.h"
 #include "ortools/base/file.h"
+#include "ortools/base/helpers.h"
+#include "ortools/base/init_google.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/timer.h"
 #include "ortools/packing/arc_flow_builder.h"
@@ -30,7 +32,7 @@
 #include "ortools/packing/vector_bin_packing_parser.h"
 
 ABSL_FLAG(std::string, input, "", "Vector Bin Packing (.vpb) data file name.");
-ABSL_FLAG(std::string, params, "",
+ABSL_FLAG(std::string, params, "num_workers:16,max_time_in_seconds:10",
           "Parameters in solver specific text format.");
 ABSL_FLAG(std::string, solver, "sat", "Solver to use: sat, scip");
 ABSL_FLAG(double, time_limit, 900.0, "Time limit in seconds");
@@ -40,7 +42,7 @@ ABSL_FLAG(int, max_bins, -1,
           "Maximum number of bins: default = -1 meaning no limits");
 
 namespace operations_research {
-void ParseAndSolve(const std::string& filename, const std::string& solver,
+void ParseAndSolve(const std::string& filename, absl::string_view solver,
                    const std::string& params) {
   std::string problem_name = filename;
   const size_t found = problem_name.find_last_of("/\\");
@@ -70,7 +72,7 @@ void ParseAndSolve(const std::string& filename, const std::string& solver,
             << data.item_size() << " item types, and "
             << data.resource_capacity_size() << " dimensions.";
   if (absl::GetFlag(FLAGS_display_proto)) {
-    LOG(INFO) << data.DebugString();
+    LOG(INFO) << data;
   }
 
   // Build optimization model.
@@ -96,9 +98,8 @@ void ParseAndSolve(const std::string& filename, const std::string& solver,
 }  // namespace operations_research
 
 int main(int argc, char** argv) {
-  absl::SetFlag(&FLAGS_logtostderr, true);
-  google::InitGoogleLogging(argv[0]);
-  absl::ParseCommandLine(argc, argv);
+  absl::SetFlag(&FLAGS_stderrthreshold, 0);
+  InitGoogle(argv[0], &argc, &argv, true);
   if (absl::GetFlag(FLAGS_input).empty()) {
     LOG(FATAL) << "Please supply a data file with --input=";
   }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2010-2021 Google LLC
+# Copyright 2010-2022 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # [START program]
 """Simple solve."""
 # [START import]
@@ -28,9 +29,9 @@ def main():
     # Creates the variables.
     # [START variables]
     var_upper_bound = max(50, 45, 37)
-    x = model.NewIntVar(0, var_upper_bound, 'x')
-    y = model.NewIntVar(0, var_upper_bound, 'y')
-    z = model.NewIntVar(0, var_upper_bound, 'z')
+    x = model.NewIntVar(0, var_upper_bound, "x")
+    y = model.NewIntVar(0, var_upper_bound, "y")
+    z = model.NewIntVar(0, var_upper_bound, "z")
     # [END variables]
 
     # Creates the constraints.
@@ -52,24 +53,24 @@ def main():
 
     # [START print_solution]
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print(f'Maximum of objective function: {solver.ObjectiveValue()}\n')
-        print(f'x = {solver.Value(x)}')
-        print(f'y = {solver.Value(y)}')
-        print(f'z = {solver.Value(z)}')
+        print(f"Maximum of objective function: {solver.ObjectiveValue()}\n")
+        print(f"x = {solver.Value(x)}")
+        print(f"y = {solver.Value(y)}")
+        print(f"z = {solver.Value(z)}")
     else:
-        print('No solution found.')
+        print("No solution found.")
     # [END print_solution]
 
     # Statistics.
     # [START statistics]
-    print('\nStatistics')
-    print(f'  status   : {solver.StatusName(status)}')
-    print(f'  conflicts: {solver.NumConflicts()}')
-    print(f'  branches : {solver.NumBranches()}')
-    print(f'  wall time: {solver.WallTime()} s')
+    print("\nStatistics")
+    print(f"  status   : {solver.StatusName(status)}")
+    print(f"  conflicts: {solver.NumConflicts()}")
+    print(f"  branches : {solver.NumBranches()}")
+    print(f"  wall time: {solver.WallTime()} s")
     # [END statistics]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 # [END program]

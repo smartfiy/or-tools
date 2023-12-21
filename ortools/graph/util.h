@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,10 +22,13 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "absl/container/btree_map.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/inlined_vector.h"
+#include "absl/types/span.h"
 #include "ortools/base/hash.h"
 #include "ortools/base/map_util.h"
 #include "ortools/graph/connected_components.h"
@@ -83,7 +86,7 @@ std::unique_ptr<Graph> RemapGraph(const Graph& graph,
 // be done in O(num new nodes + num new arcs) but with a higher constant.
 template <class Graph>
 std::unique_ptr<Graph> GetSubgraphOfNodes(const Graph& graph,
-                                          const std::vector<int>& nodes);
+                                          absl::Span<const int> nodes);
 
 // This can be used to view a directed graph (that supports reverse arcs)
 // from graph.h as un undirected graph: operator[](node) returns a
@@ -129,7 +132,7 @@ class UndirectedAdjacencyListsOfDirectedGraph {
 
 // Computes the weakly connected components of a directed graph that
 // provides the OutgoingOrOppositeIncomingArcs() API, and returns them
-// as a mapping from node to component index. See GetConnectedComponens().
+// as a mapping from node to component index. See GetConnectedComponents().
 template <class Graph>
 std::vector<int> GetWeaklyConnectedComponents(const Graph& graph) {
   return GetConnectedComponents(
@@ -139,7 +142,7 @@ std::vector<int> GetWeaklyConnectedComponents(const Graph& graph) {
 // Returns true iff the given vector is a subset of [0..n-1], i.e.
 // all elements i are such that 0 <= i < n and no two elements are equal.
 // "n" must be >= 0 or the result is undefined.
-bool IsSubsetOf0N(const std::vector<int>& v, int n);
+bool IsSubsetOf0N(absl::Span<const int> v, int n);
 
 // Returns true iff the given vector is a permutation of [0..size()-1].
 inline bool IsValidPermutation(const std::vector<int>& v) {
@@ -293,7 +296,7 @@ std::unique_ptr<Graph> RemapGraph(const Graph& old_graph,
 
 template <class Graph>
 std::unique_ptr<Graph> GetSubgraphOfNodes(const Graph& old_graph,
-                                          const std::vector<int>& nodes) {
+                                          absl::Span<const int> nodes) {
   typedef typename Graph::NodeIndex NodeIndex;
   typedef typename Graph::ArcIndex ArcIndex;
   DCHECK(IsSubsetOf0N(nodes, old_graph.num_nodes())) << "Invalid subset";
@@ -352,7 +355,7 @@ void RemoveCyclesFromPath(const Graph& graph, std::vector<int>* arc_path) {
   if (arc_path->empty()) return;
 
   // This maps each node to the latest arc in the given path that leaves it.
-  std::map<int, int> last_arc_leaving_node;
+  absl::btree_map<int, int> last_arc_leaving_node;
   for (const int arc : *arc_path) last_arc_leaving_node[graph.Tail(arc)] = arc;
 
   // Special case for the destination.
@@ -389,7 +392,7 @@ std::vector<int> ComputeOnePossibleReverseArcMapping(
   std::vector<int> reverse_arc(graph.num_arcs(), -1);
   // We need a multi-map since a given (tail,head) may appear several times.
   // NOTE(user): It's free, in terms of space, to use InlinedVector<int, 4>
-  // rather than std::vector<int>. See go/inlined-vector-size.
+  // rather than std::vector<int>.
   absl::flat_hash_map<std::pair</*tail*/ int, /*head*/ int>,
                       absl::InlinedVector<int, 4>>
       arc_map;

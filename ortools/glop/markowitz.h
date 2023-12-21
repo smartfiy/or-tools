@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -75,6 +75,8 @@
 
 #include <cstdint>
 #include <queue>
+#include <string>
+#include <vector>
 
 #include "absl/container/inlined_vector.h"
 #include "ortools/base/logging.h"
@@ -99,7 +101,7 @@ namespace glop {
 // given step will only correspond to a subset of the initial indices.
 class MatrixNonZeroPattern {
  public:
-  MatrixNonZeroPattern() {}
+  MatrixNonZeroPattern() = default;
 
   // Releases the memory used by this class.
   void Clear();
@@ -204,7 +206,7 @@ class MatrixNonZeroPattern {
 // Empty columns (i.e. with degree 0) are not stored in the queue.
 class ColumnPriorityQueue {
  public:
-  ColumnPriorityQueue() {}
+  ColumnPriorityQueue() = default;
 
   // Releases the memory used by this class.
   void Clear();
@@ -236,7 +238,7 @@ class ColumnPriorityQueue {
 // reuses the memory of the columns that are no longer needed.
 class SparseMatrixWithReusableColumnMemory {
  public:
-  SparseMatrixWithReusableColumnMemory() {}
+  SparseMatrixWithReusableColumnMemory() = default;
 
   // Resets the repository to num_cols empty columns.
   void Reset(ColIndex num_cols);
@@ -272,7 +274,7 @@ class SparseMatrixWithReusableColumnMemory {
 // decomposition.
 class Markowitz {
  public:
-  Markowitz() {}
+  Markowitz() = default;
 
   // Computes the full factorization with P, Q, L and U.
   //
@@ -335,8 +337,8 @@ class Markowitz {
   // column permutation that move these columns in order to form an identity
   // sub-matrix on the upper left.
   //
-  // Note(user): Linear programming bases usually have a resonable percentage of
-  // slack columns in them, so this gives a big speedup.
+  // Note(user): Linear programming bases usually have a reasonable percentage
+  // of slack columns in them, so this gives a big speedup.
   void ExtractSingletonColumns(const CompactSparseMatrixView& basis_matrix,
                                RowPermutation* row_perm,
                                ColumnPermutation* col_perm, int* index);

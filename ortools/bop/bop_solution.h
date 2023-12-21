@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,12 +14,17 @@
 #ifndef OR_TOOLS_BOP_BOP_SOLUTION_H_
 #define OR_TOOLS_BOP_BOP_SOLUTION_H_
 
-#include <cstdint>
+#include <stddef.h>
 
+#include <cstdint>
+#include <string>
+
+#include "absl/strings/string_view.h"
 #include "ortools/base/strong_vector.h"
 #include "ortools/bop/bop_types.h"
 #include "ortools/sat/boolean_problem.h"
 #include "ortools/sat/boolean_problem.pb.h"
+#include "ortools/sat/pb_constraint.h"
 
 namespace operations_research {
 namespace bop {
@@ -33,8 +38,7 @@ namespace bop {
 // the feasibility.
 class BopSolution {
  public:
-  BopSolution(const sat::LinearBooleanProblem& problem,
-              const std::string& name);
+  BopSolution(const sat::LinearBooleanProblem& problem, absl::string_view name);
 
   void SetValue(VariableIndex var, bool value) {
     recompute_cost_ = true;
@@ -45,7 +49,7 @@ class BopSolution {
   size_t Size() const { return values_.size(); }
   bool Value(VariableIndex var) const { return values_[var]; }
   const std::string& name() const { return name_; }
-  void set_name(const std::string& name) { name_ = name; }
+  void set_name(absl::string_view name) { name_ = name; }
 
   // Returns the objective cost of the solution.
   // Note that this code is lazy but not incremental and might run in the

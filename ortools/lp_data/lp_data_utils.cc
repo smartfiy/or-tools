@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -166,7 +166,7 @@ void LpScalingHelper::UnscaleColumnRightSolve(
   const Fractional global_factor = scaler_.ColScalingFactor(col);
 
   // [RowScale * B * BColScale] * inverse = RowScale * column * ColScale.
-  // That is B * (BColScale * inverse) = columm * ColScale[col].
+  // That is B * (BColScale * inverse) = column * ColScale[col].
   if (right_inverse->non_zeros.empty()) {
     const RowIndex num_rows = right_inverse->values.size();
     for (RowIndex row(0); row < num_rows; ++row) {

@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,24 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// IWYU pragma: private, include "ortools/math_opt/cpp/math_opt.h"
+// IWYU pragma: friend "ortools/math_opt/cpp/.*"
+
 #ifndef OR_TOOLS_MATH_OPT_CPP_MAP_FILTER_H_
 #define OR_TOOLS_MATH_OPT_CPP_MAP_FILTER_H_
 
 #include <algorithm>
 #include <initializer_list>
+#include <optional>
 
-#include "absl/types/optional.h"
-#include "ortools/base/int_type.h"
-#include "ortools/math_opt/core/indexed_model.h"
-#include "ortools/math_opt/cpp/id_set.h"
+#include "absl/algorithm/container.h"
+#include "ortools/base/status_macros.h"
+#include "ortools/math_opt/cpp/key_types.h"
 #include "ortools/math_opt/sparse_containers.pb.h"
+#include "ortools/math_opt/storage/model_storage.h"
 
 namespace operations_research {
 namespace math_opt {
 
 // A filter that only keeps some specific key-value pairs of a map.
 //
-// It is used to limit the quantity of data returned in a Result or in a
+// It is used to limit the quantity of data returned in a SolveResult or in a
 // CallbackResult when the models are huge and the user is only interested in
 // the values of a subset of the keys.
 //
@@ -69,7 +73,7 @@ struct MapFilter {
   //   // Unset the filter.
   //   filter.filtered_keys.reset();
   //   // alternatively:
-  //   filter.filtered_keys = absl::nullopt;
+  //   filter.filtered_keys = std::nullopt;
   //
   //   // Set the filter with an empty list of keys (filtering out all pairs).
   //   //
@@ -87,19 +91,23 @@ struct MapFilter {
   //   filter.emplace(decision_vars.begin(), decision_vars.end());
   //
   // Prefer using MakeSkipAllFilter() or MakeKeepKeysFilter() when appropriate.
-  absl::optional<IdSet<KeyType>> filtered_keys;
+  std::optional<absl::flat_hash_set<KeyType>> filtered_keys;
 
-  // Returns the model of filtered keys. It returns a non-null value if and only
-  // if the filtered_keys is set and non-empty.
-  inline IndexedModel* model() const;
+  // Returns a failure if the keys don't belong to the input expected_storage
+  // (which must not be nullptr).
+  inline absl::Status CheckModelStorage(
+      const ModelStorage* expected_storage) const;
 
   // Returns the proto corresponding to this filter.
+  //
+  // The caller should use CheckModelStorage() as this function does not check
+  // internal consistency of the referenced variables and constraints.
   SparseVectorFilterProto Proto() const;
 };
 
 // Returns a filter that skips all key-value pairs.
 //
-// This is typically used to disable the dual data in Result when these are
+// This is typically used to disable the dual data in SolveResult when these are
 // ignored by the user.
 //
 // Example:
@@ -157,23 +165,32 @@ MapFilter<KeyType> MakeKeepKeysFilter(std::initializer_list<KeyType> keys) {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename KeyType>
-IndexedModel* MapFilter<KeyType>::model() const {
-  return filtered_keys ? filtered_keys->model() : nullptr;
+absl::Status MapFilter<KeyType>::CheckModelStorage(
+    const ModelStorage* expected_storage) const {
+  if (!filtered_keys.has_value()) {
+    return absl::OkStatus();
+  }
+  for (const KeyType& k : filtered_keys.value()) {
+    RETURN_IF_ERROR(internal::CheckModelStorage(
+        /*storage=*/k.storage(),
+        /*expected_storage=*/expected_storage));
+  }
+  return absl::OkStatus();
 }
 
 template <typename KeyType>
 SparseVectorFilterProto MapFilter<KeyType>::Proto() const {
   SparseVectorFilterProto ret;
   ret.set_skip_zero_values(skip_zero_values);
-  if (filtered_keys) {
+  if (filtered_keys.has_value()) {
     ret.set_filter_by_ids(true);
-    const auto filtered_ids = ret.mutable_filtered_ids();
-    filtered_ids->Reserve(filtered_keys->size());
-    for (const auto id : filtered_keys->raw_set()) {
-      filtered_ids->Add(id.value());
+    auto& filtered_ids = *ret.mutable_filtered_ids();
+    filtered_ids.Reserve(static_cast<int>(filtered_keys.value().size()));
+    for (const auto k : filtered_keys.value()) {
+      filtered_ids.Add(k.typed_id().value());
     }
     // Iteration on the set is random but we want the proto to be stable.
-    std::sort(filtered_ids->begin(), filtered_ids->end());
+    absl::c_sort(filtered_ids);
   }
   return ret;
 }

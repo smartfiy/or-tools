@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,7 @@
 // limitations under the License.
 
 //
+#if defined(USE_CBC)
 
 #include <cstdint>
 #include <limits>
@@ -25,12 +26,9 @@
 #include "absl/strings/str_format.h"
 #include "ortools/base/commandlineflags.h"
 #include "ortools/base/hash.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/timer.h"
 #include "ortools/linear_solver/linear_solver.h"
-
-#if defined(USE_CBC)
 
 #undef PACKAGE
 #undef VERSION
@@ -47,7 +45,7 @@ namespace operations_research {
 class CBCInterface : public MPSolverInterface {
  public:
   // Constructor that takes a name for the underlying glpk solver.
-  explicit CBCInterface(MPSolver* const solver);
+  explicit CBCInterface(MPSolver* solver);
   ~CBCInterface() override;
 
   // ----- Reset -----
@@ -82,9 +80,9 @@ class CBCInterface : public MPSolverInterface {
   void SetConstraintBounds(int row_index, double lb, double ub) override;
 
   // Add constraint incrementally.
-  void AddRowConstraint(MPConstraint* const ct) override;
+  void AddRowConstraint(MPConstraint* ct) override;
   // Add variable incrementally.
-  void AddVariable(MPVariable* const var) override;
+  void AddVariable(MPVariable* var) override;
   // Change a coefficient in a constraint.
   void SetCoefficient(MPConstraint* const constraint,
                       const MPVariable* const variable, double new_value,
@@ -483,7 +481,7 @@ int64_t CBCInterface::nodes() const {
 
 // The support for parameters in CBC is intentionally sparse. There is
 // a memory leak in callCbc that prevents to pass parameters through
-// it, so handling parameters would require an comprehensive rewrite
+// it, so handling parameters would require a comprehensive rewrite
 // of the code. I will improve the parameter support only if there is
 // a relevant use case.
 

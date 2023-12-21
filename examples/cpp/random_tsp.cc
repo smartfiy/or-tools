@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//
 // Traveling Salesman Sample.
 //
 // This is a sample using the routing library to solve a Traveling Salesman
@@ -25,14 +24,15 @@
 // Optionally one can randomly forbid a set of random connections between nodes
 // (forbidden arcs).
 
+#include <cstdint>
 #include <memory>
+#include <string>
 
-#include "absl/memory/memory.h"
+#include "absl/flags/parse.h"
 #include "absl/random/random.h"
 #include "absl/strings/str_cat.h"
 #include "google/protobuf/text_format.h"
-#include "ortools/base/commandlineflags.h"
-#include "ortools/base/integral_types.h"
+#include "ortools/base/logging.h"
 #include "ortools/constraint_solver/routing.h"
 #include "ortools/constraint_solver/routing_index_manager.h"
 #include "ortools/constraint_solver/routing_parameters.h"
@@ -68,7 +68,7 @@ int32_t GetSeed() {
 
 // Sample function.
 int64_t MyDistance(RoutingIndexManager::NodeIndex from,
-                 RoutingIndexManager::NodeIndex to) {
+                   RoutingIndexManager::NodeIndex to) {
   // Put your distance code here.
   return (from + to).value();  // for instance
 }
@@ -78,13 +78,14 @@ class RandomMatrix {
  public:
   explicit RandomMatrix(int size) : size_(size) {}
   void Initialize() {
-    matrix_ = absl::make_unique<int64_t[]>(size_ * size_);
+    matrix_ = std::make_unique<int64_t[]>(size_ * size_);
     const int64_t kDistanceMax = 100;
     random_engine_t randomizer(GetSeed());
     for (RoutingIndexManager::NodeIndex from(0); from < size_; ++from) {
       for (RoutingIndexManager::NodeIndex to(0); to < size_; ++to) {
         if (to != from) {
-          matrix_[MatrixIndex(from, to)] = absl::Uniform(randomizer, 0, kDistanceMax);
+          matrix_[MatrixIndex(from, to)] =
+              absl::Uniform(randomizer, 0, kDistanceMax);
         } else {
           matrix_[MatrixIndex(from, to)] = 0LL;
         }
@@ -92,13 +93,13 @@ class RandomMatrix {
     }
   }
   int64_t Distance(RoutingIndexManager::NodeIndex from,
-                 RoutingIndexManager::NodeIndex to) const {
+                   RoutingIndexManager::NodeIndex to) const {
     return matrix_[MatrixIndex(from, to)];
   }
 
  private:
   int64_t MatrixIndex(RoutingIndexManager::NodeIndex from,
-                    RoutingIndexManager::NodeIndex to) const {
+                      RoutingIndexManager::NodeIndex to) const {
     return (from * size_ + to).value();
   }
   std::unique_ptr<int64_t[]> matrix_;
@@ -122,7 +123,7 @@ void Tsp() {
     // Setting the cost function.
     // Put a permanent callback to the distance accessor here. The callback
     // has the following signature: ResultCallback2<int64_t, int64_t, int64_t>.
-    // The two arguments are the from and to node inidices.
+    // The two arguments are the from and to node indices.
     RandomMatrix matrix(absl::GetFlag(FLAGS_tsp_size));
     if (absl::GetFlag(FLAGS_tsp_use_random_matrix)) {
       matrix.Initialize();
@@ -144,9 +145,10 @@ void Tsp() {
     int64_t forbidden_connections = 0;
     while (forbidden_connections <
            absl::GetFlag(FLAGS_tsp_random_forbidden_connections)) {
-      const int64_t from = absl::Uniform(randomizer, 0, absl::GetFlag(FLAGS_tsp_size) - 1);
+      const int64_t from =
+          absl::Uniform(randomizer, 0, absl::GetFlag(FLAGS_tsp_size) - 1);
       const int64_t to =
-          absl::Uniform(randomizer, 0 , absl::GetFlag(FLAGS_tsp_size) - 1) + 1;
+          absl::Uniform(randomizer, 0, absl::GetFlag(FLAGS_tsp_size) - 1) + 1;
       if (routing.NextVar(from)->Contains(to)) {
         LOG(INFO) << "Forbidding connection " << from << " -> " << to;
         routing.NextVar(from)->RemoveValue(to);

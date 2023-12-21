@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,16 +13,20 @@
 
 #include "ortools/flatzinc/model.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
-#include "ortools/base/map_util.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "ortools/base/stl_util.h"
 #include "ortools/util/logging.h"
 
@@ -197,7 +201,7 @@ bool Domain::IntersectWithInterval(int64_t interval_min, int64_t interval_max) {
   return false;
 }
 
-bool Domain::IntersectWithListOfIntegers(const std::vector<int64_t>& integers) {
+bool Domain::IntersectWithListOfIntegers(absl::Span<const int64_t> integers) {
   if (is_interval) {
     const int64_t dmin =
         values.empty() ? std::numeric_limits<int64_t>::min() : values[0];
@@ -367,7 +371,7 @@ bool Domain::Contains(int64_t value) const {
 
 namespace {
 bool IntervalOverlapValues(int64_t lb, int64_t ub,
-                           const std::vector<int64_t>& values) {
+                           absl::Span<const int64_t> values) {
   for (int64_t value : values) {
     if (lb <= value && value <= ub) {
       return true;
@@ -761,7 +765,7 @@ int Argument::Size() const {
 
 // ----- Variable -----
 
-Variable::Variable(const std::string& name_, const Domain& domain_,
+Variable::Variable(absl::string_view name_, const Domain& domain_,
                    bool temporary_)
     : name(name_), domain(domain_), temporary(temporary_), active(true) {
   if (!domain.is_interval) {
@@ -769,7 +773,7 @@ Variable::Variable(const std::string& name_, const Domain& domain_,
   }
 }
 
-bool Variable::Merge(const std::string& other_name, const Domain& other_domain,
+bool Variable::Merge(absl::string_view other_name, const Domain& other_domain,
                      bool other_temporary) {
   if (temporary && !other_temporary) {
     temporary = false;
@@ -834,7 +838,7 @@ Annotation Annotation::AnnotationList(std::vector<Annotation> list) {
   return result;
 }
 
-Annotation Annotation::Identifier(const std::string& id) {
+Annotation Annotation::Identifier(absl::string_view id) {
   Annotation result;
   result.type = IDENTIFIER;
   result.interval_min = 0;
@@ -843,7 +847,7 @@ Annotation Annotation::Identifier(const std::string& id) {
   return result;
 }
 
-Annotation Annotation::FunctionCallWithArguments(const std::string& id,
+Annotation Annotation::FunctionCallWithArguments(absl::string_view id,
                                                  std::vector<Annotation> args) {
   Annotation result;
   result.type = FUNCTION_CALL;
@@ -854,7 +858,7 @@ Annotation Annotation::FunctionCallWithArguments(const std::string& id,
   return result;
 }
 
-Annotation Annotation::FunctionCall(const std::string& id) {
+Annotation Annotation::FunctionCall(absl::string_view id) {
   Annotation result;
   result.type = FUNCTION_CALL;
   result.interval_min = 0;
@@ -878,6 +882,14 @@ Annotation Annotation::IntegerValue(int64_t value) {
   return result;
 }
 
+Annotation Annotation::IntegerList(const std::vector<int64_t>& values) {
+  LOG(INFO) << "Create INT_LIST";
+  Annotation result;
+  result.type = INT_LIST;
+  result.values = values;
+  return result;
+}
+
 Annotation Annotation::VarRef(Variable* const var) {
   Annotation result;
   result.type = VAR_REF;
@@ -896,7 +908,7 @@ Annotation Annotation::VarRefArray(std::vector<Variable*> variables) {
   return result;
 }
 
-Annotation Annotation::String(const std::string& str) {
+Annotation Annotation::String(absl::string_view str) {
   Annotation result;
   result.type = STRING_VALUE;
   result.interval_min = 0;
@@ -931,6 +943,9 @@ std::string Annotation::DebugString() const {
     case INT_VALUE: {
       return absl::StrCat(interval_min);
     }
+    case INT_LIST: {
+      return absl::StrFormat("[%s]", absl::StrJoin(values, ", "));
+    }
     case VAR_REF: {
       return variables.front()->name;
     }
@@ -957,7 +972,7 @@ std::string SolutionOutputSpecs::Bounds::DebugString() const {
 }
 
 SolutionOutputSpecs SolutionOutputSpecs::SingleVariable(
-    const std::string& name, Variable* variable, bool display_as_boolean) {
+    absl::string_view name, Variable* variable, bool display_as_boolean) {
   SolutionOutputSpecs result;
   result.name = name;
   result.variable = variable;
@@ -966,7 +981,7 @@ SolutionOutputSpecs SolutionOutputSpecs::SingleVariable(
 }
 
 SolutionOutputSpecs SolutionOutputSpecs::MultiDimensionalArray(
-    const std::string& name, std::vector<Bounds> bounds,
+    absl::string_view name, std::vector<Bounds> bounds,
     std::vector<Variable*> flat_variables, bool display_as_boolean) {
   SolutionOutputSpecs result;
   result.variable = nullptr;
@@ -1001,7 +1016,7 @@ Model::~Model() {
   gtl::STLDeleteElements(&constraints_);
 }
 
-Variable* Model::AddVariable(const std::string& name, const Domain& domain,
+Variable* Model::AddVariable(absl::string_view name, const Domain& domain,
                              bool defined) {
   Variable* const var = new Variable(name, domain, defined);
   variables_.push_back(var);
@@ -1023,14 +1038,14 @@ Variable* Model::AddFloatConstant(double value) {
   return var;
 }
 
-void Model::AddConstraint(const std::string& id,
-                          std::vector<Argument> arguments, bool is_domain) {
+void Model::AddConstraint(absl::string_view id, std::vector<Argument> arguments,
+                          bool is_domain) {
   Constraint* const constraint =
       new Constraint(id, std::move(arguments), is_domain);
   constraints_.push_back(constraint);
 }
 
-void Model::AddConstraint(const std::string& id,
+void Model::AddConstraint(absl::string_view id,
                           std::vector<Argument> arguments) {
   AddConstraint(id, std::move(arguments), false);
 }

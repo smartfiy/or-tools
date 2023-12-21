@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,7 +20,7 @@ syntax = "proto3";
 option java_package = "com.google.ortools.constraintsolver";
 option java_multiple_files = true;
 option csharp_namespace = "Google.OrTools.ConstraintSolver";
-option go_package = "github.com/airspacetechnologies/or-tools/ortools/gen/ortools/go/constraintsolver";
+option go_package = "github.com/airspacetechnologies/or-tools/go/ortools/constraintsolver";
 
 import "google/protobuf/duration.proto";
 import "ortools/constraint_solver/routing_enums.proto";
@@ -36,7 +36,7 @@ package operations_research;
 // then the routing library will pick its preferred value for that parameter
 // automatically: this should be the case for most parameters.
 // To see those "default" parameters, call GetDefaultRoutingSearchParameters().
-// Next ID: 49
+// Next ID: 58
 message RoutingSearchParameters {
   // First solution strategies, used as starting point of local search.
   FirstSolutionStrategy.Value first_solution_strategy = 1;
@@ -107,12 +107,37 @@ message RoutingSearchParameters {
   // the GlobalCheapestInsertion heuristic.
   bool cheapest_insertion_add_unperformed_entries = 40;
 
+  // In insertion-based heuristics, describes what positions must be considered
+  // when inserting a pickup/delivery pair, and in what order they are
+  // considered.
+  enum PairInsertionStrategy {
+    // Let the solver decide the set of positions and its ordering.
+    AUTOMATIC = 0;
+    // Consider all positions, by increasing (cost(pickup), cost(delivery)).
+    BEST_PICKUP_THEN_BEST_DELIVERY = 1;
+    // Consider all positions, by increasing by cost(pickup) + cost(delivery).
+    BEST_PICKUP_DELIVERY_PAIR = 2;
+    // Only consider insertion positions that are compatible with the multitour
+    // property, meaning a series of pickups may only start when the vehicle
+    // is not carrying any delivery. This setting is designed to explore much
+    // less possibilities than the full BEST_PICKUP_DELIVERY_PAIR.
+    // Order by increasing by cost(pickup) + cost(delivery).
+    BEST_PICKUP_DELIVERY_PAIR_MULTITOUR = 3;
+  }
+  // Choice of insertion strategy for pickup/delivery pairs, used in local
+  // cheapest insertion, both first solution heuristic and LNS.
+  PairInsertionStrategy local_cheapest_insertion_pickup_delivery_strategy = 49;
+  // Choice of insertion strategy for pickup/delivery pairs, used in local
+  // cheapest cost insertion, both first solution heuristic and LNS.
+  PairInsertionStrategy local_cheapest_cost_insertion_pickup_delivery_strategy =
+      55;
+
   // If true use minimum matching instead of minimal matching in the
   // Christofides algorithm.
   bool christofides_use_minimum_matching = 30;
 
   // Local search neighborhood operators used to build a solutions neighborhood.
-  // Next ID: 34
+  // Next ID: 35
   message LocalSearchNeighborhoodOperators {
     // --- Inter-route operators ---
     // Operator which moves a single node to another position.
@@ -306,6 +331,13 @@ message RoutingSearchParameters {
     //   1 -> [5] ->  2  -> 4 with 3 inactive
     //   1 ->  2  -> [5] -> 4 with 3 inactive
     OptionalBoolean use_extended_swap_active = 15;
+    // Swaps active nodes from node alternatives in sequence. Considers chains
+    // of nodes with alternatives, builds a DAG from the chain, each "layer" of
+    // the DAG being composed of the set of alternatives of the node at a given
+    // rank in the chain, fully connected to the next layer. A neighbor is built
+    // from the shortest path starting from the node before the chain (source),
+    // through the DAG to the node following the chain.
+    OptionalBoolean use_shortest_path_swap_active = 34;
     // Operator which makes an inactive node active and an active pair of nodes
     // inactive OR makes an inactive pair of nodes active and an active node
     // inactive.
@@ -370,6 +402,12 @@ message RoutingSearchParameters {
   }
   LocalSearchNeighborhoodOperators local_search_operators = 3;
 
+  // Neighbors ratio and minimum number of neighbors considered in local
+  // search operators (see cheapest_insertion_first_solution_neighbors_ratio
+  // and cheapest_insertion_first_solution_min_neighbors for more information).
+  double ls_operator_neighbors_ratio = 53;
+  int32 ls_operator_min_neighbors = 54;
+
   // If true, the solver will use multi-armed bandit concatenate operators. It
   // dynamically chooses the next neighbor operator in order to get the best
   // objective improvement.
@@ -410,6 +448,9 @@ message RoutingSearchParameters {
   // Lambda coefficient used to penalize arc costs when GUIDED_LOCAL_SEARCH is
   // used. Must be positive.
   double guided_local_search_lambda_coefficient = 5;
+  // Whether to reset penalties when a new best solution is found. The effect is
+  // that a greedy descent is started before the next penalization phase.
+  bool guided_local_search_reset_penalties_on_new_best_solution = 51;
 
   // --- Search control ---
   //
@@ -433,15 +474,24 @@ message RoutingSearchParameters {
   // If use_cp_sat or use_generalized_cp_sat is true, contains the SAT algorithm
   // parameters which will be used.
   sat.SatParameters sat_parameters = 48;
+  // If use_cp_sat or use_generalized_cp_sat is true, will report intermediate
+  // solutions found by CP-SAT to solution listeners.
+  bool report_intermediate_cp_sat_solutions = 56;
+  // If model.Size() is less than the threshold and that no solution has been
+  // found, attempt a pass with CP-SAT.
+  int32 fallback_to_cp_sat_size_threshold = 52;
   // Underlying solver to use in dimension scheduling, respectively for
   // continuous and mixed models.
   enum SchedulingSolver {
-    UNSET = 0;
-    GLOP = 1;
-    CP_SAT = 2;
+    SCHEDULING_UNSET = 0;
+    SCHEDULING_GLOP = 1;
+    SCHEDULING_CP_SAT = 2;
   }
   SchedulingSolver continuous_scheduling_solver = 33;
   SchedulingSolver mixed_integer_scheduling_solver = 34;
+  // Setting this to true completely disables the LP and MIP scheduling in the
+  // solver. This overrides the 2 SchedulingSolver options above.
+  optional bool disable_scheduling_beware_this_may_degrade_performance = 50;
   // Minimum step by which the solution must be improved in local search. 0
   // means "unspecified". If this value is fractional, it will get rounded to
   // the nearest integer.
@@ -458,6 +508,13 @@ message RoutingSearchParameters {
   // Limit to the time spent in the completion search for each local search
   // neighbor.
   google.protobuf.Duration lns_time_limit = 10;
+  // Ratio of the overall time limit spent in a secondary LS phase with only
+  // intra-route and insertion operators, meant to "cleanup" the current
+  // solution before stopping the search.
+  // TODO(user): Since these operators are very fast, add a parameter to cap
+  // the max time allocated for this second phase (e.g.
+  // Duration max_secondary_ls_time_limit).
+  double secondary_ls_time_limit_ratio = 57;
 
   // Parameters required for the improvement search limit.
   message ImprovementSearchLimitParameters {

@@ -1,10 +1,24 @@
+# Copyright 2010-2022 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # ##############################################################################
 # SWIG (WIN32)
 # ##############################################################################
 if(WIN32
    AND (BUILD_PYTHON
         OR BUILD_JAVA
-        OR BUILD_DOTNET))
+        OR BUILD_DOTNET
+        OR BUILD_GO))
   message(CHECK_START "Fetching SWIG")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SWIG.CMakeLists.txt.in
@@ -19,7 +33,7 @@ if(WIN32
   endif()
 
   execute_process(
-    COMMAND ${CMAKE_COMMAND} --build project_build --config ${CMAKE_BUILD_TYPE}
+    COMMAND ${CMAKE_COMMAND} --build project_build --config Release
     RESULT_VARIABLE result
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/SWIG)
   if(result)
@@ -39,6 +53,7 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_TESTING OFF)
+set(CMAKE_Fortran_COMPILER OFF)
 
 # ##############################################################################
 # ZLIB
@@ -49,7 +64,7 @@ if(BUILD_ZLIB)
   FetchContent_Declare(
     zlib
     GIT_REPOSITORY "https://github.com/madler/ZLIB.git"
-    GIT_TAG "v1.2.11"
+    GIT_TAG "v1.2.13"
     PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/ZLIB.patch")
   FetchContent_MakeAvailable(zlib)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
@@ -59,15 +74,19 @@ endif()
 # ##############################################################################
 # ABSEIL-CPP
 # ##############################################################################
+set(CMAKE_CXX_STANDARD 17)
 if(BUILD_absl)
   message(CHECK_START "Fetching Abseil-cpp")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
   set(ABSL_ENABLE_INSTALL ON)
+  set(ABSL_USE_SYSTEM_INCLUDES ON)
+  set(ABSL_PROPAGATE_CXX_STD ON)
   FetchContent_Declare(
     absl
     GIT_REPOSITORY "https://github.com/abseil/abseil-cpp.git"
-    GIT_TAG "20211102.0"
-    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/abseil-cpp-20211102.0.patch")
+    GIT_TAG "20230802.1"
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/abseil-cpp-20230802.1.patch"
+  )
   FetchContent_MakeAvailable(absl)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
   message(CHECK_PASS "fetched")
@@ -80,27 +99,16 @@ if(BUILD_Protobuf)
   message(CHECK_START "Fetching Protobuf")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
   set(protobuf_BUILD_TESTS OFF)
+  set(protobuf_BUILD_SHARED_LIBS OFF)
   set(protobuf_BUILD_EXPORT OFF)
   set(protobuf_MSVC_STATIC_RUNTIME OFF)
-  # FetchContent_Declare(SOURCE_SUBDIR) was introduced in 3.18
-  if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18")
-    FetchContent_Declare(
-      protobuf
-      GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
-      GIT_TAG "v3.19.1"
-      GIT_SUBMODULES ""
-      PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/protobuf-v3.19.1.patch"
-      SOURCE_SUBDIR cmake)
-    FetchContent_MakeAvailable(protobuf)
-  else()
-    fetch_git_dependency(
-      NAME Protobuf
-      REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
-      TAG "v3.19.1"
-      PATCH_COMMAND "git apply --ignore-whitespace \"${CMAKE_CURRENT_LIST_DIR}/../../patches/protobuf-v3.19.1.patch\""
-      SOURCE_SUBDIR cmake
-      )
-  endif()
+  FetchContent_Declare(
+    protobuf
+    GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
+    GIT_TAG "v25.0"
+    GIT_SUBMODULES ""
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/protobuf-v25.0.patch")
+  FetchContent_MakeAvailable(protobuf)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
   message(CHECK_PASS "fetched")
 endif()
@@ -111,14 +119,110 @@ endif()
 if(BUILD_re2)
   message(CHECK_START "Fetching re2")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
-  set(ABSL_ENABLE_INSTALL ON)
+  set(RE2_BUILD_TESTING OFF)
   FetchContent_Declare(
     re2
     GIT_REPOSITORY "https://github.com/google/re2.git"
-    GIT_TAG "2021-11-01"
-    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/re2-2021-11-01.patch"
+    GIT_TAG "2023-11-01"
+    #PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/re2-2023-11-01.patch"
   )
   FetchContent_MakeAvailable(re2)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
+  message(CHECK_PASS "fetched")
+endif()
+
+# ##############################################################################
+# EIGEN3
+# ##############################################################################
+if(BUILD_Eigen3)
+  message(CHECK_START "Fetching Eigen3")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  set(EIGEN_MPL2_ONLY ON)
+  set(EIGEN_BUILD_PKGCONFIG OFF)
+  set(EIGEN_BUILD_DOC OFF)
+  set(EIGEN_BUILD_TESTING OFF)
+  FetchContent_Declare(
+    eigen3
+    GIT_REPOSITORY "https://gitlab.com/libeigen/eigen.git"
+    GIT_TAG "3.4.0"
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/eigen3-3.4.0.patch"
+  )
+  FetchContent_MakeAvailable(eigen3)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
+  message(CHECK_PASS "fetched")
+endif()
+
+# ##############################################################################
+# pybind11
+# ##############################################################################
+if(BUILD_PYTHON AND BUILD_pybind11)
+  # Find Python 3
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+
+  message(CHECK_START "Fetching pybind11")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  set(PYBIND11_INSTALL ON)
+  set(PYBIND11_TEST OFF)
+  FetchContent_Declare(
+    pybind11
+    GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
+    GIT_TAG "v2.10.3"
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/pybind11.patch"
+  )
+  FetchContent_MakeAvailable(pybind11)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
+  message(CHECK_PASS "fetched")
+endif()
+
+if(BUILD_PYTHON AND BUILD_pybind11_protobuf)
+  message(CHECK_START "Fetching pybind11_protobuf")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  FetchContent_Declare(
+    pybind11_protobuf
+    GIT_REPOSITORY "https://github.com/pybind/pybind11_protobuf.git"
+    GIT_TAG "main"
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/pybind11_protobuf.patch"
+  )
+  FetchContent_MakeAvailable(pybind11_protobuf)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
+  message(CHECK_PASS "fetched")
+endif()
+
+
+# ##############################################################################
+# GLPK
+# ##############################################################################
+if(BUILD_GLPK)
+  message(CHECK_START "Fetching GLPK")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  set(BUILD_EXAMPLES OFF)
+  set(WITH_GMP OFF)
+  set(WITH_ODBC OFF)
+  set(WITH_MYSQL OFF)
+
+  FetchContent_Declare(
+    glpk
+    GIT_REPOSITORY "https://github.com/Mizux/GLPK.git"
+    GIT_TAG        "5.0"
+  )
+  FetchContent_MakeAvailable(glpk)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
+  message(CHECK_PASS "fetched")
+endif()
+
+# ##############################################################################
+# HiGHS
+# ##############################################################################
+if(BUILD_HIGHS)
+  message(CHECK_START "Fetching HiGHS")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  set(CI OFF) # disable CI tests
+  FetchContent_Declare(
+    highs
+    GIT_REPOSITORY "https://github.com/ERGO-Code/HiGHS.git"
+    GIT_TAG        "v1.6.0"
+  )
+  FetchContent_MakeAvailable(highs)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
   message(CHECK_PASS "fetched")
 endif()
@@ -143,8 +247,9 @@ if(BUILD_SCIP)
   set(SYM "none" CACHE STRING "Scip param")
   FetchContent_Declare(
     scip
-    GIT_REPOSITORY https://github.com/scipopt/scip.git
-    GIT_TAG        master
+    GIT_REPOSITORY "https://github.com/scipopt/scip.git"
+    GIT_TAG        "v804"
+    #PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/scip-v804.patch"
   )
   FetchContent_MakeAvailable(scip)
   set(LPI_GLOP_SRC ${scip_SOURCE_DIR}/src/lpi/lpi_glop.cpp PARENT_SCOPE)
@@ -153,30 +258,9 @@ if(BUILD_SCIP)
 endif()
 
 # ##############################################################################
-# GLPK
-# ##############################################################################
-if(BUILD_GLPK)
-  message(CHECK_START "Fetching GLPK")
-  list(APPEND CMAKE_MESSAGE_INDENT "  ")
-  set(BUILD_EXAMPLES OFF)
-  set(WITH_GMP OFF)
-  set(WITH_ODBC OFF)
-  set(WITH_MYSQL OFF)
-
-  FetchContent_Declare(
-    glpk
-    GIT_REPOSITORY https://github.com/Mizux/GLPK.git
-    GIT_TAG        5.0
-  )
-  FetchContent_MakeAvailable(glpk)
-  list(POP_BACK CMAKE_MESSAGE_INDENT)
-  message(CHECK_PASS "fetched")
-endif()
-
-# ##############################################################################
 # Coinutils
 # ##############################################################################
-# Coin-OR does not support C++17 (use of 'register' storage class specifier)
+# Coin-OR does not support C++17/C++20 (use of 'register' storage class specifier)
 set(CMAKE_CXX_STANDARD 11)
 
 if(BUILD_CoinUtils)
@@ -185,7 +269,7 @@ if(BUILD_CoinUtils)
   FetchContent_Declare(
     CoinUtils
     GIT_REPOSITORY "https://github.com/Mizux/CoinUtils.git"
-    GIT_TAG "stable/2.11"
+    GIT_TAG "cmake/2.11.6"
     PATCH_COMMAND git apply --ignore-whitespace
     "${CMAKE_CURRENT_LIST_DIR}/../../patches/coinutils-2.11.patch")
   FetchContent_MakeAvailable(CoinUtils)
@@ -202,7 +286,7 @@ if(BUILD_Osi)
   FetchContent_Declare(
     Osi
     GIT_REPOSITORY "https://github.com/Mizux/Osi.git"
-    GIT_TAG "stable/0.108"
+    GIT_TAG "cmake/0.108.7"
     PATCH_COMMAND git apply --ignore-whitespace
     "${CMAKE_CURRENT_LIST_DIR}/../../patches/osi-0.108.patch")
   FetchContent_MakeAvailable(Osi)
@@ -219,7 +303,7 @@ if(BUILD_Clp)
   FetchContent_Declare(
     Clp
     GIT_REPOSITORY "https://github.com/Mizux/Clp.git"
-    GIT_TAG "stable/1.17.4"
+    GIT_TAG "cmake/1.17.7"
     PATCH_COMMAND git apply --ignore-whitespace
     "${CMAKE_CURRENT_LIST_DIR}/../../patches/clp-1.17.4.patch")
   FetchContent_MakeAvailable(Clp)
@@ -236,7 +320,7 @@ if(BUILD_Cgl)
   FetchContent_Declare(
     Cgl
     GIT_REPOSITORY "https://github.com/Mizux/Cgl.git"
-    GIT_TAG "stable/0.60"
+    GIT_TAG "cmake/0.60.5"
     PATCH_COMMAND git apply --ignore-whitespace
     "${CMAKE_CURRENT_LIST_DIR}/../../patches/cgl-0.60.patch")
   FetchContent_MakeAvailable(Cgl)
@@ -253,7 +337,7 @@ if(BUILD_Cbc)
   FetchContent_Declare(
     Cbc
     GIT_REPOSITORY "https://github.com/Mizux/Cbc.git"
-    GIT_TAG "stable/2.10"
+    GIT_TAG "cmake/2.10.7"
     PATCH_COMMAND git apply --ignore-whitespace
     "${CMAKE_CURRENT_LIST_DIR}/../../patches/cbc-2.10.patch")
   FetchContent_MakeAvailable(Cbc)
@@ -261,4 +345,24 @@ if(BUILD_Cbc)
   message(CHECK_PASS "fetched")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+if(MSVC)
+  set(CMAKE_CXX_STANDARD 20)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+###############
+##  TESTING  ##
+###############
+if(BUILD_googletest)
+  message(CHECK_START "Fetching googletest")
+  list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.13.0)
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+  list(POP_BACK CMAKE_MESSAGE_INDENT)
+  message(CHECK_PASS "fetched")
+endif()

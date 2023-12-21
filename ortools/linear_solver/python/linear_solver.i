@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,6 +12,7 @@
 // limitations under the License.
 
 // This .i file exposes the linear programming and integer programming
+// solver. See the C++/Python codelab: .
 //
 // The python API is enriched by custom code defined here, making it
 // extremely intuitive, like:
@@ -23,7 +24,7 @@
 //   solver.Maximize(10 * x1 + 6 * x2)
 //
 // USAGE EXAMPLES:
-// - examples/python/linear_programming.py
+// - ortools/python/linear_programming.py
 // - ./pywraplp_test.py
 //
 // TODO(user): test all the APIs that are currently marked as 'untested'.
@@ -43,6 +44,7 @@ namespace operations_research {
 class MPModelProto;
 class MPModelRequest;
 class MPSolutionResponse;
+class IISResponse;
 }  // namespace operations_research
 
 %{
@@ -54,15 +56,15 @@ class MPSolutionResponse;
 
 %pythoncode %{
 import numbers
-from ortools.linear_solver.linear_solver_natural_api import OFFSET_KEY
-from ortools.linear_solver.linear_solver_natural_api import inf
-from ortools.linear_solver.linear_solver_natural_api import LinearExpr
-from ortools.linear_solver.linear_solver_natural_api import ProductCst
-from ortools.linear_solver.linear_solver_natural_api import Sum
-from ortools.linear_solver.linear_solver_natural_api import SumArray
-from ortools.linear_solver.linear_solver_natural_api import SumCst
-from ortools.linear_solver.linear_solver_natural_api import LinearConstraint
-from ortools.linear_solver.linear_solver_natural_api import VariableExpr
+from ortools.linear_solver.python.linear_solver_natural_api import OFFSET_KEY
+from ortools.linear_solver.python.linear_solver_natural_api import inf
+from ortools.linear_solver.python.linear_solver_natural_api import LinearExpr
+from ortools.linear_solver.python.linear_solver_natural_api import ProductCst
+from ortools.linear_solver.python.linear_solver_natural_api import Sum
+from ortools.linear_solver.python.linear_solver_natural_api import SumArray
+from ortools.linear_solver.python.linear_solver_natural_api import SumCst
+from ortools.linear_solver.python.linear_solver_natural_api import LinearConstraint
+from ortools.linear_solver.python.linear_solver_natural_api import VariableExpr
 %}  // %pythoncode
 
 %extend operations_research::MPVariable {
@@ -79,17 +81,37 @@ from ortools.linear_solver.linear_solver_natural_api import VariableExpr
   }  // %pythoncode
 }
 
+%exception operations_research::MPSolver::Solve {
+  Py_BEGIN_ALLOW_THREADS
+  $action
+  Py_END_ALLOW_THREADS
+}
+
 %extend operations_research::MPSolver {
   // Change the API of LoadModelFromProto() to simply return the error message:
-  // it will always be empty iff the model was valid.
-  std::string LoadModelFromProto(const operations_research::MPModelProto& input_model) {
+  // it will always be empty iff the model was valid. This clears all names in
+  // the model, see also LoadModelFromProtoKeepNames().
+  std::string LoadModelFromProto(
+      const operations_research::MPModelProto& input_model) {
     std::string error_message;
     $self->LoadModelFromProto(input_model, &error_message);
     return error_message;
   }
 
-  // Ditto for LoadModelFromProtoWithUniqueNamesOrDie()
-  std::string LoadModelFromProtoWithUniqueNamesOrDie(const operations_research::MPModelProto& input_model) {
+  // Like LoadModelFromProto(), but keeps the names and verifies that they are
+  // unique.
+  std::string LoadModelFromProtoKeepNames(
+      const operations_research::MPModelProto& input_model) {
+    std::string error_message;
+    $self->LoadModelFromProto(input_model, &error_message,
+                              /*clear_names=*/false);
+    return error_message;
+  }
+
+  // DEPRECATED: Use LoadModelFromProtoKeepNames() and test that the returned
+  // error is empty.
+  std::string LoadModelFromProtoWithUniqueNamesOrDie(
+      const operations_research::MPModelProto& input_model) {
     std::string error_message;
     $self->LoadModelFromProtoWithUniqueNamesOrDie(input_model, &error_message);
     return error_message;
@@ -202,7 +224,6 @@ from ortools.linear_solver.linear_solver_natural_api import VariableExpr
     }
   }
 
-
   static double Infinity() { return operations_research::MPSolver::infinity(); }
   void SetTimeLimit(int64_t x) { $self->set_time_limit(x); }
   int64_t WallTime() const { return $self->wall_time(); }
@@ -236,8 +257,16 @@ PY_PROTO_TYPEMAP(ortools.linear_solver.linear_solver_pb2,
                  operations_research::MPModelProto);
 
 PY_PROTO_TYPEMAP(ortools.linear_solver.linear_solver_pb2,
+                 MPModelRequest,
+                 operations_research::MPModelRequest);
+
+PY_PROTO_TYPEMAP(ortools.linear_solver.linear_solver_pb2,
                  MPSolutionResponse,
                  operations_research::MPSolutionResponse);
+
+PY_PROTO_TYPEMAP(ortools.linear_solver.iis_pb2,
+                 IISResponse,
+                 operations_research::IISResponse);
 
 // Actual conversions. This also includes the conversion to std::vector<Class>.
 PY_CONVERT_HELPER_PTR(MPConstraint);
@@ -253,18 +282,20 @@ PY_CONVERT(MPVariable);
 // Strip the "MP" prefix from the exposed classes.
 %rename (Solver) operations_research::MPSolver;
 %rename (Solver) operations_research::MPSolver::MPSolver;
+%unignore operations_research::MPSolver::SolverVersion;
 %rename (Constraint) operations_research::MPConstraint;
 %rename (Variable) operations_research::MPVariable;
 %rename (Objective) operations_research::MPObjective;
 
 // Expose the MPSolver::OptimizationProblemType enum.
 %unignore operations_research::MPSolver::OptimizationProblemType;
-%unignore operations_research::MPSolver::GLOP_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::CLP_LINEAR_PROGRAMMING;
+%unignore operations_research::MPSolver::GLOP_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::GLPK_LINEAR_PROGRAMMING;
-%unignore operations_research::MPSolver::SCIP_MIXED_INTEGER_PROGRAMMING;
+%unignore operations_research::MPSolver::PDLP_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::CBC_MIXED_INTEGER_PROGRAMMING;
 %unignore operations_research::MPSolver::GLPK_MIXED_INTEGER_PROGRAMMING;
+%unignore operations_research::MPSolver::SCIP_MIXED_INTEGER_PROGRAMMING;
 %unignore operations_research::MPSolver::BOP_INTEGER_PROGRAMMING;
 %unignore operations_research::MPSolver::SAT_INTEGER_PROGRAMMING;
 // These aren't unit tested, as they only run on machines with a Gurobi license.
@@ -275,7 +306,6 @@ PY_CONVERT(MPVariable);
 %unignore operations_research::MPSolver::XPRESS_LINEAR_PROGRAMMING;
 %unignore operations_research::MPSolver::XPRESS_MIXED_INTEGER_PROGRAMMING;
 
-
 // Expose the MPSolver::ResultStatus enum.
 %unignore operations_research::MPSolver::ResultStatus;
 %unignore operations_research::MPSolver::OPTIMAL;
@@ -283,6 +313,7 @@ PY_CONVERT(MPVariable);
 %unignore operations_research::MPSolver::INFEASIBLE;
 %unignore operations_research::MPSolver::UNBOUNDED;  // No unit test
 %unignore operations_research::MPSolver::ABNORMAL;
+%unignore operations_research::MPSolver::MODEL_INVALID;  // No unit test
 %unignore operations_research::MPSolver::NOT_SOLVED;  // No unit test
 
 // Expose the MPSolver's basic API, with some renames.
@@ -302,7 +333,6 @@ PY_CONVERT(MPVariable);
 %newobject operations_research::MPSolver::CreateSolver;
 %unignore operations_research::MPSolver::CreateSolver;
 %unignore operations_research::MPSolver::ParseAndCheckSupportForProblemType;
-
 %unignore operations_research::MPSolver::Solve;
 %unignore operations_research::MPSolver::VerifySolution;
 %unignore operations_research::MPSolver::infinity;
@@ -310,6 +340,7 @@ PY_CONVERT(MPVariable);
 
 // Proto-based API of the MPSolver. Use is encouraged.
 %unignore operations_research::MPSolver::SolveWithProto;
+%unignore operations_research::MPSolver::ComputeIrreducibleInfeasibleSubset;
 %unignore operations_research::MPSolver::ExportModelToProto;
 %unignore operations_research::MPSolver::FillSolutionResponseProto;
 // LoadModelFromProto() is also visible: it's overridden by an %extend, above.

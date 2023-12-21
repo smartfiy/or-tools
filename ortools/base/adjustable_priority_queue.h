@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,8 +20,6 @@
 #include <list>
 #include <vector>
 
-#include "ortools/base/basictypes.h"
-#include "ortools/base/logging.h"
 #include "ortools/base/macros.h"
 
 template <typename T, typename Comparator>
@@ -39,8 +37,8 @@ class AdjustablePriorityQueue {
  public:
   // The objects references 'c' and 'm' are not required to be alive for the
   // lifetime of this object.
-  AdjustablePriorityQueue() {}
-  AdjustablePriorityQueue(const Comp& c) : c_(c) {}
+  AdjustablePriorityQueue() = default;
+  explicit AdjustablePriorityQueue(const Comp& c) : c_(c) {}
   AdjustablePriorityQueue(const AdjustablePriorityQueue&) = delete;
   AdjustablePriorityQueue& operator=(const AdjustablePriorityQueue&) = delete;
   AdjustablePriorityQueue(AdjustablePriorityQueue&&) = default;

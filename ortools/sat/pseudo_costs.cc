@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,32 +13,32 @@
 
 #include "ortools/sat/pseudo_costs.h"
 
-#include <cmath>
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+#include <tuple>
 #include <vector>
 
+#include "absl/log/check.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/sat/integer.h"
-#include "ortools/sat/sat_decision.h"
+#include "ortools/sat/model.h"
+#include "ortools/sat/sat_base.h"
 #include "ortools/sat/sat_parameters.pb.h"
 #include "ortools/sat/util.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
 
 PseudoCosts::PseudoCosts(Model* model)
-    : integer_trail_(*model->GetOrCreate<IntegerTrail>()),
-      parameters_(*model->GetOrCreate<SatParameters>()) {
-  const int num_vars = integer_trail_.NumIntegerVariables().value();
+    : parameters_(*model->GetOrCreate<SatParameters>()),
+      integer_trail_(model->GetOrCreate<IntegerTrail>()),
+      encoder_(model->GetOrCreate<IntegerEncoder>()) {
+  const int num_vars = integer_trail_->NumIntegerVariables().value();
   pseudo_costs_.resize(num_vars);
-}
-
-void PseudoCosts::UpdateCostForVar(IntegerVariable var, double new_cost) {
-  if (var >= pseudo_costs_.size()) {
-    // Create space for new variable and its negation.
-    const int new_size = std::max(var, NegationOf(var)).value() + 1;
-    pseudo_costs_.resize(new_size, IncrementalAverage(0.0));
-  }
-  DCHECK_LT(var, pseudo_costs_.size());
-  pseudo_costs_[var].AddData(new_cost);
+  is_relevant_.resize(num_vars, false);
+  scores_.resize(num_vars, 0.0);
 }
 
 void PseudoCosts::UpdateCost(
@@ -47,44 +47,56 @@ void PseudoCosts::UpdateCost(
   DCHECK_GE(obj_bound_improvement, 0);
   if (obj_bound_improvement == IntegerValue(0)) return;
 
-  for (const VariableBoundChange& decision : bound_changes) {
-    if (integer_trail_.IsCurrentlyIgnored(decision.var)) continue;
-    if (decision.lower_bound_change == IntegerValue(0)) continue;
+  const double epsilon = 1e-6;
+  for (const auto [var, lb_change] : bound_changes) {
+    if (integer_trail_->IsCurrentlyIgnored(var)) continue;
+    if (lb_change == IntegerValue(0)) continue;
 
-    const double current_pseudo_cost =
-        ToDouble(obj_bound_improvement) / ToDouble(decision.lower_bound_change);
-    UpdateCostForVar(decision.var, current_pseudo_cost);
+    if (var >= pseudo_costs_.size()) {
+      // Create space for new variable and its negation.
+      const int new_size = std::max(var, NegationOf(var)).value() + 1;
+      is_relevant_.resize(new_size, false);
+      scores_.resize(new_size, 0.0);
+      pseudo_costs_.resize(new_size, IncrementalAverage(0.0));
+    }
+
+    pseudo_costs_[var].AddData(ToDouble(obj_bound_improvement) /
+                               ToDouble(lb_change));
+
+    const IntegerVariable positive_var = PositiveVariable(var);
+    const IntegerVariable negative_var = NegationOf(positive_var);
+    const int64_t count = pseudo_costs_[positive_var].NumRecords() +
+                          pseudo_costs_[negative_var].NumRecords();
+    if (count >= parameters_.pseudo_cost_reliability_threshold()) {
+      scores_[positive_var] = std::max(GetCost(positive_var), epsilon) *
+                              std::max(GetCost(negative_var), epsilon);
+
+      if (!is_relevant_[positive_var]) {
+        is_relevant_[positive_var] = true;
+        relevant_variables_.push_back(positive_var);
+      }
+    }
   }
 }
 
+// TODO(user): Supports search randomization tolerance.
+// TODO(user): Implement generic class to choose the randomized
+// solution, and supports sub-linear variable selection.
 IntegerVariable PseudoCosts::GetBestDecisionVar() {
-  if (pseudo_costs_.empty()) return kNoIntegerVariable;
-
-  const double epsilon = 1e-6;
-
-  double best_cost = -std::numeric_limits<double>::infinity();
   IntegerVariable chosen_var = kNoIntegerVariable;
+  double best_score = -std::numeric_limits<double>::infinity();
 
-  for (IntegerVariable positive_var(0); positive_var < pseudo_costs_.size();
-       positive_var += 2) {
-    const IntegerVariable negative_var = NegationOf(positive_var);
-    if (integer_trail_.IsCurrentlyIgnored(positive_var)) continue;
-    const IntegerValue lb = integer_trail_.LowerBound(positive_var);
-    const IntegerValue ub = integer_trail_.UpperBound(positive_var);
+  // TODO(user): Avoid the O(num_relevant_variable) loop.
+  // In practice since a variable only become relevant after 100 records, this
+  // list might be small compared to the number of variable though.
+  for (const IntegerVariable positive_var : relevant_variables_) {
+    if (integer_trail_->IsCurrentlyIgnored(positive_var)) continue;
+    const IntegerValue lb = integer_trail_->LowerBound(positive_var);
+    const IntegerValue ub = integer_trail_->UpperBound(positive_var);
     if (lb >= ub) continue;
-    if (GetRecordings(positive_var) + GetRecordings(negative_var) <
-        parameters_.pseudo_cost_reliability_threshold()) {
-      continue;
-    }
-
-    // TODO(user): Experiment with different ways to merge the costs.
-    const double current_merged_cost =
-        std::max(GetCost(positive_var), epsilon) *
-        std::max(GetCost(negative_var), epsilon);
-
-    if (current_merged_cost > best_cost) {
+    if (scores_[positive_var] > best_score) {
       chosen_var = positive_var;
-      best_cost = current_merged_cost;
+      best_score = scores_[positive_var];
     }
   }
 
@@ -96,22 +108,38 @@ IntegerVariable PseudoCosts::GetBestDecisionVar() {
   return chosen_var;
 }
 
-std::vector<PseudoCosts::VariableBoundChange> GetBoundChanges(
-    LiteralIndex decision, Model* model) {
+std::vector<PseudoCosts::VariableBoundChange> PseudoCosts::GetBoundChanges(
+    Literal decision) {
   std::vector<PseudoCosts::VariableBoundChange> bound_changes;
-  if (decision == kNoLiteralIndex) return bound_changes;
-  auto* encoder = model->GetOrCreate<IntegerEncoder>();
-  auto* integer_trail = model->GetOrCreate<IntegerTrail>();
-  // NOTE: We ignore negation of equality decisions.
-  for (const IntegerLiteral l :
-       encoder->GetAllIntegerLiterals(Literal(decision))) {
-    if (l.var == kNoIntegerVariable) continue;
-    if (integer_trail->IsCurrentlyIgnored(l.var)) continue;
+
+  for (const IntegerLiteral l : encoder_->GetIntegerLiterals(decision)) {
+    if (integer_trail_->IsCurrentlyIgnored(l.var)) continue;
     PseudoCosts::VariableBoundChange var_bound_change;
     var_bound_change.var = l.var;
     var_bound_change.lower_bound_change =
-        l.bound - integer_trail->LowerBound(l.var);
+        l.bound - integer_trail_->LowerBound(l.var);
     bound_changes.push_back(var_bound_change);
+  }
+
+  // NOTE: We ignore literal associated to var != value.
+  for (const auto [var, value] : encoder_->GetEqualityLiterals(decision)) {
+    if (integer_trail_->IsCurrentlyIgnored(var)) continue;
+    {
+      PseudoCosts::VariableBoundChange var_bound_change;
+      var_bound_change.var = var;
+      var_bound_change.lower_bound_change =
+          value - integer_trail_->LowerBound(var);
+      bound_changes.push_back(var_bound_change);
+    }
+
+    // Also do the negation.
+    {
+      PseudoCosts::VariableBoundChange var_bound_change;
+      var_bound_change.var = NegationOf(var);
+      var_bound_change.lower_bound_change =
+          (-value) - integer_trail_->LowerBound(NegationOf(var));
+      bound_changes.push_back(var_bound_change);
+    }
   }
 
   return bound_changes;

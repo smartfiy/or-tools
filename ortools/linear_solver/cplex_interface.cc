@@ -12,17 +12,17 @@
 // limitations under the License.
 
 // Initial version of this code was written by Daniel Junglas (IBM)
+#if defined(USE_CPLEX)
 
+#include <cstdint>
 #include <limits>
 #include <memory>
 
 #include "absl/strings/str_format.h"
-#include "ortools/base/integral_types.h"
+#include "absl/strings/str_split.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/timer.h"
 #include "ortools/linear_solver/linear_solver.h"
-
-#if defined(USE_CPLEX)
 
 extern "C" {
 #include "ilcplex/cplexx.h"
@@ -115,6 +115,8 @@ class CplexInterface : public MPSolverInterface {
   virtual bool IsLP() const { return !mMip; }
   virtual bool IsMIP() const { return mMip; }
 
+  bool SetSolverSpecificParametersAsString(
+      const std::string& parameters) override;
   virtual void ExtractNewVariables();
   virtual void ExtractNewConstraints();
   virtual void ExtractObjective();
@@ -863,7 +865,7 @@ void CplexInterface::ExtractNewConstraints() {
 
     CPXDIM newCons = total - offset;
     CPXDIM const cols = CPXXgetnumcols(mEnv, mLp);
-    DCHECK_EQ(last_variable_index_, cols);
+    CHECK(last_variable_index_ == 0 || last_variable_index_ == cols);
     CPXDIM const chunk = 10;  // max number of rows to add in one shot
 
     // Update indices of new constraints _before_ actually extracting
@@ -950,7 +952,7 @@ void CplexInterface::ExtractObjective() {
   //       any non-zero duplicates.
 
   CPXDIM const cols = CPXXgetnumcols(mEnv, mLp);
-  DCHECK_EQ(last_variable_index_, cols);
+  CHECK(last_variable_index_ == 0 || last_variable_index_ == cols);
 
   unique_ptr<CPXDIM[]> ind(new CPXDIM[cols]);
   unique_ptr<double[]> val(new double[cols]);
@@ -1108,6 +1110,19 @@ MPSolver::ResultStatus CplexInterface::Solve(MPSolverParameters const& param) {
   CHECK_STATUS(
       CPXXsetintparam(mEnv, CPX_PARAM_SCRIND, quiet() ? CPX_OFF : CPX_ON));
 
+  if (!solver_->solution_hint_.empty()) {
+    int const sol_count = solver_->solution_hint_.size();
+    long long int beg[1] = {0};
+    int* varindices = new int[sol_count];
+    double* values = new double[sol_count];
+
+    for (int i = 0; i < sol_count; ++i) {
+      varindices[i] = solver_->solution_hint_[i].first->index();
+      values[i] = solver_->solution_hint_[i].second;
+    }
+    CPXXaddmipstarts(mEnv, mLp, 1, sol_count, beg, varindices, values, NULL,
+                     NULL);
+  }
   // Set parameters.
   // NOTE: We must invoke SetSolverSpecificParametersAsString() _first_.
   //       Its current implementation invokes ReadParameterFile() which in
@@ -1270,6 +1285,48 @@ MPSolver::ResultStatus CplexInterface::Solve(MPSolverParameters const& param) {
 
 MPSolverInterface* BuildCplexInterface(bool mip, MPSolver* const solver) {
   return new CplexInterface(solver, mip);
+}
+
+bool CplexInterface::SetSolverSpecificParametersAsString(
+    const std::string& parameters) {
+  if (parameters.empty()) return true;
+  for (const auto parameter : absl::StrSplit(parameters, absl::ByAnyChar(","),
+                                             absl::SkipWhitespace())) {
+    std::vector<std::string> key_value =
+        absl::StrSplit(parameter, absl::ByAnyChar("="), absl::SkipWhitespace());
+    if (key_value.size() != 2) {
+      LOG(WARNING) << absl::StrFormat(
+          "Cannot parse parameter '%s'. Expected format is 'parameter/name = "
+          "value'",
+          parameter);
+      continue;
+    }
+    std::string identifier = key_value[0];
+    absl::RemoveExtraAsciiWhitespace(&identifier);
+
+    std::string value = key_value[1];
+    absl::RemoveExtraAsciiWhitespace(&value);
+
+    try {
+      if (identifier.find("LogFile") != std::string::npos) {
+        CPXXsetlogfilename(mEnv, value.c_str(), "w");
+      } else {
+        std::string delimiter = ".";
+        if (value.find(delimiter) == std::string::npos) {
+          (void)CPXXsetintparam(mEnv, std::stoi(identifier), std::stoi(value));
+        } else {
+          (void)CPXXsetdblparam(mEnv, std::stoi(identifier), std::stod(value));
+        }
+        VLOG(2) << absl::StrFormat("Set parameter %s to %s", identifier, value);
+      }
+    } catch (...) {
+      LOG(WARNING) << absl::StrFormat(
+          "Cannot parse parameter '%s'. Expected format is 'parameter/name = "
+          "value'",
+          identifier);
+    }
+  }
+  return true;
 }
 
 }  // namespace operations_research

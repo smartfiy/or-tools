@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,6 +15,8 @@
 #define OR_TOOLS_GLOP_PRIMAL_EDGE_NORMS_H_
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 #include "ortools/glop/basis_representation.h"
 #include "ortools/glop/parameters.pb.h"
@@ -62,6 +64,10 @@ class PrimalEdgeNorms {
                   const VariablesInfo& variables_info,
                   const BasisFactorization& basis_factorization);
 
+  // This type is neither copyable nor movable.
+  PrimalEdgeNorms(const PrimalEdgeNorms&) = delete;
+  PrimalEdgeNorms& operator=(const PrimalEdgeNorms&) = delete;
+
   // Clears, i.e. resets the object to its initial value. This will trigger
   // a recomputation for the next Get*() method call.
   void Clear();
@@ -74,7 +80,7 @@ class PrimalEdgeNorms {
 
   // Depending on the SetPricingRule(), this returns one of the "norms" vector
   // below. Note that all norms are squared.
-  const DenseRow& GetSquaredNorms();
+  DenseRow::ConstView GetSquaredNorms();
 
   // Returns the primal edge squared norms. This is only valid if the caller
   // properly called UpdateBeforeBasisPivot() before each basis pivot, or if
@@ -97,7 +103,10 @@ class PrimalEdgeNorms {
   // the precision is not good enough (see recompute_edges_norm_threshold in
   // GlopParameters). As a side effect, this replace the entering_col edge
   // norm with its precise version.
-  void TestEnteringEdgeNormPrecision(ColIndex entering_col,
+  //
+  // Returns false if the old norm is less that 0.25 the new one. We might want
+  // to change the leaving variable if this happens.
+  bool TestEnteringEdgeNormPrecision(ColIndex entering_col,
                                      const ScatteredColumn& direction);
 
   // Updates any internal data BEFORE the given simplex pivot is applied to B.
@@ -220,8 +229,6 @@ class PrimalEdgeNorms {
   // Boolean(s) to set to false when the norms are changed outside of the
   // UpdateBeforeBasisPivot() function.
   std::vector<bool*> watchers_;
-
-  DISALLOW_COPY_AND_ASSIGN(PrimalEdgeNorms);
 };
 
 }  // namespace glop

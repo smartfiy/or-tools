@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,26 +17,31 @@
 #include <sys/types.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <deque>
 #include <functional>
-#include <iterator>
+#include <initializer_list>
+#include <limits>
+#include <map>
 #include <memory>
+#include <optional>
+#include <queue>
 #include <set>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
+#include "absl/types/span.h"
 #include "ortools/base/adjustable_priority_queue.h"
-#include "ortools/base/integral_types.h"
-#include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
-#include "ortools/base/mathutil.h"
 #include "ortools/constraint_solver/constraint_solver.h"
 #include "ortools/constraint_solver/constraint_solveri.h"
 #include "ortools/constraint_solver/routing.h"
-#include "ortools/constraint_solver/routing_index_manager.h"
-#include "ortools/util/bitset.h"
+#include "ortools/constraint_solver/routing_parameters.pb.h"
+#include "ortools/constraint_solver/routing_utils.h"
 
 namespace operations_research {
 
@@ -103,8 +108,8 @@ class VehicleTypeCurator {
   /// Returns {-1, -1} if no compatible vehicle is found and the stopping
   /// condition is never met.
   std::pair<int, int> GetCompatibleVehicleOfType(
-      int type, std::function<bool(int)> vehicle_is_compatible,
-      std::function<bool(int)> stop_and_return_vehicle);
+      int type, const std::function<bool(int)>& vehicle_is_compatible,
+      const std::function<bool(int)>& stop_and_return_vehicle);
 
  private:
   using VehicleClassEntry =
@@ -122,6 +127,10 @@ operations_research::FirstSolutionStrategy::Value
 AutomaticFirstSolutionStrategy(bool has_pickup_deliveries,
                                bool has_node_precedences,
                                bool has_single_vehicle_node);
+
+/// Computes and returns the first node in the end chain of each vehicle in the
+/// model, based on the current bound NextVar values.
+std::vector<int64_t> ComputeVehicleEndChainStarts(const RoutingModel& model);
 
 /// Decision builder building a solution using heuristics with local search
 /// filters to evaluate its feasibility. This is very fast but can eventually
@@ -162,13 +171,14 @@ class IntVarFilteredDecisionBuilder : public DecisionBuilder {
 class IntVarFilteredHeuristic {
  public:
   IntVarFilteredHeuristic(Solver* solver, const std::vector<IntVar*>& vars,
+                          const std::vector<IntVar*>& secondary_vars,
                           LocalSearchFilterManager* filter_manager);
 
   virtual ~IntVarFilteredHeuristic() {}
 
   /// Builds a solution. Returns the resulting assignment if a solution was
   /// found, and nullptr otherwise.
-  Assignment* const BuildSolution();
+  Assignment* BuildSolution();
 
   /// Returns statistics on search, number of decisions sent to filters, number
   /// of decisions rejected by filters.
@@ -180,19 +190,26 @@ class IntVarFilteredHeuristic {
  protected:
   /// Resets the data members for a new solution.
   void ResetSolution();
+  /// Initialize the heuristic; called before starting to build a new solution.
+  virtual void Initialize() {}
   /// Virtual method to initialize the solution.
   virtual bool InitializeSolution() { return true; }
   /// Virtual method to redefine how to build a solution.
   virtual bool BuildSolutionInternal() = 0;
-  /// Commits the modifications to the current solution if these modifications
-  /// are "filter-feasible", returns false otherwise; in any case discards
-  /// all modifications.
-  bool Commit();
+  /// Evaluates the modifications to the current solution. If these
+  /// modifications are "filter-feasible" returns their corresponding cost
+  /// computed by filters.
+  /// If 'commit' is true, the modifications are committed to the current
+  /// solution.
+  /// In any case all modifications to the internal delta are cleared before
+  /// returning.
+  std::optional<int64_t> Evaluate(bool commit);
   /// Returns true if the search must be stopped.
   virtual bool StopSearch() { return false; }
   /// Modifies the current solution by setting the variable of index 'index' to
   /// value 'value'.
   void SetValue(int64_t index, int64_t value) {
+    DCHECK_LT(index, is_in_delta_.size());
     if (!is_in_delta_[index]) {
       delta_->FastAdd(vars_[index])->SetValue(value);
       delta_indices_.push_back(index);
@@ -210,11 +227,17 @@ class IntVarFilteredHeuristic {
   bool Contains(int64_t index) const {
     return assignment_->IntVarContainer().Element(index).Var() != nullptr;
   }
-  /// Returns the number of variables the decision builder is trying to
-  /// instantiate.
-  int Size() const { return vars_.size(); }
   /// Returns the variable of index 'index'.
   IntVar* Var(int64_t index) const { return vars_[index]; }
+  /// Returns the index of a secondary var.
+  int64_t SecondaryVarIndex(int64_t index) const {
+    DCHECK(HasSecondaryVars());
+    return index + base_vars_size_;
+  }
+  /// Returns true if there are secondary variables.
+  bool HasSecondaryVars() const { return base_vars_size_ != vars_.size(); }
+  /// Returns true if 'index' is a secondary variable index.
+  bool IsSecondaryVar(int64_t index) const { return index >= base_vars_size_; }
   /// Synchronizes filters with an assignment (the current solution).
   void SynchronizeFilters();
 
@@ -226,12 +249,14 @@ class IntVarFilteredHeuristic {
   bool FilterAccept();
 
   Solver* solver_;
-  const std::vector<IntVar*> vars_;
+  std::vector<IntVar*> vars_;
+  const int base_vars_size_;
   Assignment* const delta_;
   std::vector<int> delta_indices_;
   std::vector<bool> is_in_delta_;
   Assignment* const empty_;
   LocalSearchFilterManager* filter_manager_;
+  int64_t objective_upper_bound_;
   /// Stats on search
   int64_t number_of_decisions_;
   int64_t number_of_rejects_;
@@ -241,6 +266,7 @@ class IntVarFilteredHeuristic {
 class RoutingFilteredHeuristic : public IntVarFilteredHeuristic {
  public:
   RoutingFilteredHeuristic(RoutingModel* model,
+                           std::function<bool()> stop_search,
                            LocalSearchFilterManager* filter_manager);
   ~RoutingFilteredHeuristic() override {}
   /// Builds a solution starting from the routes formed by the next accessor.
@@ -254,8 +280,8 @@ class RoutingFilteredHeuristic : public IntVarFilteredHeuristic {
   /// Make nodes in the same disjunction as 'node' unperformed. 'node' is a
   /// variable index corresponding to a node.
   void MakeDisjunctionNodesUnperformed(int64_t node);
-  /// Make all unassigned nodes unperformed.
-  void MakeUnassignedNodesUnperformed();
+  /// Make all unassigned nodes unperformed, always returns true.
+  bool MakeUnassignedNodesUnperformed();
   /// Make all partially performed pickup and delivery pairs unperformed. A
   /// pair is partially unperformed if one element of the pair has one of its
   /// alternatives performed in the solution and the other has no alternatives
@@ -263,11 +289,15 @@ class RoutingFilteredHeuristic : public IntVarFilteredHeuristic {
   void MakePartiallyPerformedPairsUnperformed();
 
  protected:
-  bool StopSearch() override { return model_->CheckLimit(); }
-  virtual void SetVehicleIndex(int64_t node, int vehicle) {}
+  bool StopSearch() override { return stop_search_(); }
+  virtual void SetVehicleIndex(int64_t /*node*/, int /*vehicle*/) {}
   virtual void ResetVehicleIndices() {}
   bool VehicleIsEmpty(int vehicle) const {
     return Value(model()->Start(vehicle)) == model()->End(vehicle);
+  }
+  void SetNext(int64_t node, int64_t next, int vehicle) {
+    SetValue(node, next);
+    if (HasSecondaryVars()) SetValue(SecondaryVarIndex(node), vehicle);
   }
 
  private:
@@ -275,6 +305,7 @@ class RoutingFilteredHeuristic : public IntVarFilteredHeuristic {
   bool InitializeSolution() override;
 
   RoutingModel* const model_;
+  std::function<bool()> stop_search_;
   std::vector<int64_t> start_chain_ends_;
   std::vector<int64_t> end_chain_starts_;
 };
@@ -283,7 +314,7 @@ class CheapestInsertionFilteredHeuristic : public RoutingFilteredHeuristic {
  public:
   /// Takes ownership of evaluator.
   CheapestInsertionFilteredHeuristic(
-      RoutingModel* model,
+      RoutingModel* model, std::function<bool()> stop_search,
       std::function<int64_t(int64_t, int64_t, int64_t)> evaluator,
       std::function<int64_t(int64_t)> penalty_evaluator,
       LocalSearchFilterManager* filter_manager);
@@ -301,49 +332,81 @@ class CheapestInsertionFilteredHeuristic : public RoutingFilteredHeuristic {
     }
   };
   struct StartEndValue {
-    int64_t num_allowed_vehicles;
     int64_t distance;
     int vehicle;
 
     bool operator<(const StartEndValue& other) const {
-      return std::tie(num_allowed_vehicles, distance, vehicle) <
-             std::tie(other.num_allowed_vehicles, other.distance,
-                      other.vehicle);
+      return std::tie(distance, vehicle) <
+             std::tie(other.distance, other.vehicle);
     }
   };
-  typedef std::pair<StartEndValue, /*seed_node*/ int> Seed;
+  struct Seed {
+    uint64_t num_allowed_vehicles;
+    int64_t neg_penalty;
+    StartEndValue start_end_value;
+    /// Indicates whether this Seed corresponds to a pair or a single node.
+    /// If false, the 'index' is the pair_index, otherwise it's the node index.
+    bool is_node_index = true;
+    int index;
+
+    bool operator>(const Seed& other) const {
+      return std::tie(num_allowed_vehicles, neg_penalty, start_end_value,
+                      is_node_index, index) >
+             std::tie(other.num_allowed_vehicles, other.neg_penalty,
+                      other.start_end_value, other.is_node_index, other.index);
+    }
+  };
+  // clang-format off
+  struct SeedQueue {
+    explicit SeedQueue(bool prioritize_farthest_nodes) :
+      prioritize_farthest_nodes(prioritize_farthest_nodes) {}
+
+    /// By default, the priority is given (hierarchically) to nodes with lower
+    /// number of allowed vehicles, higher penalty and lower start/end distance.
+    std::priority_queue<Seed, std::vector<Seed>, std::greater<Seed> >
+        priority_queue;
+    /// When 'prioritize_farthest_nodes' is true, the start/end distance is
+    /// inverted so higher priority is given to farther nodes.
+    const bool prioritize_farthest_nodes;
+  };
 
   /// Computes and returns the distance of each uninserted node to every vehicle
-  /// in "vehicles" as a std::vector<std::vector<StartEndValue>>,
+  /// in 'vehicles' as a std::vector<std::vector<StartEndValue>>,
   /// start_end_distances_per_node.
   /// For each node, start_end_distances_per_node[node] is sorted in decreasing
   /// order.
-  // clang-format off
   std::vector<std::vector<StartEndValue> >
       ComputeStartEndDistanceForVehicles(const std::vector<int>& vehicles);
 
-  /// Initializes the priority_queue by inserting the best entry corresponding
+  /// Initializes sq->priority_queue by inserting the best entry corresponding
   /// to each node, i.e. the last element of start_end_distances_per_node[node],
   /// which is supposed to be sorted in decreasing order.
-  /// Queue is a priority queue containing Seeds.
-  template <class Queue>
-  void InitializePriorityQueue(
+  void InitializeSeedQueue(
       std::vector<std::vector<StartEndValue> >* start_end_distances_per_node,
-      Queue* priority_queue);
+      SeedQueue* sq);
   // clang-format on
 
-  /// Inserts 'node' just after 'predecessor', and just before 'successor',
-  /// resulting in the following subsequence: predecessor -> node -> successor.
+  /// Adds a Seed corresponding to the given 'node' to sq.priority_queue, based
+  /// on the last entry in its 'start_end_distances' (from which it's deleted).
+  void AddSeedNodeToQueue(int node,
+                          std::vector<StartEndValue>* start_end_distances,
+                          SeedQueue* sq);
+
+  /// Inserts 'node' just after 'predecessor', and just before 'successor' on
+  /// the route of 'vehicle', resulting in the following subsequence:
+  /// predecessor -> node -> successor.
   /// If 'node' is part of a disjunction, other nodes of the disjunction are
   /// made unperformed.
-  void InsertBetween(int64_t node, int64_t predecessor, int64_t successor);
+  void InsertBetween(int64_t node, int64_t predecessor, int64_t successor,
+                     int vehicle = -1);
   /// Helper method to the ComputeEvaluatorSortedPositions* methods. Finds all
   /// possible insertion positions of node 'node_to_insert' in the partial route
   /// starting at node 'start' and adds them to 'node_insertions' (no sorting is
-  /// done).
+  /// done). If ignore_cost is true, insertion costs may not be computed.
   void AppendInsertionPositionsAfter(
       int64_t node_to_insert, int64_t start, int64_t next_after_start,
-      int vehicle, std::vector<NodeInsertion>* node_insertions);
+      int vehicle, bool ignore_cost,
+      std::vector<NodeInsertion>* node_insertions);
   /// Returns the cost of inserting 'node_to_insert' between 'insert_after' and
   /// 'insert_before' on the 'vehicle', i.e.
   /// Cost(insert_after-->node) + Cost(node-->insert_before)
@@ -398,7 +461,7 @@ class GlobalCheapestInsertionFilteredHeuristic
 
   /// Takes ownership of evaluators.
   GlobalCheapestInsertionFilteredHeuristic(
-      RoutingModel* model,
+      RoutingModel* model, std::function<bool()> stop_search,
       std::function<int64_t(int64_t, int64_t, int64_t)> evaluator,
       std::function<int64_t(int64_t)> penalty_evaluator,
       LocalSearchFilterManager* filter_manager,
@@ -410,11 +473,98 @@ class GlobalCheapestInsertionFilteredHeuristic
   }
 
  private:
-  class NodeEntry;
-  class PairEntry;
+  /// Priority queue entries used by global cheapest insertion heuristic.
+  class NodeEntryQueue;
+
+  /// Entry in priority queue containing the insertion positions of a node pair.
+  class PairEntry {
+   public:
+    PairEntry(int pickup_to_insert, int pickup_insert_after,
+              int delivery_to_insert, int delivery_insert_after, int vehicle,
+              int64_t bucket)
+        : value_(std::numeric_limits<int64_t>::max()),
+          heap_index_(-1),
+          pickup_to_insert_(pickup_to_insert),
+          pickup_insert_after_(pickup_insert_after),
+          delivery_to_insert_(delivery_to_insert),
+          delivery_insert_after_(delivery_insert_after),
+          vehicle_(vehicle),
+          bucket_(bucket) {}
+    // Note: for compatibility reasons, comparator follows tie-breaking rules
+    // used in the first version of GlobalCheapestInsertion.
+    bool operator<(const PairEntry& other) const {
+      // We give higher priority to insertions from lower buckets.
+      if (bucket_ != other.bucket_) {
+        return bucket_ > other.bucket_;
+      }
+      // We then compare by value, then we favor insertions (vehicle != -1).
+      // The rest of the tie-breaking is done with std::tie.
+      if (value_ != other.value_) {
+        return value_ > other.value_;
+      }
+      if ((vehicle_ == -1) ^ (other.vehicle_ == -1)) {
+        return vehicle_ == -1;
+      }
+      return std::tie(pickup_insert_after_, pickup_to_insert_,
+                      delivery_insert_after_, delivery_to_insert_, vehicle_) >
+             std::tie(other.pickup_insert_after_, other.pickup_to_insert_,
+                      other.delivery_insert_after_, other.delivery_to_insert_,
+                      other.vehicle_);
+    }
+    void SetHeapIndex(int h) { heap_index_ = h; }
+    int GetHeapIndex() const { return heap_index_; }
+    void set_value(int64_t value) { value_ = value; }
+    int pickup_to_insert() const { return pickup_to_insert_; }
+    int pickup_insert_after() const { return pickup_insert_after_; }
+    void set_pickup_insert_after(int pickup_insert_after) {
+      pickup_insert_after_ = pickup_insert_after;
+    }
+    int delivery_to_insert() const { return delivery_to_insert_; }
+    int delivery_insert_after() const { return delivery_insert_after_; }
+    int vehicle() const { return vehicle_; }
+    void set_vehicle(int vehicle) { vehicle_ = vehicle; }
+
+   private:
+    int64_t value_;
+    int heap_index_;
+    int pickup_to_insert_;
+    int pickup_insert_after_;
+    int delivery_to_insert_;
+    int delivery_insert_after_;
+    int vehicle_;
+    int64_t bucket_;
+  };
 
   typedef absl::flat_hash_set<PairEntry*> PairEntries;
-  typedef absl::flat_hash_set<NodeEntry*> NodeEntries;
+
+  /// Priority queue entry allocator.
+  template <typename T>
+  class EntryAllocator {
+   public:
+    EntryAllocator() {}
+    void Clear() {
+      entries_.clear();
+      free_entries_.clear();
+    }
+    template <typename... Args>
+    T* NewEntry(const Args&... args) {
+      if (!free_entries_.empty()) {
+        auto* entry = free_entries_.back();
+        free_entries_.pop_back();
+        *entry = T(args...);
+        return entry;
+      } else {
+        entries_.emplace_back(args...);
+        return &entries_.back();
+      }
+    }
+    void FreeEntry(T* entry) { free_entries_.push_back(entry); }
+
+   private:
+    /// std::deque references to elements are stable when extended.
+    std::deque<T> entries_;
+    std::vector<T*> free_entries_;
+  };
 
   /// Inserts non-inserted single nodes or pickup/delivery pairs which have a
   /// visit type in the type requirement graph, i.e. required for or requiring
@@ -448,7 +598,7 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// NOTE: Assumes (DCHECKS) that
   /// UseEmptyVehicleTypeCuratorForVehicle(pair_entry.vehicle()) is true.
   bool InsertPairEntryUsingEmptyVehicleTypeCurator(
-      const std::vector<int>& pair_indices, PairEntry* const pair_entry,
+      const absl::flat_hash_set<int>& pair_indices, PairEntry* pair_entry,
       AdjustablePriorityQueue<PairEntry>* priority_queue,
       std::vector<PairEntries>* pickup_to_entries,
       std::vector<PairEntries>* delivery_to_entries);
@@ -472,10 +622,7 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// UseEmptyVehicleTypeCuratorForVehicle(node_entry.vehicle(), all_vehicles)
   /// is true.
   bool InsertNodeEntryUsingEmptyVehicleTypeCurator(
-      const std::vector<int>& nodes, bool all_vehicles,
-      NodeEntry* const node_entry,
-      AdjustablePriorityQueue<NodeEntry>* priority_queue,
-      std::vector<NodeEntries>* position_to_node_entries);
+      const std::vector<bool>& nodes, bool all_vehicles, NodeEntryQueue* queue);
 
   /// Inserts non-inserted individual nodes on routes by constructing routes
   /// sequentially.
@@ -492,6 +639,10 @@ class GlobalCheapestInsertionFilteredHeuristic
                           std::vector<int>* unused_vehicles,
                           absl::flat_hash_set<int>* used_vehicles);
 
+  /// Returns true of the vehicle's route is not empty or if the vehicle is the
+  /// representative of its class and type.
+  bool IsCheapestClassRepresentative(int vehicle) const;
+
   /// Inserts the (farthest_seeds_ratio_ * model()->vehicles()) nodes farthest
   /// from the start/ends of the available vehicle routes as seeds on their
   /// closest route.
@@ -505,16 +656,15 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// used to insert a new entry for that node if necessary (next best vehicle).
   /// If a seed node is successfully inserted, updates is_vehicle_used and
   /// returns the vehice of the corresponding route. Returns -1 otherwise.
-  template <class Queue>
   int InsertSeedNode(
       std::vector<std::vector<StartEndValue>>* start_end_distances_per_node,
-      Queue* priority_queue, std::vector<bool>* is_vehicle_used);
+      SeedQueue* sq, std::vector<bool>* is_vehicle_used);
   // clang-format on
 
   /// Initializes the priority queue and the pair entries for the given pair
   /// indices with the current state of the solution.
   bool InitializePairPositions(
-      const std::vector<int>& pair_indices,
+      const absl::flat_hash_set<int>& pair_indices,
       AdjustablePriorityQueue<PairEntry>* priority_queue,
       std::vector<PairEntries>* pickup_to_entries,
       std::vector<PairEntries>* delivery_to_entries);
@@ -532,38 +682,56 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// successfully inserted on the 'vehicle', respectively after
   /// 'pickup_position' and 'delivery_position'.
   bool UpdateAfterPairInsertion(
-      const std::vector<int>& pair_indices, int vehicle, int64_t pickup,
+      const absl::flat_hash_set<int>& pair_indices, int vehicle, int64_t pickup,
       int64_t pickup_position, int64_t delivery, int64_t delivery_position,
       AdjustablePriorityQueue<PairEntry>* priority_queue,
       std::vector<PairEntries>* pickup_to_entries,
       std::vector<PairEntries>* delivery_to_entries);
-  /// Updates all pair entries inserting a node after node "insert_after" and
-  /// updates the priority queue accordingly.
-  bool UpdatePairPositions(const std::vector<int>& pair_indices, int vehicle,
-                           int64_t insert_after,
+  /// Updates all existing pair entries inserting a node after nodes of the
+  /// chain starting at 'insert_after_start' and ending before
+  /// 'insert_after_end', and updates the priority queue accordingly.
+  bool UpdateExistingPairEntriesOnChain(
+      int64_t insert_after_start, int64_t insert_after_end,
+      AdjustablePriorityQueue<PairEntry>* priority_queue,
+      std::vector<PairEntries>* pickup_to_entries,
+      std::vector<PairEntries>* delivery_to_entries);
+  /// Adds pair entries inserting either a pickup or a delivery after
+  /// "insert_after". When inserting pickups after "insert_after", will skip
+  /// entries inserting their delivery after
+  /// "skip_entries_inserting_delivery_after". This can be used to avoid the
+  /// insertion of redundant entries.
+  bool AddPairEntriesAfter(const absl::flat_hash_set<int>& pair_indices,
+                           int vehicle, int64_t insert_after,
+                           int64_t skip_entries_inserting_delivery_after,
                            AdjustablePriorityQueue<PairEntry>* priority_queue,
                            std::vector<PairEntries>* pickup_to_entries,
                            std::vector<PairEntries>* delivery_to_entries) {
-    return UpdatePickupPositions(pair_indices, vehicle, insert_after,
-                                 priority_queue, pickup_to_entries,
-                                 delivery_to_entries) &&
-           UpdateDeliveryPositions(pair_indices, vehicle, insert_after,
-                                   priority_queue, pickup_to_entries,
-                                   delivery_to_entries);
+    return AddPairEntriesWithDeliveryAfter(pair_indices, vehicle, insert_after,
+                                           priority_queue, pickup_to_entries,
+                                           delivery_to_entries) &&
+           AddPairEntriesWithPickupAfter(pair_indices, vehicle, insert_after,
+                                         skip_entries_inserting_delivery_after,
+                                         priority_queue, pickup_to_entries,
+                                         delivery_to_entries);
   }
-  /// Updates all pair entries inserting their pickup node after node
-  /// "insert_after" and updates the priority queue accordingly.
-  bool UpdatePickupPositions(const std::vector<int>& pair_indices, int vehicle,
-                             int64_t pickup_insert_after,
-                             AdjustablePriorityQueue<PairEntry>* priority_queue,
-                             std::vector<PairEntries>* pickup_to_entries,
-                             std::vector<PairEntries>* delivery_to_entries);
-  /// Updates all pair entries inserting their delivery node after node
-  /// "insert_after" and updates the priority queue accordingly.
-  bool UpdateDeliveryPositions(
-      const std::vector<int>& pair_indices, int vehicle,
-      int64_t delivery_insert_after,
+  /// Adds pair entries inserting a pickup after node "insert_after" and a
+  /// delivery in a position after the pickup, and updates the priority queue
+  /// accordingly.
+  /// Will skip entries inserting their delivery after
+  /// "skip_entries_inserting_delivery_after". This can be used to avoid the
+  /// insertion of redundant entries.
+  bool AddPairEntriesWithPickupAfter(
+      const absl::flat_hash_set<int>& pair_indices, int vehicle,
+      int64_t insert_after, int64_t skip_entries_inserting_delivery_after,
       AdjustablePriorityQueue<PairEntry>* priority_queue,
+      std::vector<PairEntries>* pickup_to_entries,
+      std::vector<PairEntries>* delivery_to_entries);
+  /// Adds pair entries inserting a delivery after node "insert_after" and a
+  /// pickup in a position before "insert_after", and updates the priority queue
+  /// accordingly.
+  bool AddPairEntriesWithDeliveryAfter(
+      const absl::flat_hash_set<int>& pair_indices, int vehicle,
+      int64_t insert_after, AdjustablePriorityQueue<PairEntry>* priority_queue,
       std::vector<PairEntries>* pickup_to_entries,
       std::vector<PairEntries>* delivery_to_entries);
   /// Deletes an entry, removing it from the priority queue and the appropriate
@@ -585,7 +753,7 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// Updates the pair entry's value and rearranges the priority queue
   /// accordingly.
   void UpdatePairEntry(
-      PairEntry* const pair_entry,
+      PairEntry* pair_entry,
       AdjustablePriorityQueue<PairEntry>* priority_queue) const;
   /// Computes and returns the insertion value of inserting 'pickup' and
   /// 'delivery' respectively after 'pickup_insert_after' and
@@ -598,71 +766,41 @@ class GlobalCheapestInsertionFilteredHeuristic
 
   /// Initializes the priority queue and the node entries with the current state
   /// of the solution on the given vehicle routes.
-  bool InitializePositions(const std::vector<int>& nodes,
+  bool InitializePositions(const std::vector<bool>& nodes,
                            const absl::flat_hash_set<int>& vehicles,
-                           AdjustablePriorityQueue<NodeEntry>* priority_queue,
-                           std::vector<NodeEntries>* position_to_node_entries);
-  /// Adds insertion entries performing 'node', and updates 'priority_queue' and
+                           NodeEntryQueue* queue);
+  /// Adds insertion entries performing 'node', and updates 'queue' and
   /// position_to_node_entries accordingly.
   /// Based on gci_params_.use_neighbors_ratio_for_initialization, either all
   /// contained nodes are considered as insertion positions, or only the
   /// closest neighbors of 'node'.
   void InitializeInsertionEntriesPerformingNode(
       int64_t node, const absl::flat_hash_set<int>& vehicles,
-      AdjustablePriorityQueue<NodeEntry>* priority_queue,
-      std::vector<NodeEntries>* position_to_node_entries);
-  /// Updates all node entries inserting a node after node "insert_after" and
-  /// updates the priority queue accordingly.
-  bool UpdatePositions(const std::vector<int>& nodes, int vehicle,
-                       int64_t insert_after, bool all_vehicles,
-                       AdjustablePriorityQueue<NodeEntry>* priority_queue,
-                       std::vector<NodeEntries>* node_entries);
-  /// Deletes an entry, removing it from the priority queue and the appropriate
-  /// node entry sets.
-  void DeleteNodeEntry(NodeEntry* entry,
-                       AdjustablePriorityQueue<NodeEntry>* priority_queue,
-                       std::vector<NodeEntries>* node_entries);
+      NodeEntryQueue* queue);
+  /// Performs all the necessary updates after 'node' was successfully inserted
+  /// on the 'vehicle' after 'insert_after'.
+  bool UpdateAfterNodeInsertion(const std::vector<bool>& nodes, int vehicle,
+                                int64_t node, int64_t insert_after,
+                                bool all_vehicles, NodeEntryQueue* queue);
+  /// Updates all existing node entries inserting a node after nodes of the
+  /// chain starting at 'insert_after_start' and ending before
+  /// 'insert_after_end', and updates the priority queue accordingly.
+  bool UpdateExistingNodeEntriesOnChain(const std::vector<bool>& nodes,
+                                        int vehicle, int64_t insert_after_start,
+                                        int64_t insert_after_end,
+                                        bool all_vehicles,
+                                        NodeEntryQueue* queue);
+  /// Adds node entries inserting a node after "insert_after" and updates the
+  /// priority queue accordingly.
+  bool AddNodeEntriesAfter(const std::vector<bool>& nodes, int vehicle,
+                           int64_t insert_after, bool all_vehicles,
+                           NodeEntryQueue* queue);
 
   /// Creates a NodeEntry corresponding to the insertion of 'node' after
-  /// 'insert_after' on 'vehicle' and adds it to the 'priority_queue' and
+  /// 'insert_after' on 'vehicle' and adds it to the 'queue' and
   /// 'node_entries'.
   void AddNodeEntry(int64_t node, int64_t insert_after, int vehicle,
-                    bool all_vehicles,
-                    AdjustablePriorityQueue<NodeEntry>* priority_queue,
-                    std::vector<NodeEntries>* node_entries) const;
-  /// Updates the given node_entry's value and rearranges the priority queue
-  /// accordingly.
-  void UpdateNodeEntry(
-      NodeEntry* const node_entry,
-      AdjustablePriorityQueue<NodeEntry>* priority_queue) const;
-
-  /// Computes the neighborhood of all nodes for every cost class, if needed and
-  /// not done already.
-  void ComputeNeighborhoods();
-
-  /// Returns true iff neighbor_index is in node_index's neighbors list
-  /// corresponding to neighbor_is_pickup and neighbor_is_delivery.
-  bool IsNeighborForCostClass(int cost_class, int64_t node_index,
-                              int64_t neighbor_index) const;
-
-  /// Returns the neighbors of the given node for the given cost_class.
-  const std::vector<int64_t>& GetNeighborsOfNodeForCostClass(
-      int cost_class, int64_t node_index) const {
-    return gci_params_.neighbors_ratio == 1
-               ? all_nodes_
-               : node_index_to_neighbors_by_cost_class_[node_index][cost_class]
-                     ->PositionsSetAtLeastOnce();
-  }
-
-  int64_t NumNonStartEndNodes() const {
-    return model()->Size() - model()->vehicles();
-  }
-
-  int64_t NumNeighbors() const {
-    return std::max(gci_params_.min_neighbors,
-                    MathUtil::FastInt64Round(gci_params_.neighbors_ratio *
-                                             NumNonStartEndNodes()));
-  }
+                    bool all_vehicles, NodeEntryQueue* queue) const;
 
   void ResetVehicleIndices() override {
     node_index_to_vehicle_.assign(node_index_to_vehicle_.size(), -1);
@@ -683,13 +821,13 @@ class GlobalCheapestInsertionFilteredHeuristic
   }
 
   /// Returns the bucket of a pair of pickup and delivery alternates.
-  int64_t GetBucketOfPair(const RoutingModel::IndexPair& index_pair) const {
+  int64_t GetBucketOfPair(const PickupDeliveryPair& pair) const {
     int64_t max_pickup_bucket = 0;
-    for (int64_t pickup : index_pair.first) {
+    for (int64_t pickup : pair.pickup_alternatives) {
       max_pickup_bucket = std::max(max_pickup_bucket, GetBucketOfNode(pickup));
     }
     int64_t max_delivery_bucket = 0;
-    for (int64_t delivery : index_pair.second) {
+    for (int64_t delivery : pair.delivery_alternatives) {
       max_delivery_bucket =
           std::max(max_delivery_bucket, GetBucketOfNode(delivery));
     }
@@ -698,11 +836,11 @@ class GlobalCheapestInsertionFilteredHeuristic
 
   /// Checks if the search should be stopped (time limit reached), and cleans up
   /// the priority queue if it's the case.
-  template <class T>
+  template <typename T>
   bool StopSearchAndCleanup(AdjustablePriorityQueue<T>* priority_queue) {
     if (!StopSearch()) return false;
-    for (T* const entry : *priority_queue->Raw()) {
-      delete entry;
+    if constexpr (std::is_same_v<T, PairEntry>) {
+      pair_entry_allocator_.Clear();
     }
     priority_queue->Clear();
     return true;
@@ -712,20 +850,209 @@ class GlobalCheapestInsertionFilteredHeuristic
   /// Stores the vehicle index of each node in the current assignment.
   std::vector<int> node_index_to_vehicle_;
 
-  // clang-format off
-  std::vector<std::vector<std::unique_ptr<SparseBitset<int64_t> > > >
+  const RoutingModel::NodeNeighborsByCostClass*
       node_index_to_neighbors_by_cost_class_;
-  // clang-format on
 
   std::unique_ptr<VehicleTypeCurator> empty_vehicle_type_curator_;
 
-  /// When neighbors_ratio is 1, we don't compute the neighborhood matrix
-  /// above, and use the following vector in the code to avoid unnecessary
-  /// computations and decrease the time and space complexities.
-  std::vector<int64_t> all_nodes_;
+  mutable EntryAllocator<PairEntry> pair_entry_allocator_;
 };
 
-/// Filter-base decision builder which builds a solution by inserting
+// Holds sequences of insertions.
+// A sequence of insertions must be in the same path, each insertion must
+// take place either after the previously inserted node or further down the
+// path, never before.
+class InsertionSequenceContainer {
+ private:
+  // InsertionSequenceContainer holds all insertion sequences in the same vector
+  // contiguously, each insertion sequence is defined by a pair of bounds.
+  // Using Insertion* directly to delimit bounds would cause out-of-memory reads
+  // when the underlying vector<Insertion> is extended and reallocated,
+  // so this stores integer bounds in InsertionBounds to delimit sequences,
+  // and InsertionSequenceIterator translates those bounds to
+  // Insertion*-based ranges (InsertionSequence) on-the-fly when iterating over
+  // all sequences.
+  struct InsertionBounds {
+    size_t begin;
+    size_t end;
+    int vehicle;
+    int64_t cost;
+    bool operator<(const InsertionBounds& other) const {
+      return std::tie(cost, vehicle, begin) <
+             std::tie(other.cost, other.vehicle, other.begin);
+    }
+    size_t Size() const { return end - begin; }
+  };
+
+ public:
+  struct Insertion {
+    int pred;
+    int node;
+    bool operator==(const Insertion& other) const {
+      return pred == other.pred && node == other.node;
+    }
+  };
+
+  // Represents an insertion sequence as passed to AddInsertionSequence.
+  // This only allows to modify the cost, as a means to reorder sequences.
+  class InsertionSequence {
+   public:
+    InsertionSequence(Insertion* data, InsertionBounds* bounds)
+        : data_(data), bounds_(bounds) {}
+
+    bool operator!=(const InsertionSequence& other) const {
+      DCHECK_NE(data_, other.data_);
+      return bounds_ != other.bounds_;
+    }
+
+    const Insertion* begin() const { return data_ + bounds_->begin; }
+    const Insertion* end() const { return data_ + bounds_->end; }
+    size_t Size() const { return bounds_->Size(); }
+    int Vehicle() const { return bounds_->vehicle; }
+    int64_t Cost() const { return bounds_->cost; }
+    int64_t& Cost() { return bounds_->cost; }
+
+   private:
+    const Insertion* const data_;
+    InsertionBounds* const bounds_;
+  };
+  class InsertionSequenceIterator {
+   public:
+    InsertionSequenceIterator(Insertion* data, InsertionBounds* bounds)
+        : data_(data), bounds_(bounds) {}
+    bool operator!=(const InsertionSequenceIterator& other) const {
+      DCHECK_EQ(data_, other.data_);
+      return bounds_ != other.bounds_;
+    }
+    InsertionSequenceIterator& operator++() {
+      ++bounds_;
+      return *this;
+    }
+    InsertionSequence operator*() const { return {data_, bounds_}; }
+
+   private:
+    Insertion* data_;
+    InsertionBounds* bounds_;
+  };
+
+  // InsertionSequenceContainer is a range over insertion sequences.
+  InsertionSequenceIterator begin() {
+    return {insertions_.data(), insertion_bounds_.data()};
+  }
+  InsertionSequenceIterator end() {
+    return {insertions_.data(),
+            insertion_bounds_.data() + insertion_bounds_.size()};
+  }
+  // Returns the number of sequences of this container.
+  size_t Size() const { return insertion_bounds_.size(); }
+
+  // Adds an insertion sequence to the container.
+  // Passing an initializer_list allows deeper optimizations by the compiler
+  // for cases where the sequence has a compile-time fixed size.
+  void AddInsertionSequence(
+      int vehicle, std::initializer_list<Insertion> insertion_sequence) {
+    insertion_bounds_.push_back(
+        {.begin = insertions_.size(),
+         .end = insertions_.size() + insertion_sequence.size(),
+         .vehicle = vehicle,
+         .cost = 0});
+    insertions_.insert(insertions_.end(), insertion_sequence.begin(),
+                       insertion_sequence.end());
+  }
+
+  // Adds an insertion sequence to the container.
+  void AddInsertionSequence(int vehicle,
+                            absl::Span<const Insertion> insertion_sequence) {
+    insertion_bounds_.push_back(
+        {.begin = insertions_.size(),
+         .end = insertions_.size() + insertion_sequence.size(),
+         .vehicle = vehicle,
+         .cost = 0});
+    insertions_.insert(insertions_.end(), insertion_sequence.begin(),
+                       insertion_sequence.end());
+  }
+
+  // Similar to std::remove_if(), removes all sequences that match a predicate.
+  // This keeps original order, and removes selected sequences.
+  void RemoveIf(const std::function<bool(const InsertionSequence&)>& p) {
+    size_t from = 0;
+    size_t to = 0;
+    for (const InsertionSequence& sequence : *this) {
+      // TODO(user): Benchmark this against std::swap().
+      if (!p(sequence)) insertion_bounds_[to++] = insertion_bounds_[from];
+      ++from;
+    }
+    insertion_bounds_.resize(to);
+  }
+
+  // Sorts sequences according to (cost, vehicle).
+  // TODO(user): benchmark this against other ways to get insertion
+  // sequence in order, for instance sorting by index, separating {cost, index},
+  // making a heap.
+  void Sort() { std::sort(insertion_bounds_.begin(), insertion_bounds_.end()); }
+
+  // Removes all sequences.
+  void Clear() {
+    insertions_.clear();
+    insertion_bounds_.clear();
+  }
+
+ private:
+  std::vector<Insertion> insertions_;
+  std::vector<InsertionBounds> insertion_bounds_;
+};
+
+// Generates insertion positions respecting structural constraints.
+class InsertionSequenceGenerator {
+ public:
+  InsertionSequenceGenerator() {}
+
+  /// Generates insertions for a pickup and delivery pair in a multitour path:
+  /// - a series of pickups may only start if all the deliveries of previous
+  ///   pickups have been performed.
+  /// - given a maximal pickup*delivery* subsequence, either the pickups or the
+  ///   deliveries are symmetric, meaning their order does not matter.
+  /// Under these specifications, this method generates all
+  /// unique insertions of the given pair that keep the multitour property.
+  /// Note that there are several ways one can extend pure pickup and delivery
+  /// problems to mixed paired and unpaired visits.
+  /// Two extreme views:
+  /// - multitour heuristics should consider that only consecutive pickups or
+  ///   consecutive deliveries have a symmetry. Heuristics should only break
+  ///   those symmetries, in the mixed case inserting a pair in a path of length
+  ///   p has O(p²) possibilities.
+  /// - multitour heuristics should not consider unpaired visits. Insertions
+  ///   are made on the subpath of paired nodes, all extensions to the original
+  ///   path that conserve order are equivalent.
+  void AppendPickupDeliveryMultitourInsertions(
+      int pickup, int delivery, int vehicle, const std::vector<int>& path,
+      const std::vector<bool>& path_node_is_pickup,
+      const std::vector<bool>& path_node_is_delivery,
+      InsertionSequenceContainer& insertions);
+
+ private:
+  // Information[i] describes the insertion between path[i] and path[i+1].
+  std::vector<int> next_decrease_;  // next position after a delivery.
+  std::vector<int> next_increase_;  // next position after a pickup.
+  std::vector<int> prev_decrease_;  // previous position after delivery.
+  std::vector<int> prev_increase_;  // previous position after pickup.
+};
+
+struct PickupDeliveryInsertion {
+  int64_t insert_pickup_after;
+  int64_t insert_delivery_after;
+  int64_t value;
+  int vehicle;
+
+  bool operator<(const PickupDeliveryInsertion& other) const {
+    return std::tie(value, insert_pickup_after, insert_delivery_after,
+                    vehicle) < std::tie(other.value, other.insert_pickup_after,
+                                        other.insert_delivery_after,
+                                        other.vehicle);
+  }
+};
+
+/// Filter-based decision builder which builds a solution by inserting
 /// nodes at their cheapest position. The cost of a position is computed
 /// an arc-based cost callback. Node selected for insertion are considered in
 /// decreasing order of distance to the start/ends of the routes, i.e. farthest
@@ -735,31 +1062,62 @@ class LocalCheapestInsertionFilteredHeuristic
  public:
   /// Takes ownership of evaluator.
   LocalCheapestInsertionFilteredHeuristic(
-      RoutingModel* model,
+      RoutingModel* model, std::function<bool()> stop_search,
       std::function<int64_t(int64_t, int64_t, int64_t)> evaluator,
-      LocalSearchFilterManager* filter_manager);
+      RoutingSearchParameters::PairInsertionStrategy pair_insertion_strategy,
+      LocalSearchFilterManager* filter_manager,
+      BinCapacities* bin_capacities = nullptr);
   ~LocalCheapestInsertionFilteredHeuristic() override {}
   bool BuildSolutionInternal() override;
   std::string DebugString() const override {
     return "LocalCheapestInsertionFilteredHeuristic";
   }
 
+ protected:
+  void Initialize() override;
+
  private:
+  /// Computes the order of insertion of the node/pairs in the model based on
+  /// the "Seed" values (number of allowed vehicles, penalty, distance from
+  /// vehicle start/ends), and stores them in insertion_order_.
+  void ComputeInsertionOrder();
   /// Computes the possible insertion positions of 'node' and sorts them
   /// according to the current cost evaluator.
-  /// 'node' is a variable index corresponding to a node, 'sorted_insertions' is
-  /// a sorted vector of insertions.
-  void ComputeEvaluatorSortedPositions(
-      int64_t node, std::vector<NodeInsertion>* sorted_insertions);
+  /// 'node' is a variable index corresponding to a node.
+  std::vector<NodeInsertion> ComputeEvaluatorSortedPositions(int64_t node);
   /// Like ComputeEvaluatorSortedPositions, subject to the additional
   /// restrictions that the node may only be inserted after node 'start' on the
   /// route. For convenience, this method also needs the node that is right
   /// after 'start' on the route.
-  void ComputeEvaluatorSortedPositionsOnRouteAfter(
-      int64_t node, int64_t start, int64_t next_after_start, int vehicle,
-      std::vector<NodeInsertion>* sorted_insertions);
+  std::vector<NodeInsertion> ComputeEvaluatorSortedPositionsOnRouteAfter(
+      int64_t node, int64_t start, int64_t next_after_start, int vehicle);
 
-  std::vector<std::vector<StartEndValue>> start_end_distances_per_node_;
+  /// Computes the possible simultaneous insertion positions of the pair
+  /// 'pickup' and 'delivery'. Sorts them according to the current cost
+  /// evaluator.
+  std::vector<PickupDeliveryInsertion> ComputeEvaluatorSortedPairPositions(
+      int pickup, int delivery);
+
+  // Tries to insert any alternative of the given pair,
+  // ordered by cost of pickup insertion, then by cost of delivery insertion.
+  void InsertBestPickupThenDelivery(const PickupDeliveryPair& pair);
+  // Tries to insert any alternative of the given pair,
+  // ordered by the sum of pickup and delivery insertion.
+  void InsertBestPair(const PickupDeliveryPair& pair);
+  // Tries to insert any alternative of the given pair,
+  // at a position that preserves the multitour property,
+  // ordered by the sum of pickup and delivery insertion.
+  void InsertBestPairMultitour(const PickupDeliveryPair& pair);
+  // Tries to insert a pair at the given location. Returns true iff inserted.
+  bool InsertPair(int64_t pickup, int64_t insert_pickup_after, int64_t delivery,
+                  int64_t insert_delivery_after, int vehicle);
+
+  std::vector<Seed> insertion_order_;
+  const RoutingSearchParameters::PairInsertionStrategy pair_insertion_strategy_;
+  InsertionSequenceContainer insertion_container_;
+  InsertionSequenceGenerator insertion_generator_;
+
+  BinCapacities* const bin_capacities_;
 };
 
 /// Filtered-base decision builder based on the addition heuristic, extending
@@ -767,6 +1125,7 @@ class LocalCheapestInsertionFilteredHeuristic
 class CheapestAdditionFilteredHeuristic : public RoutingFilteredHeuristic {
  public:
   CheapestAdditionFilteredHeuristic(RoutingModel* model,
+                                    std::function<bool()> stop_search,
                                     LocalSearchFilterManager* filter_manager);
   ~CheapestAdditionFilteredHeuristic() override {}
   bool BuildSolutionInternal() override;
@@ -811,7 +1170,8 @@ class EvaluatorCheapestAdditionFilteredHeuristic
  public:
   /// Takes ownership of evaluator.
   EvaluatorCheapestAdditionFilteredHeuristic(
-      RoutingModel* model, std::function<int64_t(int64_t, int64_t)> evaluator,
+      RoutingModel* model, std::function<bool()> stop_search,
+      std::function<int64_t(int64_t, int64_t)> evaluator,
       LocalSearchFilterManager* filter_manager);
   ~EvaluatorCheapestAdditionFilteredHeuristic() override {}
   std::string DebugString() const override {
@@ -834,7 +1194,8 @@ class ComparatorCheapestAdditionFilteredHeuristic
  public:
   /// Takes ownership of evaluator.
   ComparatorCheapestAdditionFilteredHeuristic(
-      RoutingModel* model, Solver::VariableValueComparator comparator,
+      RoutingModel* model, std::function<bool()> stop_search,
+      Solver::VariableValueComparator comparator,
       LocalSearchFilterManager* filter_manager);
   ~ComparatorCheapestAdditionFilteredHeuristic() override {}
   std::string DebugString() const override {
@@ -875,13 +1236,25 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
     double arc_coefficient = 1.0;
   };
 
-  SavingsFilteredHeuristic(RoutingModel* model, SavingsParameters parameters,
+  SavingsFilteredHeuristic(RoutingModel* model,
+                           std::function<bool()> stop_search,
+                           SavingsParameters parameters,
                            LocalSearchFilterManager* filter_manager);
   ~SavingsFilteredHeuristic() override;
   bool BuildSolutionInternal() override;
 
  protected:
-  typedef std::pair</*saving*/ int64_t, /*saving index*/ int64_t> Saving;
+  struct Saving {
+    int64_t saving;
+    unsigned int vehicle_type : 20;
+    unsigned int before_node : 22;
+    unsigned int after_node : 22;
+    bool operator<(const Saving& other) const {
+      return std::tie(saving, vehicle_type, before_node, after_node) <
+             std::tie(other.saving, other.vehicle_type, other.before_node,
+                      other.after_node);
+    }
+  };
 
   template <typename S>
   class SavingsContainer;
@@ -889,21 +1262,6 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
   virtual double ExtraSavingsMemoryMultiplicativeFactor() const = 0;
 
   virtual void BuildRoutesFromSavings() = 0;
-
-  /// Returns the cost class from a saving.
-  int64_t GetVehicleTypeFromSaving(const Saving& saving) const {
-    return saving.second / size_squared_;
-  }
-  /// Returns the "before node" from a saving.
-  int64_t GetBeforeNodeFromSaving(const Saving& saving) const {
-    return (saving.second % size_squared_) / Size();
-  }
-  /// Returns the "after node" from a saving.
-  int64_t GetAfterNodeFromSaving(const Saving& saving) const {
-    return (saving.second % size_squared_) % Size();
-  }
-  /// Returns the saving value from a saving.
-  int64_t GetSavingValue(const Saving& saving) const { return saving.first; }
 
   /// Finds the best available vehicle of type "type" to start a new route to
   /// serve the arc before_node-->after_node.
@@ -944,8 +1302,9 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
   /// Builds a saving from a saving value, a vehicle type and two nodes.
   Saving BuildSaving(int64_t saving, int vehicle_type, int before_node,
                      int after_node) const {
-    return std::make_pair(saving, vehicle_type * size_squared_ +
-                                      before_node * Size() + after_node);
+    return {saving, static_cast<unsigned int>(vehicle_type),
+            static_cast<unsigned int>(before_node),
+            static_cast<unsigned int>(after_node)};
   }
 
   /// Computes and returns the maximum number of (closest) neighbors to consider
@@ -954,7 +1313,6 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
   int64_t MaxNumNeighborsPerNode(int num_vehicle_types) const;
 
   const SavingsParameters savings_params_;
-  int64_t size_squared_;
 
   friend class SavingsFilteredHeuristicTestPeer;
 };
@@ -962,10 +1320,12 @@ class SavingsFilteredHeuristic : public RoutingFilteredHeuristic {
 class SequentialSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
  public:
   SequentialSavingsFilteredHeuristic(RoutingModel* model,
+                                     std::function<bool()> stop_search,
                                      SavingsParameters parameters,
                                      LocalSearchFilterManager* filter_manager)
-      : SavingsFilteredHeuristic(model, parameters, filter_manager) {}
-  ~SequentialSavingsFilteredHeuristic() override{};
+      : SavingsFilteredHeuristic(model, std::move(stop_search), parameters,
+                                 filter_manager) {}
+  ~SequentialSavingsFilteredHeuristic() override {}
   std::string DebugString() const override {
     return "SequentialSavingsFilteredHeuristic";
   }
@@ -982,10 +1342,12 @@ class SequentialSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
 class ParallelSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
  public:
   ParallelSavingsFilteredHeuristic(RoutingModel* model,
+                                   std::function<bool()> stop_search,
                                    SavingsParameters parameters,
                                    LocalSearchFilterManager* filter_manager)
-      : SavingsFilteredHeuristic(model, parameters, filter_manager) {}
-  ~ParallelSavingsFilteredHeuristic() override{};
+      : SavingsFilteredHeuristic(model, std::move(stop_search), parameters,
+                                 filter_manager) {}
+  ~ParallelSavingsFilteredHeuristic() override {}
   std::string DebugString() const override {
     return "ParallelSavingsFilteredHeuristic";
   }
@@ -1028,6 +1390,7 @@ class ParallelSavingsFilteredHeuristic : public SavingsFilteredHeuristic {
 class ChristofidesFilteredHeuristic : public RoutingFilteredHeuristic {
  public:
   ChristofidesFilteredHeuristic(RoutingModel* model,
+                                std::function<bool()> stop_search,
                                 LocalSearchFilterManager* filter_manager,
                                 bool use_minimum_matching);
   ~ChristofidesFilteredHeuristic() override {}
@@ -1040,12 +1403,17 @@ class ChristofidesFilteredHeuristic : public RoutingFilteredHeuristic {
   const bool use_minimum_matching_;
 };
 
-/// Class to arrange indices by by their distance and their angles from the
-/// depot. Used in the Sweep first solution heuristic.
+/// Class to arrange indices by their distance and their angle from the depot.
+/// Used in the Sweep first solution heuristic.
 class SweepArranger {
  public:
   explicit SweepArranger(
       const std::vector<std::pair<int64_t, int64_t>>& points);
+
+  // This type is neither copyable nor movable.
+  SweepArranger(const SweepArranger&) = delete;
+  SweepArranger& operator=(const SweepArranger&) = delete;
+
   virtual ~SweepArranger() {}
   void ArrangeIndices(std::vector<int64_t>* indices);
   void SetSectors(int sectors) { sectors_ = sectors; }
@@ -1053,8 +1421,6 @@ class SweepArranger {
  private:
   std::vector<int> coordinates_;
   int sectors_;
-
-  DISALLOW_COPY_AND_ASSIGN(SweepArranger);
 };
 #endif  // SWIG
 

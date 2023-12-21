@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,149 +13,146 @@
 
 #include "ortools/sat/disjunctive.h"
 
-#include <memory>
+#include <algorithm>
+#include <functional>
+#include <vector>
 
-#include "ortools/base/iterator_adaptors.h"
+#include "absl/algorithm/container.h"
+#include "absl/log/check.h"
 #include "ortools/base/logging.h"
 #include "ortools/sat/all_different.h"
 #include "ortools/sat/integer.h"
+#include "ortools/sat/integer_expr.h"
+#include "ortools/sat/intervals.h"
+#include "ortools/sat/model.h"
+#include "ortools/sat/precedences.h"
+#include "ortools/sat/sat_base.h"
 #include "ortools/sat/sat_parameters.pb.h"
 #include "ortools/sat/sat_solver.h"
+#include "ortools/sat/theta_tree.h"
 #include "ortools/sat/timetable.h"
 #include "ortools/util/sort.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
 
-std::function<void(Model*)> Disjunctive(
-    const std::vector<IntervalVariable>& vars) {
-  return [=](Model* model) {
-    bool is_all_different = true;
-    IntervalsRepository* repository = model->GetOrCreate<IntervalsRepository>();
-    for (const IntervalVariable var : vars) {
-      if (repository->IsOptional(var) || repository->MinSize(var) != 1 ||
-          repository->MaxSize(var) != 1) {
-        is_all_different = false;
-        break;
-      }
-    }
-    if (is_all_different) {
-      std::vector<AffineExpression> starts;
-      starts.reserve(vars.size());
-      for (const IntervalVariable interval : vars) {
-        starts.push_back(repository->Start(interval));
-      }
-      model->Add(AllDifferentOnBounds(starts));
-      return;
-    }
+void AddDisjunctive(const std::vector<IntervalVariable>& intervals,
+                    Model* model) {
+  // Depending on the parameters, create all pair of conditional precedences.
+  // TODO(user): create them dynamically instead?
+  const auto& params = *model->GetOrCreate<SatParameters>();
+  if (intervals.size() <=
+          params.max_size_to_create_precedence_literals_in_disjunctive() &&
+      params.use_strong_propagation_in_disjunctive()) {
+    AddDisjunctiveWithBooleanPrecedencesOnly(intervals, model);
+  }
 
-    auto* watcher = model->GetOrCreate<GenericLiteralWatcher>();
-    const auto& sat_parameters = *model->GetOrCreate<SatParameters>();
-    if (vars.size() > 2 && sat_parameters.use_combined_no_overlap()) {
-      model->GetOrCreate<CombinedDisjunctive<true>>()->AddNoOverlap(vars);
-      model->GetOrCreate<CombinedDisjunctive<false>>()->AddNoOverlap(vars);
-      return;
+  bool is_all_different = true;
+  IntervalsRepository* repository = model->GetOrCreate<IntervalsRepository>();
+  for (const IntervalVariable var : intervals) {
+    if (repository->IsOptional(var) || repository->MinSize(var) != 1 ||
+        repository->MaxSize(var) != 1) {
+      is_all_different = false;
+      break;
     }
-
-    SchedulingConstraintHelper* helper =
-        new SchedulingConstraintHelper(vars, model);
-    model->TakeOwnership(helper);
-
-    // Experiments to use the timetable only to propagate the disjunctive.
-    if (/*DISABLES_CODE*/ (false)) {
-      const AffineExpression one(IntegerValue(1));
-      std::vector<AffineExpression> demands(vars.size(), one);
-      TimeTablingPerTask* timetable = new TimeTablingPerTask(
-          demands, one, model->GetOrCreate<IntegerTrail>(), helper);
-      timetable->RegisterWith(watcher);
-      model->TakeOwnership(timetable);
-      return;
+  }
+  if (is_all_different) {
+    std::vector<AffineExpression> starts;
+    starts.reserve(intervals.size());
+    for (const IntervalVariable interval : intervals) {
+      starts.push_back(repository->Start(interval));
     }
+    model->Add(AllDifferentOnBounds(starts));
+    return;
+  }
 
-    if (vars.size() == 2) {
-      DisjunctiveWithTwoItems* propagator = new DisjunctiveWithTwoItems(helper);
-      propagator->RegisterWith(watcher);
-      model->TakeOwnership(propagator);
-    } else {
-      // We decided to create the propagators in this particular order, but it
-      // shouldn't matter much because of the different priorities used.
-      {
-        // Only one direction is needed by this one.
-        DisjunctiveOverloadChecker* overload_checker =
-            new DisjunctiveOverloadChecker(helper);
-        const int id = overload_checker->RegisterWith(watcher);
-        watcher->SetPropagatorPriority(id, 1);
-        model->TakeOwnership(overload_checker);
-      }
-      for (const bool time_direction : {true, false}) {
-        DisjunctiveDetectablePrecedences* detectable_precedences =
-            new DisjunctiveDetectablePrecedences(time_direction, helper);
-        const int id = detectable_precedences->RegisterWith(watcher);
-        watcher->SetPropagatorPriority(id, 2);
-        model->TakeOwnership(detectable_precedences);
-      }
-      for (const bool time_direction : {true, false}) {
-        DisjunctiveNotLast* not_last =
-            new DisjunctiveNotLast(time_direction, helper);
-        const int id = not_last->RegisterWith(watcher);
-        watcher->SetPropagatorPriority(id, 3);
-        model->TakeOwnership(not_last);
-      }
-      for (const bool time_direction : {true, false}) {
-        DisjunctiveEdgeFinding* edge_finding =
-            new DisjunctiveEdgeFinding(time_direction, helper);
-        const int id = edge_finding->RegisterWith(watcher);
-        watcher->SetPropagatorPriority(id, 4);
-        model->TakeOwnership(edge_finding);
-      }
-    }
+  auto* watcher = model->GetOrCreate<GenericLiteralWatcher>();
+  if (intervals.size() > 2 && params.use_combined_no_overlap()) {
+    model->GetOrCreate<CombinedDisjunctive<true>>()->AddNoOverlap(intervals);
+    model->GetOrCreate<CombinedDisjunctive<false>>()->AddNoOverlap(intervals);
+    return;
+  }
 
-    // Note that we keep this one even when there is just two intervals. This is
-    // because it might push a variable that is after both of the intervals
-    // using the fact that they are in disjunction.
-    if (sat_parameters.use_precedences_in_disjunctive_constraint() &&
-        !sat_parameters.use_combined_no_overlap()) {
-      for (const bool time_direction : {true, false}) {
-        DisjunctivePrecedences* precedences = new DisjunctivePrecedences(
-            time_direction, helper, model->GetOrCreate<IntegerTrail>(),
-            model->GetOrCreate<PrecedencesPropagator>());
-        const int id = precedences->RegisterWith(watcher);
-        watcher->SetPropagatorPriority(id, 5);
-        model->TakeOwnership(precedences);
-      }
+  SchedulingConstraintHelper* helper = repository->GetOrCreateHelper(
+      intervals, /*register_as_disjunctive_helper=*/true);
+
+  // Experiments to use the timetable only to propagate the disjunctive.
+  if (/*DISABLES_CODE*/ (false)) {
+    const AffineExpression one(IntegerValue(1));
+    std::vector<AffineExpression> demands(intervals.size(), one);
+    SchedulingDemandHelper* demands_helper =
+        repository->GetOrCreateDemandHelper(helper, demands);
+
+    TimeTablingPerTask* timetable =
+        new TimeTablingPerTask(one, helper, demands_helper, model);
+    timetable->RegisterWith(watcher);
+    model->TakeOwnership(timetable);
+    return;
+  }
+
+  if (intervals.size() == 2) {
+    DisjunctiveWithTwoItems* propagator = new DisjunctiveWithTwoItems(helper);
+    propagator->RegisterWith(watcher);
+    model->TakeOwnership(propagator);
+  } else {
+    // We decided to create the propagators in this particular order, but it
+    // shouldn't matter much because of the different priorities used.
+    {
+      // Only one direction is needed by this one.
+      DisjunctiveOverloadChecker* overload_checker =
+          new DisjunctiveOverloadChecker(helper);
+      const int id = overload_checker->RegisterWith(watcher);
+      watcher->SetPropagatorPriority(id, 1);
+      model->TakeOwnership(overload_checker);
     }
-  };
+    for (const bool time_direction : {true, false}) {
+      DisjunctiveDetectablePrecedences* detectable_precedences =
+          new DisjunctiveDetectablePrecedences(time_direction, helper);
+      const int id = detectable_precedences->RegisterWith(watcher);
+      watcher->SetPropagatorPriority(id, 2);
+      model->TakeOwnership(detectable_precedences);
+    }
+    for (const bool time_direction : {true, false}) {
+      DisjunctiveNotLast* not_last =
+          new DisjunctiveNotLast(time_direction, helper);
+      const int id = not_last->RegisterWith(watcher);
+      watcher->SetPropagatorPriority(id, 3);
+      model->TakeOwnership(not_last);
+    }
+    for (const bool time_direction : {true, false}) {
+      DisjunctiveEdgeFinding* edge_finding =
+          new DisjunctiveEdgeFinding(time_direction, helper);
+      const int id = edge_finding->RegisterWith(watcher);
+      watcher->SetPropagatorPriority(id, 4);
+      model->TakeOwnership(edge_finding);
+    }
+  }
+
+  // Note that we keep this one even when there is just two intervals. This is
+  // because it might push a variable that is after both of the intervals
+  // using the fact that they are in disjunction.
+  if (params.use_precedences_in_disjunctive_constraint() &&
+      !params.use_combined_no_overlap()) {
+    for (const bool time_direction : {true, false}) {
+      DisjunctivePrecedences* precedences = new DisjunctivePrecedences(
+          time_direction, helper, model->GetOrCreate<IntegerTrail>(),
+          model->GetOrCreate<PrecedencesPropagator>());
+      const int id = precedences->RegisterWith(watcher);
+      watcher->SetPropagatorPriority(id, 5);
+      model->TakeOwnership(precedences);
+    }
+  }
 }
 
-std::function<void(Model*)> DisjunctiveWithBooleanPrecedencesOnly(
-    const std::vector<IntervalVariable>& vars) {
-  return [=](Model* model) {
-    SatSolver* sat_solver = model->GetOrCreate<SatSolver>();
-    IntervalsRepository* repository = model->GetOrCreate<IntervalsRepository>();
-    PrecedencesPropagator* precedences =
-        model->GetOrCreate<PrecedencesPropagator>();
-    for (int i = 0; i < vars.size(); ++i) {
-      for (int j = 0; j < i; ++j) {
-        const BooleanVariable boolean_var = sat_solver->NewBooleanVariable();
-        const Literal i_before_j = Literal(boolean_var, true);
-        const Literal j_before_i = i_before_j.Negated();
-        precedences->AddConditionalPrecedence(repository->EndVar(vars[i]),
-                                              repository->StartVar(vars[j]),
-                                              i_before_j);
-        precedences->AddConditionalPrecedence(repository->EndVar(vars[j]),
-                                              repository->StartVar(vars[i]),
-                                              j_before_i);
-      }
+void AddDisjunctiveWithBooleanPrecedencesOnly(
+    const std::vector<IntervalVariable>& intervals, Model* model) {
+  auto* repo = model->GetOrCreate<IntervalsRepository>();
+  for (int i = 0; i < intervals.size(); ++i) {
+    for (int j = i + 1; j < intervals.size(); ++j) {
+      repo->CreateDisjunctivePrecedenceLiteral(intervals[i], intervals[j]);
     }
-  };
-}
-
-std::function<void(Model*)> DisjunctiveWithBooleanPrecedences(
-    const std::vector<IntervalVariable>& vars) {
-  return [=](Model* model) {
-    model->Add(DisjunctiveWithBooleanPrecedencesOnly(vars));
-    model->Add(Disjunctive(vars));
-  };
+  }
 }
 
 void TaskSet::AddEntry(const Entry& e) {
@@ -192,11 +189,6 @@ void TaskSet::NotifyEntryIsNowLastIfPresent(const Entry& e) {
   optimized_restart_ = sorted_tasks_.size();
   sorted_tasks_.push_back(e);
   DCHECK(std::is_sorted(sorted_tasks_.begin(), sorted_tasks_.end()));
-}
-
-void TaskSet::RemoveEntryWithIndex(int index) {
-  sorted_tasks_.erase(sorted_tasks_.begin() + index);
-  optimized_restart_ = 0;
 }
 
 IntegerValue TaskSet::ComputeEndMin() const {
@@ -445,6 +437,9 @@ bool CombinedDisjunctive<time_direction>::Propagate() {
       const IntegerValue shifted_smin = helper_->ShiftedStartMin(t);
       const IntegerValue size_min = helper_->SizeMin(t);
       for (const int d_index : task_to_disjunctives_[t]) {
+        // TODO(user): Refactor the code to use the same algo as in
+        // DisjunctiveDetectablePrecedences, it is superior and do not need
+        // this function.
         task_sets_[d_index].NotifyEntryIsNowLastIfPresent(
             {t, shifted_smin, size_min});
         end_mins_[d_index] = task_sets_[d_index].ComputeEndMin();
@@ -456,8 +451,9 @@ bool CombinedDisjunctive<time_direction>::Propagate() {
 }
 
 bool DisjunctiveOverloadChecker::Propagate() {
-  if (!helper_->SynchronizeAndSetTimeDirection(/*is_forward=*/true))
+  if (!helper_->SynchronizeAndSetTimeDirection(/*is_forward=*/true)) {
     return false;
+  }
 
   // Split problem into independent part.
   //
@@ -470,20 +466,21 @@ bool DisjunctiveOverloadChecker::Propagate() {
   // all task in the window, [start_min, end_min] is inside the window, and the
   // end min of any set of task to the left is <= window_start, and the
   // start_min of any task to the right is >= end_min.
-  window_.clear();
   IntegerValue window_end = kMinIntegerValue;
   IntegerValue relevant_end;
+  int window_size = 0;
   int relevant_size = 0;
   for (const TaskTime task_time : helper_->TaskByIncreasingShiftedStartMin()) {
     const int task = task_time.task_index;
     if (helper_->IsAbsent(task)) continue;
 
+    // Extend window.
     const IntegerValue start_min = task_time.time;
     if (start_min < window_end) {
-      window_.push_back(task_time);
+      window_[window_size++] = task_time;
       window_end += helper_->SizeMin(task);
       if (window_end > helper_->EndMax(task)) {
-        relevant_size = window_.size();
+        relevant_size = window_size;
         relevant_end = window_end;
       }
       continue;
@@ -492,21 +489,19 @@ bool DisjunctiveOverloadChecker::Propagate() {
     // Process current window.
     // We don't need to process the end of the window (after relevant_size)
     // because these interval can be greedily assembled in a feasible solution.
-    window_.resize(relevant_size);
-    if (relevant_size > 0 && !PropagateSubwindow(relevant_end)) {
+    if (relevant_size > 0 && !PropagateSubwindow(relevant_size, relevant_end)) {
       return false;
     }
 
     // Start of the next window.
-    window_.clear();
-    window_.push_back(task_time);
+    window_size = 0;
+    window_[window_size++] = task_time;
     window_end = start_min + helper_->SizeMin(task);
     relevant_size = 0;
   }
 
   // Process last window.
-  window_.resize(relevant_size);
-  if (relevant_size > 0 && !PropagateSubwindow(relevant_end)) {
+  if (relevant_size > 0 && !PropagateSubwindow(relevant_size, relevant_end)) {
     return false;
   }
 
@@ -521,24 +516,28 @@ bool DisjunctiveOverloadChecker::Propagate() {
 // overload after every insertion, but we could use an upper bound of the
 // theta envelope to save us from checking the actual value.
 bool DisjunctiveOverloadChecker::PropagateSubwindow(
-    IntegerValue global_window_end) {
+    int relevant_size, IntegerValue global_window_end) {
   // Set up theta tree and task_by_increasing_end_max_.
-  const int window_size = window_.size();
-  theta_tree_.Reset(window_size);
+  int num_events = 0;
   task_by_increasing_end_max_.clear();
-  for (int i = 0; i < window_size; ++i) {
+  for (int i = 0; i < relevant_size; ++i) {
     // No point adding a task if its end_max is too large.
-    const int task = window_[i].task_index;
+    const TaskTime& task_time = window_[i];
+    const int task = task_time.task_index;
     const IntegerValue end_max = helper_->EndMax(task);
     if (end_max < global_window_end) {
-      task_to_event_[task] = i;
+      window_[num_events] = task_time;
+      task_to_event_[task] = num_events;
       task_by_increasing_end_max_.push_back({task, end_max});
+      ++num_events;
     }
   }
+  theta_tree_.Reset(num_events);
 
   // Introduce events by increasing end_max, check for overloads.
-  std::sort(task_by_increasing_end_max_.begin(),
-            task_by_increasing_end_max_.end());
+  // If end_max is the same, we want to add high start-min first.
+  absl::c_reverse(task_by_increasing_end_max_);
+  absl::c_stable_sort(task_by_increasing_end_max_);
   for (const auto task_time : task_by_increasing_end_max_) {
     const int current_task = task_time.task_index;
 
@@ -572,7 +571,7 @@ bool DisjunctiveOverloadChecker::PropagateSubwindow(
       const IntegerValue window_start = window_[critical_event].time;
       const IntegerValue window_end =
           theta_tree_.GetEnvelopeOf(critical_event) - 1;
-      for (int event = critical_event; event < window_size; event++) {
+      for (int event = critical_event; event < num_events; event++) {
         const IntegerValue energy_min = theta_tree_.EnergyMin(event);
         if (energy_min > 0) {
           const int task = window_[event].task_index;
@@ -605,7 +604,7 @@ bool DisjunctiveOverloadChecker::PropagateSubwindow(
         const IntegerValue window_start = window_[critical_event].time;
         const IntegerValue window_end =
             current_end + optional_size_min - available_energy - 1;
-        for (int event = critical_event; event < window_size; event++) {
+        for (int event = critical_event; event < num_events; event++) {
           const IntegerValue energy_min = theta_tree_.EnergyMin(event);
           if (energy_min > 0) {
             const int task = window_[event].task_index;
@@ -814,21 +813,68 @@ bool DisjunctiveDetectablePrecedences::PropagateSubwindow() {
             helper_->ShiftedStartMin(t) + helper_->SizeMin(t);
         const IntegerValue window_start =
             sorted_tasks[critical_index].start_min;
+        IntegerValue min_slack = kMaxIntegerValue;
+        bool all_already_before = true;
+        IntegerValue energy_of_task_before = 0;
         for (int i = critical_index; i < sorted_tasks.size(); ++i) {
           const int ct = sorted_tasks[i].task;
           DCHECK_NE(ct, t);
           helper_->AddPresenceReason(ct);
-          helper_->AddEnergyAfterReason(ct, sorted_tasks[i].size_min,
-                                        window_start);
-          helper_->AddStartMaxReason(ct, end_min_if_present - 1);
+
+          // Heuristic, if some tasks are known to be after the first one,
+          // we just add the min-size as a reason.
+          if (i > critical_index && helper_->GetCurrentMinDistanceBetweenTasks(
+                                        sorted_tasks[critical_index].task, ct,
+                                        /*add_reason_if_after=*/true) >= 0) {
+            helper_->AddSizeMinReason(ct);
+          } else {
+            helper_->AddEnergyAfterReason(ct, sorted_tasks[i].size_min,
+                                          window_start);
+          }
+
+          // We only need the reason for being before if we don't already have
+          // a static precedence between the tasks.
+          const IntegerValue dist = helper_->GetCurrentMinDistanceBetweenTasks(
+              ct, t, /*add_reason_if_after=*/true);
+          if (dist >= 0) {
+            energy_of_task_before += sorted_tasks[i].size_min;
+            min_slack = std::min(min_slack, dist);
+          } else {
+            all_already_before = false;
+            helper_->AddStartMaxReason(ct, end_min_if_present - 1);
+          }
         }
 
-        // Add the reason for t (we only need the end-min).
-        helper_->AddEndMinReason(t, end_min_if_present);
+        // We only need the end-min of t if not all the task are already known
+        // to be before.
+        IntegerValue new_start_min = task_set_end_min;
+        if (all_already_before) {
+          // We can actually push further!
+          // And we don't need other reason except the precedences.
+          new_start_min += min_slack;
+        } else {
+          helper_->AddEndMinReason(t, end_min_if_present);
+        }
+
+        // In some situation, we can push the task further.
+        // TODO(user): We can also reduce the reason in this case.
+        if (min_slack != kMaxIntegerValue &&
+            window_start + energy_of_task_before + min_slack > new_start_min) {
+          new_start_min = window_start + energy_of_task_before + min_slack;
+        }
+
+        // If we detect precedences at level zero, lets add them to the
+        // precedence propagator. The hope is that this leads to faster
+        // propagation with better reason if they ever trigger.
+        if (helper_->CurrentDecisionLevel() == 0 && helper_->IsPresent(t)) {
+          for (int i = critical_index; i < sorted_tasks.size(); ++i) {
+            helper_->AddLevelZeroPrecedence(sorted_tasks[i].task, t);
+          }
+        }
 
         // This augment the start-min of t. Note that t is not in task set
         // yet, so we will use this updated start if we ever add it there.
-        if (!helper_->IncreaseStartMin(t, task_set_end_min)) {
+        if (!helper_->IncreaseStartMin(t, new_start_min)) {
           return false;
         }
 
@@ -1131,7 +1177,10 @@ bool DisjunctiveNotLast::PropagateSubwindow() {
       const int ct = sorted_tasks[i].task;
       if (t == ct) continue;
       const IntegerValue start_max = helper_->StartMax(ct);
-      if (start_max > largest_ct_start_max) {
+
+      // If we already known that t is after ct we can have a tighter start-max.
+      if (start_max > largest_ct_start_max &&
+          helper_->GetCurrentMinDistanceBetweenTasks(ct, t) < 0) {
         largest_ct_start_max = start_max;
       }
     }
@@ -1150,7 +1199,10 @@ bool DisjunctiveNotLast::PropagateSubwindow() {
         helper_->AddPresenceReason(ct);
         helper_->AddEnergyAfterReason(ct, sorted_tasks[i].size_min,
                                       window_start);
-        helper_->AddStartMaxReason(ct, largest_ct_start_max);
+        if (helper_->GetCurrentMinDistanceBetweenTasks(
+                ct, t, /*add_reason_if_after=*/true) < 0) {
+          helper_->AddStartMaxReason(ct, largest_ct_start_max);
+        }
       }
 
       // Add the reason for t, we only need the start-max.
@@ -1325,21 +1377,41 @@ bool DisjunctiveEdgeFinding::PropagateSubwindow(IntegerValue window_end_min) {
         const int critical_event =
             theta_tree_.GetMaxEventWithEnvelopeGreaterThan(non_gray_end_min -
                                                            1);
-        const int first_event =
-            std::min(critical_event, critical_event_with_gray);
-        const int second_event =
-            std::max(critical_event, critical_event_with_gray);
+
+        // Even if we need less task to explain the overload, because we are
+        // going to explain the full non_gray_end_min, we can relax the
+        // explanation.
+        if (critical_event_with_gray > critical_event) {
+          critical_event_with_gray = critical_event;
+        }
+
+        const int first_event = critical_event_with_gray;
+        const int second_event = critical_event;
         const IntegerValue first_start = window_[first_event].time;
         const IntegerValue second_start = window_[second_event].time;
 
         // window_end is chosen to be has big as possible and still have an
         // overload if the gray task is not last.
-        const IntegerValue window_end =
-            non_gray_end_max + event_size_[gray_event] - available_energy - 1;
+        //
+        // If gray_task is with variable duration, it is possible that it must
+        // be last just because is end-min is large.
+        bool use_energy_reason = true;
+        IntegerValue window_end;
+        if (helper_->EndMin(gray_task) > non_gray_end_max) {
+          // This is actually a form of detectable precedence.
+          //
+          // TODO(user): We could relax the reason more, but this happen really
+          // rarely it seems.
+          use_energy_reason = false;
+          window_end = helper_->EndMin(gray_task) - 1;
+        } else {
+          window_end = non_gray_end_min + event_size_[gray_event] - 1;
+        }
         CHECK_GE(window_end, non_gray_end_max);
 
         // The non-gray part of the explanation as detailed above.
         helper_->ClearReason();
+        bool one_before = false;
         for (int event = first_event; event < window_size; event++) {
           const int task = window_[event].task_index;
           if (is_gray_[task]) continue;
@@ -1347,13 +1419,39 @@ bool DisjunctiveEdgeFinding::PropagateSubwindow(IntegerValue window_end_min) {
           helper_->AddEnergyAfterReason(
               task, event_size_[event],
               event >= second_event ? second_start : first_start);
-          helper_->AddEndMaxReason(task, window_end);
+
+          const IntegerValue dist = helper_->GetCurrentMinDistanceBetweenTasks(
+              task, gray_task, /*add_reason_if_after=*/true);
+          if (dist >= 0) {
+            one_before = true;
+          } else {
+            helper_->AddEndMaxReason(task, window_end);
+          }
         }
 
         // Add the reason for the gray_task (we don't need the end-max or
         // presence reason).
-        helper_->AddEnergyAfterReason(gray_task, event_size_[gray_event],
-                                      window_[critical_event_with_gray].time);
+        if (one_before) {
+          helper_->AddSizeMinReason(gray_task);
+        } else if (use_energy_reason) {
+          helper_->AddEnergyAfterReason(gray_task, event_size_[gray_event],
+                                        window_[critical_event_with_gray].time);
+        } else {
+          helper_->AddEndMinReason(gray_task, helper_->EndMin(gray_task));
+        }
+
+        // If we detect precedences at level zero, lets add them to the
+        // precedence propagator. The hope is that this leads to faster
+        // propagation with better reason if they ever trigger.
+        if (helper_->CurrentDecisionLevel() == 0 &&
+            helper_->IsPresent(gray_task)) {
+          for (int i = first_event; i < window_size; ++i) {
+            const int task = window_[i].task_index;
+            if (!is_gray_[task]) {
+              helper_->AddLevelZeroPrecedence(task, gray_task);
+            }
+          }
+        }
 
         // Enqueue the new start-min for gray_task.
         //

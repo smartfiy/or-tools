@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,14 +13,17 @@
 
 #include "ortools/util/time_limit.h"
 
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "absl/strings/str_cat.h"
 
 ABSL_FLAG(bool, time_limit_use_usertime, false,
           "If true, rely on the user time in the TimeLimit class. This is "
           "only recommended for benchmarking on a non-isolated environment.");
-
-ABSL_FLAG(bool, time_limit_use_instruction_count, false,
-          "If true, measures the number of instructions executed");
 
 namespace operations_research {
 
@@ -61,5 +64,4 @@ NestedTimeLimit::~NestedTimeLimit() {
   base_time_limit_->AdvanceDeterministicTime(
       time_limit_.GetElapsedDeterministicTime());
 }
-
 }  // namespace operations_research

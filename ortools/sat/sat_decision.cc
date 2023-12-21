@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,9 +13,23 @@
 
 #include "ortools/sat/sat_decision.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <random>
+#include <utility>
+#include <vector>
 
+#include "absl/log/check.h"
+#include "ortools/base/logging.h"
+#include "ortools/base/strong_vector.h"
+#include "ortools/sat/model.h"
+#include "ortools/sat/pb_constraint.h"
+#include "ortools/sat/sat_base.h"
+#include "ortools/sat/sat_parameters.pb.h"
 #include "ortools/sat/util.h"
+#include "ortools/util/bitset.h"
+#include "ortools/util/integer_pq.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
@@ -31,7 +45,7 @@ void SatDecisionPolicy::IncreaseNumVariables(int num_variables) {
 
   activities_.resize(num_variables, parameters_.initial_variables_activity());
   tie_breakers_.resize(num_variables, 0.0);
-  num_bumps_.resize(num_variables, 0);
+  num_bumps_.clear();
   pq_need_update_for_var_at_trail_index_.IncreaseSize(num_variables);
 
   weighted_sign_.resize(num_variables, 0.0);
@@ -71,7 +85,8 @@ void SatDecisionPolicy::BeforeConflict(int trail_index) {
   }
 
   if (trail_index > best_partial_assignment_.size()) {
-    best_partial_assignment_.assign(&trail_[0], &trail_[trail_index]);
+    best_partial_assignment_.assign(trail_.IteratorAt(0),
+                                    trail_.IteratorAt(trail_index));
   }
 
   --num_conflicts_until_rephase_;
@@ -130,7 +145,7 @@ void SatDecisionPolicy::ResetDecisionHeuristic() {
   variable_activity_increment_ = 1.0;
   activities_.assign(num_variables, parameters_.initial_variables_activity());
   tie_breakers_.assign(num_variables, 0.0);
-  num_bumps_.assign(num_variables, 0);
+  num_bumps_.clear();
   var_ordering_.Clear();
 
   polarity_phase_ = 0;
@@ -287,8 +302,11 @@ void SatDecisionPolicy::UpdateWeightedSign(
 }
 
 void SatDecisionPolicy::BumpVariableActivities(
-    const std::vector<Literal>& literals) {
+    absl::Span<const Literal> literals) {
   if (parameters_.use_erwa_heuristic()) {
+    if (num_bumps_.size() != activities_.size()) {
+      num_bumps_.resize(activities_.size(), 0);
+    }
     for (const Literal literal : literals) {
       // Note that we don't really need to bump level 0 variables since they
       // will never be backtracked over. However it is faster to simply bump
@@ -405,6 +423,10 @@ void SatDecisionPolicy::Untrail(int target_trail_index) {
 
   DCHECK_LT(target_trail_index, trail_.Index());
   if (parameters_.use_erwa_heuristic()) {
+    if (num_bumps_.size() != activities_.size()) {
+      num_bumps_.resize(activities_.size(), 0);
+    }
+
     // The ERWA parameter between the new estimation of the learning rate and
     // the old one. TODO(user): Expose parameters for these values.
     const double alpha = std::max(0.06, 0.4 - 1e-6 * num_conflicts_);
@@ -430,14 +452,15 @@ void SatDecisionPolicy::Untrail(int target_trail_index) {
 
       // TODO(user): This heuristic can make this code quite slow because
       // all the untrailed variable will cause a priority queue update.
-      const int64_t num_bumps = num_bumps_[var];
-      double new_rate = 0.0;
-      if (num_bumps > 0) {
-        DCHECK_GT(num_conflicts, 0);
-        num_bumps_[var] = 0;
-        new_rate = static_cast<double>(num_bumps) / num_conflicts;
+      if (num_conflicts > 0) {
+        const int64_t num_bumps = num_bumps_[var];
+        double new_rate = 0.0;
+        if (num_bumps > 0) {
+          num_bumps_[var] = 0;
+          new_rate = static_cast<double>(num_bumps) / num_conflicts;
+        }
+        activities_[var] = alpha * new_rate + (1 - alpha) * activities_[var];
       }
-      activities_[var] = alpha * new_rate + (1 - alpha) * activities_[var];
       if (var_ordering_is_initialized_) PqInsertOrUpdate(var);
     }
     if (num_conflicts > 0) {

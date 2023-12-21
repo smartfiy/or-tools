@@ -1,25 +1,48 @@
 # Create a virtual environment with all tools installed
 # ref: https://hub.docker.com/_/fedora
 FROM fedora:latest AS env
-LABEL maintainer="corentinl@google.com"
+
 # Install system build dependencies
 ENV PATH=/usr/local/bin:$PATH
 RUN dnf -y update \
-&& dnf -y install git \
+&& dnf -y install git wget \
 && dnf -y groupinstall "Development Tools" \
 && dnf -y install gcc-c++ zlib-devel \
 && dnf -y install dnf-plugins-core \
 && dnf -y copr enable vbatts/bazel \
-&& dnf -y install bazel4 \
+&& dnf -y install which \
+&& dnf clean all
+
+# Install Bazelisk
+RUN wget \
+https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-amd64 \
+&& chmod +x bazelisk-linux-amd64 \
+&& mv bazelisk-linux-amd64 /usr/local/bin/bazel
+
+# Install Java
+RUN dnf -y update \
+&& dnf -y install java-11-openjdk java-11-openjdk-devel maven \
+&& dnf clean all
+ENV JAVA_HOME=/usr/lib/jvm/java-openjdk
+
+# Install Python
+RUN dnf -y update \
+&& dnf -y install python3 python3-devel python3-pip \
 && dnf clean all
 
 FROM env AS devel
-WORKDIR /home/lib
+WORKDIR /home/project
 COPY . .
 
-FROM devel as build
+FROM devel AS build
 RUN bazel version
-RUN bazel build --curses=no --cxxopt=-std=c++17 --copt='-Wno-sign-compare' //...:all
+RUN bazel build \
+ -c opt \
+ --subcommands=true \
+ //ortools/... //examples/...
 
-FROM build as test
-RUN bazel test -c opt --curses=no --cxxopt=-std=c++17 --copt='-Wno-sign-compare' //...:all
+FROM build AS test
+RUN bazel test \
+ -c opt \
+ --test_output=errors \
+ //ortools/... //examples/...

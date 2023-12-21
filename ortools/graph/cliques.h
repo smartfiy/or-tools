@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,6 +28,7 @@
 #include <functional>
 #include <limits>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include "absl/strings/str_cat.h"
@@ -347,7 +348,7 @@ class BronKerboschAlgorithm {
   // A vector that receives the current clique found by the algorithm.
   std::vector<NodeIndex> current_clique_;
 
-  // Set to true if the algorithm is active (it was not stopped by an the clique
+  // Set to true if the algorithm is active (it was not stopped by a the clique
   // callback).
   int64_t num_remaining_iterations_;
 

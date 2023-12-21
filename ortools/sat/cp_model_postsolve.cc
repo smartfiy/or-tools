@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,10 +13,16 @@
 
 #include "ortools/sat/cp_model_postsolve.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
+#include <vector>
 
+#include "absl/log/check.h"
+#include "ortools/base/logging.h"
+#include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_utils.h"
+#include "ortools/util/sorted_interval_list.h"
 
 namespace operations_research {
 namespace sat {
@@ -187,13 +193,14 @@ void PostsolveLinear(const ConstraintProto& ct, std::vector<Domain>* domains) {
 
 namespace {
 
+// Note that if a domain is not fixed, we just take its Min() value.
 int64_t EvaluateLinearExpression(const LinearExpressionProto& expr,
                                  const std::vector<Domain>& domains) {
   int64_t value = expr.offset();
   for (int i = 0; i < expr.vars_size(); ++i) {
     const int ref = expr.vars(i);
     const int64_t increment =
-        domains[PositiveRef(expr.vars(i))].FixedValue() * expr.coeffs(i);
+        domains[PositiveRef(expr.vars(i))].Min() * expr.coeffs(i);
     value += RefIsPositive(ref) ? increment : -increment;
   }
   return value;
@@ -201,20 +208,25 @@ int64_t EvaluateLinearExpression(const LinearExpressionProto& expr,
 
 }  // namespace
 
-// Compute the max of each expression, and assign it to the target expr (which
-// must be of the form +ref or -ref);
-// We only support post-solving the case were the target is unassigned,
-// but everything else is fixed.
+// Compute the max of each expression, and assign it to the target expr. We only
+// support post-solving the case where whatever the value of all expression,
+// there will be a valid target.
 void PostsolveLinMax(const ConstraintProto& ct, std::vector<Domain>* domains) {
   int64_t max_value = std::numeric_limits<int64_t>::min();
   for (const LinearExpressionProto& expr : ct.lin_max().exprs()) {
+    // In most case all expression are fixed, except in the corner case where
+    // one of the expression refer to the target itself !
     max_value = std::max(max_value, EvaluateLinearExpression(expr, *domains));
   }
-  const int target_ref = GetSingleRefFromExpression(ct.lin_max().target());
-  const int target_var = PositiveRef(target_ref);
-  (*domains)[target_var] = (*domains)[target_var].IntersectionWith(
-      Domain(RefIsPositive(target_ref) ? max_value : -max_value));
-  CHECK(!(*domains)[target_var].IsEmpty());
+
+  const LinearExpressionProto& target = ct.lin_max().target();
+  CHECK_EQ(target.vars().size(), 1);
+  CHECK(RefIsPositive(target.vars(0)));
+
+  max_value -= target.offset();
+  CHECK_EQ(max_value % target.coeffs(0), 0);
+  max_value /= target.coeffs(0);
+  (*domains)[target.vars(0)] = Domain(max_value);
 }
 
 // We only support 3 cases in the presolve currently.
@@ -301,6 +313,22 @@ void PostsolveElement(const ConstraintProto& ct, std::vector<Domain>* domains) {
   DCHECK(!(*domains)[index_var].IsEmpty());
 }
 
+// We only support assigning to an affine target.
+void PostsolveIntMod(const ConstraintProto& ct, std::vector<Domain>* domains) {
+  const int64_t exp = EvaluateLinearExpression(ct.int_mod().exprs(0), *domains);
+  const int64_t mod = EvaluateLinearExpression(ct.int_mod().exprs(1), *domains);
+  CHECK_NE(mod, 0);
+  const int64_t target_value = exp % mod;
+
+  const LinearExpressionProto& target = ct.int_mod().target();
+  CHECK_EQ(target.vars().size(), 1);
+  const int64_t term_value = target_value - target.offset();
+  CHECK_EQ(term_value % target.coeffs(0), 0);
+  const int64_t value = term_value / target.coeffs(0);
+  CHECK((*domains)[target.vars(0)].Contains(value));
+  (*domains)[target.vars(0)] = Domain(value);
+}
+
 void PostsolveResponse(const int64_t num_variables_in_original_model,
                        const CpModelProto& mapping_proto,
                        const std::vector<int>& postsolve_mapping,
@@ -356,6 +384,9 @@ void PostsolveResponse(const int64_t num_variables_in_original_model,
         break;
       case ConstraintProto::kElement:
         PostsolveElement(ct, &domains);
+        break;
+      case ConstraintProto::kIntMod:
+        PostsolveIntMod(ct, &domains);
         break;
       default:
         // This should never happen as we control what kind of constraint we

@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +16,10 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
@@ -25,7 +29,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "ortools/base/commandlineflags.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/map_util.h"
 #include "ortools/linear_solver/linear_solver.pb.h"
@@ -52,7 +55,7 @@ class LineBreaker {
   // Returns true if string s will fit on the current line without adding a
   // carriage return.
   bool WillFit(const std::string& s) {
-    return line_size_ + s.size() < max_line_size_;
+    return line_size_ + static_cast<int>(s.size()) < max_line_size_;
   }
 
   // "Consumes" size characters on the line. Used when starting the constraint
@@ -79,6 +82,11 @@ void LineBreaker::Append(const std::string& s) {
 class MPModelProtoExporter {
  public:
   explicit MPModelProtoExporter(const MPModelProto& model);
+
+  // This type is neither copyable nor movable.
+  MPModelProtoExporter(const MPModelProtoExporter&) = delete;
+  MPModelProtoExporter& operator=(const MPModelProtoExporter&) = delete;
+
   bool ExportModelAsLpFormat(const MPModelExportOptions& options,
                              std::string* output);
   bool ExportModelAsMpsFormat(const MPModelExportOptions& options,
@@ -204,8 +212,6 @@ class MPModelProtoExporter {
   // Format for MPS file lines.
   std::unique_ptr<absl::ParsedFormat<'s', 's'>> mps_header_format_;
   std::unique_ptr<absl::ParsedFormat<'s', 's'>> mps_format_;
-
-  DISALLOW_COPY_AND_ASSIGN(MPModelProtoExporter);
 };
 
 }  // namespace
@@ -446,7 +452,8 @@ bool IsBoolean(const MPVariableProto& var) {
 }
 
 void UpdateMaxSize(const std::string& new_string, int* size) {
-  if (new_string.size() > *size) *size = new_string.size();
+  const int new_size = new_string.size();
+  if (new_size > *size) *size = new_size;
 }
 
 void UpdateMaxSize(double new_number, int* size) {
@@ -820,6 +827,12 @@ bool MPModelProtoExporter::ExportModelAsMpsFormat(
   // RHS (right-hand-side) section.
   current_mps_column_ = 0;
   std::string rhs_section;
+  // Follow Gurobi's MPS format for objective offsets.
+  // See https://www.gurobi.com/documentation/9.1/refman/mps_format.html
+  if (proto_.objective_offset() != 0) {
+    AppendMpsTermWithContext("RHS", "COST", -proto_.objective_offset(),
+                             &rhs_section);
+  }
   for (int cst_index = 0; cst_index < proto_.constraint_size(); ++cst_index) {
     const MPConstraintProto& ct_proto = proto_.constraint(cst_index);
     const double lb = ct_proto.lower_bound();

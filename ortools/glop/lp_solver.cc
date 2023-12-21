@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,25 +13,34 @@
 
 #include "ortools/glop/lp_solver.h"
 
+#include <algorithm>
 #include <cmath>
-#include <stack>
-#include <vector>
+#include <cstdlib>
+#include <memory>
+#include <string>
 
-#include "absl/memory/memory.h"
-#include "absl/strings/match.h"
+#include "absl/flags/flag.h"
+#include "absl/log/check.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
-#include "ortools/base/commandlineflags.h"
-#include "ortools/base/integral_types.h"
-#include "ortools/base/timer.h"
+#include "google/protobuf/text_format.h"
+#include "ortools/base/logging.h"
+#include "ortools/base/version.h"
+#include "ortools/glop/parameters.pb.h"
 #include "ortools/glop/preprocessor.h"
+#include "ortools/glop/revised_simplex.h"
 #include "ortools/glop/status.h"
+#include "ortools/glop/variables_info.h"
+#include "ortools/linear_solver/linear_solver.pb.h"
+#include "ortools/lp_data/lp_data.h"
 #include "ortools/lp_data/lp_types.h"
 #include "ortools/lp_data/lp_utils.h"
 #include "ortools/lp_data/proto_utils.h"
 #include "ortools/util/fp_utils.h"
+#include "ortools/util/logging.h"
 
-// TODO(user): abstract this in some way to the port directory.
 #ifndef __PORTABLE_PLATFORM__
+// TODO(user): abstract this in some way to the port directory.
 #include "ortools/util/file_util.h"
 #endif
 
@@ -109,6 +118,10 @@ void DumpLinearProgramIfRequiredByFlags(const LinearProgram& linear_program,
 
 LPSolver::LPSolver() : num_solves_(0) {}
 
+std::string LPSolver::GlopVersion() {
+  return absl::StrCat("Glop solver v", OrToolsVersionString());
+}
+
 void LPSolver::SetParameters(const GlopParameters& parameters) {
   parameters_ = parameters;
 #ifndef __PORTABLE_PLATFORM__
@@ -143,22 +156,6 @@ ProblemStatus LPSolver::SolveWithTimeLimit(const LinearProgram& lp,
   num_revised_simplex_iterations_ = 0;
   DumpLinearProgramIfRequiredByFlags(lp, num_solves_);
 
-  // Check some preconditions.
-  if (!lp.IsCleanedUp()) {
-    LOG(DFATAL) << "The columns of the given linear program should be ordered "
-                << "by row and contain no zero coefficients. Call CleanUp() "
-                << "on it before calling Solve().";
-    ResizeSolution(lp.num_constraints(), lp.num_variables());
-    return ProblemStatus::INVALID_PROBLEM;
-  }
-  if (!lp.IsValid()) {
-    LOG(DFATAL) << "The given linear program is invalid. It contains NaNs, "
-                << "infinite coefficients or invalid bounds specification. "
-                << "You can construct it in debug mode to get the exact cause.";
-    ResizeSolution(lp.num_constraints(), lp.num_variables());
-    return ProblemStatus::INVALID_PROBLEM;
-  }
-
   // Display a warning if running in non-opt, unless we're inside a unit test.
   DLOG(WARNING)
       << "\n******************************************************************"
@@ -176,13 +173,35 @@ ProblemStatus LPSolver::SolveWithTimeLimit(const LinearProgram& lp,
     logger_.SetLogToStdOut(false);
   }
 
-  // Make an internal copy of the problem for the preprocessing.
+  // Log some initial info about the input model.
   if (logger_.LoggingIsEnabled()) {
     SOLVER_LOG(&logger_, "");
     SOLVER_LOG(&logger_, "Initial problem: ", lp.GetDimensionString());
     SOLVER_LOG(&logger_, "Objective stats: ", lp.GetObjectiveStatsString());
     SOLVER_LOG(&logger_, "Bounds stats: ", lp.GetBoundsStatsString());
   }
+
+  // Check some preconditions.
+  if (!lp.IsCleanedUp()) {
+    LOG(DFATAL) << "The columns of the given linear program should be ordered "
+                << "by row and contain no zero coefficients. Call CleanUp() "
+                << "on it before calling Solve().";
+    ResizeSolution(lp.num_constraints(), lp.num_variables());
+    return ProblemStatus::INVALID_PROBLEM;
+  }
+
+  // TODO(user): Unfortunately we are not really helpful with the error message
+  // here. We could do a better job. However most client should talk to glop via
+  // an input protocol buffer which should have better validation messages.
+  if (!lp.IsValid(parameters_.max_valid_magnitude())) {
+    SOLVER_LOG(&logger_,
+               "The given linear program is invalid. It contains NaNs, "
+               "coefficients too large or invalid bounds specification.");
+    ResizeSolution(lp.num_constraints(), lp.num_variables());
+    return ProblemStatus::INVALID_PROBLEM;
+  }
+
+  // Make an internal copy of the problem for the preprocessing.
   current_linear_program_.PopulateFromLinearProgram(lp);
 
   // Preprocess.
@@ -207,6 +226,17 @@ ProblemStatus LPSolver::SolveWithTimeLimit(const LinearProgram& lp,
   ProblemSolution solution(current_linear_program_.num_constraints(),
                            current_linear_program_.num_variables());
   solution.status = preprocessor.status();
+  // LoadAndVerifySolution() below updates primal_values_, dual_values_,
+  // variable_statuses_ and constraint_statuses_ with the values stored in
+  // solution by RunPrimalDualPathFollowingMethodIfNeeded() and
+  // RunRevisedSimplexIfNeeded(), and hence clears any results stored in them
+  // from a previous run. In contrast, primal_ray_, constraints_dual_ray_, and
+  // variable_bounds_dual_ray_ are modified directly by
+  // RunRevisedSimplexIfNeeded(), so we explicitly clear them from previous run
+  // results.
+  primal_ray_.clear();
+  constraints_dual_ray_.clear();
+  variable_bounds_dual_ray_.clear();
 
   // Do not launch the solver if the time limit was already reached. This might
   // mean that the pre-processors were not all run, and current_linear_program_
@@ -263,7 +293,7 @@ void LPSolver::SetInitialBasis(
     }
   }
   if (revised_simplex_ == nullptr) {
-    revised_simplex_ = absl::make_unique<RevisedSimplex>();
+    revised_simplex_ = std::make_unique<RevisedSimplex>();
     revised_simplex_->SetLogger(&logger_);
   }
   revised_simplex_->LoadStateForNextSolve(state);
@@ -570,7 +600,7 @@ void LPSolver::RunRevisedSimplexIfNeeded(ProblemSolution* solution,
   current_linear_program_.ClearTransposeMatrix();
   if (solution->status != ProblemStatus::INIT) return;
   if (revised_simplex_ == nullptr) {
-    revised_simplex_ = absl::make_unique<RevisedSimplex>();
+    revised_simplex_ = std::make_unique<RevisedSimplex>();
     revised_simplex_->SetLogger(&logger_);
   }
   revised_simplex_->SetParameters(parameters_);

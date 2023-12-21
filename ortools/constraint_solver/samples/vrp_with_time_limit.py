@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2010-2021 Google LLC
+# Copyright 2010-2022 Google LLC
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 # [START program]
 """Vehicles Routing Problem (VRP)."""
 
@@ -23,23 +24,24 @@ from ortools.constraint_solver import pywrapcp
 # [START solution_printer]
 def print_solution(manager, routing, solution):
     """Prints solution on console."""
-    print(f'Objective: {solution.ObjectiveValue()}')
+    print(f"Objective: {solution.ObjectiveValue()}")
     max_route_distance = 0
     for vehicle_id in range(manager.GetNumberOfVehicles()):
         index = routing.Start(vehicle_id)
-        plan_output = 'Route for vehicle {}:\n'.format(vehicle_id)
+        plan_output = f"Route for vehicle {vehicle_id}:\n"
         route_distance = 0
         while not routing.IsEnd(index):
-            plan_output += ' {} -> '.format(manager.IndexToNode(index))
+            plan_output += f" {manager.IndexToNode(index)} -> "
             previous_index = index
             index = solution.Value(routing.NextVar(index))
             route_distance += routing.GetArcCostForVehicle(
-                previous_index, index, vehicle_id)
-        plan_output += '{}\n'.format(manager.IndexToNode(index))
-        plan_output += 'Distance of the route: {}m\n'.format(route_distance)
+                previous_index, index, vehicle_id
+            )
+        plan_output += f"{manager.IndexToNode(index)}\n"
+        plan_output += f"Distance of the route: {route_distance}m\n"
         print(plan_output)
         max_route_distance = max(route_distance, max_route_distance)
-    print('Maximum of the route distances: {}m'.format(max_route_distance))
+    print(f"Maximum of the route distances: {max_route_distance}m")
     # [END solution_printer]
 
 
@@ -80,13 +82,14 @@ def main():
 
     # Add Distance constraint.
     # [START distance_constraint]
-    dimension_name = 'Distance'
+    dimension_name = "Distance"
     routing.AddDimension(
         transit_callback_index,
         0,  # no slack
         3000,  # vehicle maximum travel distance
         True,  # start cumul to zero
-        dimension_name)
+        dimension_name,
+    )
     distance_dimension = routing.GetDimensionOrDie(dimension_name)
     distance_dimension.SetGlobalSpanCostCoefficient(100)
     # [END distance_constraint]
@@ -95,9 +98,11 @@ def main():
     # [START parameters]
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+    )
     search_parameters.local_search_metaheuristic = (
-        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
+        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
+    )
     search_parameters.log_search = True
     search_parameters.time_limit.FromSeconds(5)
     # [END parameters]
@@ -114,6 +119,6 @@ def main():
     # [END print_solution]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 # [END program]

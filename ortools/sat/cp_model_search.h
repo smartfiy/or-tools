@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,14 +16,18 @@
 
 #include <cstdint>
 #include <functional>
+#include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
+#include "absl/container/flat_hash_map.h"
+#include "ortools/base/types.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_mapping.h"
 #include "ortools/sat/integer.h"
 #include "ortools/sat/integer_search.h"
 #include "ortools/sat/model.h"
+#include "ortools/sat/sat_base.h"
+#include "ortools/sat/sat_parameters.pb.h"
 
 namespace operations_research {
 namespace sat {
@@ -70,18 +74,35 @@ class CpModelView {
   const IntegerEncoder& integer_encoder_;
 };
 
-// Constructs the search strategy specified in the given CpModelProto. A
-// positive variable ref in the proto is mapped to variable_mapping[ref] in the
-// model. All the variables referred in the search strategy must be correctly
-// mapped, the other entries can be set to kNoIntegerVariable.
-std::function<BooleanOrIntegerLiteral()> ConstructSearchStrategy(
-    const CpModelProto& cp_model_proto,
+// Constructs the search strategy specified in the given CpModelProto.
+std::function<BooleanOrIntegerLiteral()> ConstructUserSearchStrategy(
+    const CpModelProto& cp_model_proto, Model* model);
+
+// Constructs a search strategy tailored for the current model.
+std::function<BooleanOrIntegerLiteral()> ConstructHeuristicSearchStrategy(
+    const CpModelProto& cp_model_proto, Model* model);
+
+// Constructs an integer completion search strategy.
+std::function<BooleanOrIntegerLiteral()>
+ConstructIntegerCompletionSearchStrategy(
     const std::vector<IntegerVariable>& variable_mapping,
     IntegerVariable objective_var, Model* model);
 
+// Constructs a search strategy that follows the hints from the model.
+std::function<BooleanOrIntegerLiteral()> ConstructHintSearchStrategy(
+    const CpModelProto& cp_model_proto, CpModelMapping* mapping, Model* model);
+
+// Constructs our "fixed" search strategy which start with
+// ConstructUserSearchStrategy() but is completed by a couple of automatic
+// heuristics.
+std::function<BooleanOrIntegerLiteral()> ConstructFixedSearchStrategy(
+    std::function<BooleanOrIntegerLiteral()> user_search,
+    std::function<BooleanOrIntegerLiteral()> heuristic_search,
+    std::function<BooleanOrIntegerLiteral()> integer_completion);
+
 // For debugging fixed-search: display information about the named variables
 // domain before taking each decision. Note that we copy the instrumented
-// stategy so it doesn't have to outlive the returned functions like the other
+// strategy so it doesn't have to outlive the returned functions like the other
 // arguments.
 std::function<BooleanOrIntegerLiteral()> InstrumentSearchStrategy(
     const CpModelProto& cp_model_proto,
@@ -89,12 +110,35 @@ std::function<BooleanOrIntegerLiteral()> InstrumentSearchStrategy(
     const std::function<BooleanOrIntegerLiteral()>& instrumented_strategy,
     Model* model);
 
-// Returns up to "num_workers" different parameters. We do not always return
-// num_worker parameters to leave room for strategies like LNS that do not
-// consume a full worker and can always be interleaved.
+// Returns all the named set of parameters known to the solver. This include our
+// default strategies like "max_lp", "core", etc... It is visible here so that
+// this can be reused by parameter validation.
+//
+// Usually, named strategies just override a few field from the base_params.
+absl::flat_hash_map<std::string, SatParameters> GetNamedParameters(
+    const SatParameters& base_params);
+
+// Returns up to base_params.num_workers() different parameters.
+// We do not always return num_worker parameters to leave room for strategies
+// like LNS that do not consume a full worker and can always be interleaved.
 std::vector<SatParameters> GetDiverseSetOfParameters(
+    const SatParameters& base_params, const CpModelProto& cp_model);
+
+// Returns a vector of num_params_to_generate set of parameters to specify
+// solvers specialized to find a initial solution.
+std::vector<SatParameters> GetFirstSolutionParams(
     const SatParameters& base_params, const CpModelProto& cp_model,
-    const int num_workers);
+    int num_params_to_generate);
+
+// Returns a vector of num_params_to_generate set of parameters to specify
+// solvers that cooperatively explore a search tree.
+std::vector<SatParameters> GetWorkSharingParams(
+    const SatParameters& base_params, const CpModelProto& cp_model,
+    int num_params_to_generate);
+
+// This generates a valid random seed (base_seed + delta) without overflow.
+// We assume |delta| is small.
+int ValidSumSeed(int base_seed, int delta);
 
 }  // namespace sat
 }  // namespace operations_research

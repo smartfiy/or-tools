@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,15 +13,25 @@
 
 #include "ortools/bop/bop_util.h"
 
+#include <stdint.h>
+
+#include <algorithm>
 #include <limits>
 #include <vector>
 
-#include "ortools/base/basictypes.h"
-#include "ortools/base/integral_types.h"
+#include "absl/log/check.h"
+#include "ortools/base/strong_vector.h"
 #include "ortools/bop/bop_base.h"
 #include "ortools/bop/bop_solution.h"
+#include "ortools/bop/bop_types.h"
 #include "ortools/sat/boolean_problem.h"
+#include "ortools/sat/boolean_problem.pb.h"
+#include "ortools/sat/pb_constraint.h"
+#include "ortools/sat/restart.h"
+#include "ortools/sat/sat_base.h"
 #include "ortools/sat/sat_solver.h"
+#include "ortools/util/bitset.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace bop {

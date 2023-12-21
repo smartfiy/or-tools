@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -140,28 +140,34 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <optional>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/port.h"
+#include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
+#include "absl/flags/declare.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
-#include "absl/strings/match.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/str_split.h"
+#include "absl/strings/string_view.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
 #include "absl/types/optional.h"
-#include "ortools/base/integral_types.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
-#include "ortools/base/timer.h"
 #include "ortools/linear_solver/linear_expr.h"
 #include "ortools/linear_solver/linear_solver.pb.h"
 #include "ortools/linear_solver/linear_solver_callback.h"
 #include "ortools/port/proto_utils.h"
 
 ABSL_DECLARE_FLAG(bool, linear_solver_enable_verbose_output);
+ABSL_DECLARE_FLAG(bool, log_verification_errors);
+ABSL_DECLARE_FLAG(bool, verify_solution);
 
 namespace operations_research {
 
@@ -194,20 +200,19 @@ class MPSolver {
     CLP_LINEAR_PROGRAMMING = 0,
     GLPK_LINEAR_PROGRAMMING = 1,
     GLOP_LINEAR_PROGRAMMING = 2,  // Recommended default value. Made in Google.
+    // In-house linear programming solver based on the primal-dual hybrid
+    // gradient method. Sometimes faster than Glop for medium-size problems and
+    // scales to much larger problems than Glop.
+    PDLP_LINEAR_PROGRAMMING = 8,
+    HIGHS_LINEAR_PROGRAMMING = 15,
 
     // Integer programming problems.
     // -----------------------------
-    SCIP_MIXED_INTEGER_PROGRAMMING = 3,  // Recommended default value.
+    // Recommended default value for MIP problems.
+    SCIP_MIXED_INTEGER_PROGRAMMING = 3,
     GLPK_MIXED_INTEGER_PROGRAMMING = 4,
     CBC_MIXED_INTEGER_PROGRAMMING = 5,
-
-    // Commercial software (need license).
-    GUROBI_LINEAR_PROGRAMMING = 6,
-    GUROBI_MIXED_INTEGER_PROGRAMMING = 7,
-    CPLEX_LINEAR_PROGRAMMING = 10,
-    CPLEX_MIXED_INTEGER_PROGRAMMING = 11,
-    XPRESS_LINEAR_PROGRAMMING = 101,
-    XPRESS_MIXED_INTEGER_PROGRAMMING = 102,
+    HIGHS_MIXED_INTEGER_PROGRAMMING = 16,
 
     // Boolean optimization problem (requires only integer variables and works
     // best with only Boolean variables).
@@ -216,14 +221,33 @@ class MPSolver {
     // SAT based solver (requires only integer and Boolean variables).
     // If you pass it mixed integer problems, it will scale coefficients to
     // integer values, and solver continuous variables as integral variables.
+    //
+    // Recommended default value for pure integral problems problems.
     SAT_INTEGER_PROGRAMMING = 14,
 
     // Dedicated knapsack solvers.
     KNAPSACK_MIXED_INTEGER_PROGRAMMING = 13,
+
+    // Commercial software (need license).
+    GUROBI_LINEAR_PROGRAMMING = 6,
+    GUROBI_MIXED_INTEGER_PROGRAMMING = 7,
+    CPLEX_LINEAR_PROGRAMMING = 10,
+    CPLEX_MIXED_INTEGER_PROGRAMMING = 11,
+    XPRESS_LINEAR_PROGRAMMING = 101,
+    XPRESS_MIXED_INTEGER_PROGRAMMING = 102,
+    COPT_LINEAR_PROGRAMMING = 103,
+    COPT_MIXED_INTEGER_PROGRAMMING = 104,
   };
 
   /// Create a solver with the given name and underlying solver backend.
   MPSolver(const std::string& name, OptimizationProblemType problem_type);
+
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  MPSolver(const MPSolver&) = delete;
+  MPSolver& operator=(const MPSolver&) = delete;
+#endif
+
   virtual ~MPSolver();
 
   /**
@@ -520,9 +544,12 @@ class MPSolver {
    * Returns MPSOLVER_MODEL_IS_VALID if the model is valid, and another status
    * otherwise (currently only MPSOLVER_MODEL_INVALID and MPSOLVER_INFEASIBLE).
    * If the model isn't valid, populates "error_message".
+   * If `clear_names` is true (the default), clears all names, otherwise returns
+   * MPSOLVER_MODEL_INVALID if there are duplicates (non-empty) names.
    */
   MPSolverResponseStatus LoadModelFromProto(const MPModelProto& input_model,
-                                            std::string* error_message);
+                                            std::string* error_message,
+                                            bool clear_names = true);
   /**
    * Loads model from protocol buffer.
    *
@@ -561,12 +588,12 @@ class MPSolver {
       const MPModelRequest::SolverType solver) {
     // Interruption requires that MPSolver::InterruptSolve is supported for the
     // underlying solver. Interrupting requests using SCIP is also not supported
-    // as of 2021/08/23, since InterruptSolve is not go/thread-safe
-    // for SCIP (see e.g. cl/350545631 for details).
+    // as of 2021/08/23, since InterruptSolve is not thread safe for SCIP.
     return solver == MPModelRequest::GLOP_LINEAR_PROGRAMMING ||
            solver == MPModelRequest::GUROBI_LINEAR_PROGRAMMING ||
            solver == MPModelRequest::GUROBI_MIXED_INTEGER_PROGRAMMING ||
-           solver == MPModelRequest::SAT_INTEGER_PROGRAMMING;
+           solver == MPModelRequest::SAT_INTEGER_PROGRAMMING ||
+           solver == MPModelRequest::PDLP_LINEAR_PROGRAMMING;
   }
 
   /// Exports model to protocol buffer.
@@ -663,8 +690,15 @@ class MPSolver {
    * solver. There is also no guarantee that the solver will use this hint or
    * try to return a solution "close" to this assignment in case of multiple
    * optimal solutions.
+   *
+   * Calling SetHint clears all previous hints.
    */
   void SetHint(std::vector<std::pair<const MPVariable*, double> > hint);
+
+  // Gives some brief (a few lines, at most) human-readable information about
+  // the given request, suitable for debug logging.
+  static std::string GetMPModelRequestLoggingInfo(
+      const MPModelRequest& request);
 
   /**
    * Advanced usage: possible basis status values for a variable and the slack
@@ -699,6 +733,7 @@ class MPSolver {
    * You can use -MPSolver::infinity() for negative infinity.
    */
   static double infinity() { return std::numeric_limits<double>::infinity(); }
+  double solver_infinity();
 
   /**
    * Controls (or queries) the amount of output produced by the underlying
@@ -799,8 +834,6 @@ class MPSolver {
   //
   // As of 2019-10-22, only SCIP and Gurobi support Callbacks.
   // SCIP does not support suggesting a heuristic solution in the callback.
-  //
-  // See go/mpsolver-callbacks for additional documentation.
   void SetCallback(MPCallback* mp_callback);
   bool SupportsCallbacks() const;
 
@@ -844,6 +877,8 @@ class MPSolver {
   friend class GLOPInterface;
   friend class BopInterface;
   friend class SatInterface;
+  friend class PdlpInterface;
+  friend class HighsInterface;
   friend class KnapsackInterface;
 
   // Debugging: verify that the given MPVariable* belongs to this solver.
@@ -880,7 +915,7 @@ class MPSolver {
   // The vector of variables in the problem.
   std::vector<MPVariable*> variables_;
   // A map from a variable's name to its index in variables_.
-  mutable absl::optional<absl::flat_hash_map<std::string, int> >
+  mutable std::optional<absl::flat_hash_map<std::string, int> >
       variable_name_to_index_;
   // Whether variables have been extracted to the underlying interface.
   std::vector<bool> variable_is_extracted_;
@@ -888,7 +923,7 @@ class MPSolver {
   // The vector of constraints in the problem.
   std::vector<MPConstraint*> constraints_;
   // A map from a constraint's name to its index in constraints_.
-  mutable absl::optional<absl::flat_hash_map<std::string, int> >
+  mutable std::optional<absl::flat_hash_map<std::string, int> >
       constraint_name_to_index_;
   // Whether constraints have been extracted to the underlying interface.
   std::vector<bool> constraint_is_extracted_;
@@ -921,18 +956,21 @@ class MPSolver {
   static int64_t global_num_constraints_ ABSL_GUARDED_BY(global_count_mutex_);
 #endif
 
+  enum ModelProtoNamesPolicy {
+    DEFAULT_CLEAR_NAMES = 0,
+    INVALID_MODEL_ON_DUPLICATE_NONEMPTY_NAMES = 1,
+    DIE_ON_DUPLICATE_NONEMPTY_NAMES = 2,
+  };
   MPSolverResponseStatus LoadModelFromProtoInternal(
-      const MPModelProto& input_model, bool clear_names,
+      const MPModelProto& input_model, ModelProtoNamesPolicy name_policy,
       bool check_model_validity, std::string* error_message);
-
-  DISALLOW_COPY_AND_ASSIGN(MPSolver);
 };
 
 inline bool SolverTypeIsMip(MPSolver::OptimizationProblemType solver_type) {
   return SolverTypeIsMip(static_cast<MPModelRequest::SolverType>(solver_type));
 }
 
-const absl::string_view ToString(
+absl::string_view ToString(
     MPSolver::OptimizationProblemType optimization_problem_type);
 
 inline std::ostream& operator<<(
@@ -959,6 +997,12 @@ inline std::string AbslUnparseFlag(
 /// A class to express a linear objective.
 class MPObjective {
  public:
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  MPObjective(const MPObjective&) = delete;
+  MPObjective& operator=(const MPObjective&) = delete;
+#endif
+
   /**
    *  Clears the offset, all variables and coefficients, and the optimization
    * direction.
@@ -971,14 +1015,14 @@ class MPObjective {
    * If the variable does not belong to the solver, the function just returns,
    * or crashes in non-opt mode.
    */
-  void SetCoefficient(const MPVariable* const var, double coeff);
+  void SetCoefficient(const MPVariable* var, double coeff);
 
   /**
    *  Gets the coefficient of a given variable in the objective
    *
    * It returns 0 if the variable does not appear in the objective).
    */
-  double GetCoefficient(const MPVariable* const var) const;
+  double GetCoefficient(const MPVariable* var) const;
 
   /**
    * Returns a map from variables to their coefficients in the objective.
@@ -1063,6 +1107,8 @@ class MPObjective {
   friend class GLOPInterface;
   friend class BopInterface;
   friend class SatInterface;
+  friend class PdlpInterface;
+  friend class HighsInterface;
   friend class KnapsackInterface;
 
   // Constructor. An objective points to a single MPSolverInterface
@@ -1079,13 +1125,17 @@ class MPObjective {
   absl::flat_hash_map<const MPVariable*, double> coefficients_;
   // Constant term.
   double offset_;
-
-  DISALLOW_COPY_AND_ASSIGN(MPObjective);
 };
 
 /// The class for variables of a Mathematical Programming (MP) model.
 class MPVariable {
  public:
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  MPVariable(const MPVariable&) = delete;
+  MPVariable& operator=(const MPVariable&) = delete;
+#endif
+
   /// Returns the name of the variable.
   const std::string& name() const { return name_; }
 
@@ -1172,6 +1222,8 @@ class MPVariable {
   friend class MPVariableSolutionValueTest;
   friend class BopInterface;
   friend class SatInterface;
+  friend class PdlpInterface;
+  friend class HighsInterface;
   friend class KnapsackInterface;
 
   // Constructor. A variable points to a single MPSolverInterface that
@@ -1201,7 +1253,6 @@ class MPVariable {
   double reduced_cost_;
   int branching_priority_ = 0;
   MPSolverInterface* const interface_;
-  DISALLOW_COPY_AND_ASSIGN(MPVariable);
 };
 
 /**
@@ -1211,6 +1262,12 @@ class MPVariable {
  */
 class MPConstraint {
  public:
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  MPConstraint(const MPConstraint&) = delete;
+  MPConstraint& operator=(const MPConstraint&) = delete;
+#endif
+
   /// Returns the name of the constraint.
   const std::string& name() const { return name_; }
 
@@ -1223,13 +1280,13 @@ class MPConstraint {
    * If the variable does not belong to the solver, the function just returns,
    * or crashes in non-opt mode.
    */
-  void SetCoefficient(const MPVariable* const var, double coeff);
+  void SetCoefficient(const MPVariable* var, double coeff);
 
   /**
    * Gets the coefficient of a given variable on the constraint (which is 0 if
    * the variable does not appear in the constraint).
    */
-  double GetCoefficient(const MPVariable* const var) const;
+  double GetCoefficient(const MPVariable* var) const;
 
   /**
    * Returns a map from variables to their coefficients in the constraint.
@@ -1313,6 +1370,8 @@ class MPConstraint {
   friend class GLOPInterface;
   friend class BopInterface;
   friend class SatInterface;
+  friend class PdlpInterface;
+  friend class HighsInterface;
   friend class KnapsackInterface;
 
   // Constructor. A constraint points to a single MPSolverInterface
@@ -1363,7 +1422,6 @@ class MPConstraint {
 
   double dual_value_;
   MPSolverInterface* const interface_;
-  DISALLOW_COPY_AND_ASSIGN(MPConstraint);
 };
 
 /**
@@ -1483,6 +1541,12 @@ class MPSolverParameters {
   /// The constructor sets all parameters to their default value.
   MPSolverParameters();
 
+#ifndef SWIG
+  // This type is neither copyable nor movable.
+  MPSolverParameters(const MPSolverParameters&) = delete;
+  MPSolverParameters& operator=(const MPSolverParameters&) = delete;
+#endif
+
   /// Sets a double parameter to a specific value.
   void SetDoubleParam(MPSolverParameters::DoubleParam param, double value);
 
@@ -1528,8 +1592,6 @@ class MPSolverParameters {
   // solver's default value. Only parameters for which the wrapper
   // does not define a default value need such an indicator.
   bool lp_algorithm_is_default_;
-
-  DISALLOW_COPY_AND_ASSIGN(MPSolverParameters);
 };
 
 // Whether the given MPSolverResponseStatus (of a solve) would yield an RPC
@@ -1572,7 +1634,7 @@ class MPSolverInterface {
 
   // Constructor. The user will access the MPSolverInterface through the
   // MPSolver passed as argument.
-  explicit MPSolverInterface(MPSolver* const solver);
+  explicit MPSolverInterface(MPSolver* solver);
   virtual ~MPSolverInterface();
 
   // ----- Solve -----
@@ -1586,12 +1648,12 @@ class MPSolverInterface {
   // Returns {} (eg. absl::nullopt) if direct-solve is not supported by the
   // underlying solver (possibly because interrupt != nullptr), in which case
   // the user should fall back to using MPSolver.
-  virtual absl::optional<MPSolutionResponse> DirectlySolveProto(
-      const MPModelRequest& request,
+  virtual std::optional<MPSolutionResponse> DirectlySolveProto(
+      const MPModelRequest& /*request*/,
       // `interrupt` is non-const because the internal
       // solver may set it to true itself, in some cases.
-      std::atomic<bool>* interrupt) {
-    return absl::nullopt;
+      std::atomic<bool>* /*interrupt*/) {
+    return std::nullopt;
   }
 
   // Writes the model using the solver internal write function.  Currently only
@@ -1615,28 +1677,28 @@ class MPSolverInterface {
   virtual void SetConstraintBounds(int index, double lb, double ub) = 0;
 
   // Adds a linear constraint.
-  virtual void AddRowConstraint(MPConstraint* const ct) = 0;
+  virtual void AddRowConstraint(MPConstraint* ct) = 0;
 
   // Adds an indicator constraint. Returns true if the feature is supported by
   // the underlying solver.
-  virtual bool AddIndicatorConstraint(MPConstraint* const ct) {
+  virtual bool AddIndicatorConstraint(MPConstraint* const /*ct*/) {
     LOG(ERROR) << "Solver doesn't support indicator constraints.";
     return false;
   }
 
   // Add a variable.
-  virtual void AddVariable(MPVariable* const var) = 0;
+  virtual void AddVariable(MPVariable* var) = 0;
 
   // Changes a coefficient in a constraint.
-  virtual void SetCoefficient(MPConstraint* const constraint,
-                              const MPVariable* const variable,
-                              double new_value, double old_value) = 0;
+  virtual void SetCoefficient(MPConstraint* constraint,
+                              const MPVariable* variable, double new_value,
+                              double old_value) = 0;
 
   // Clears a constraint from all its terms.
-  virtual void ClearConstraint(MPConstraint* const constraint) = 0;
+  virtual void ClearConstraint(MPConstraint* constraint) = 0;
 
   // Changes a coefficient in the linear objective.
-  virtual void SetObjectiveCoefficient(const MPVariable* const variable,
+  virtual void SetObjectiveCoefficient(const MPVariable* variable,
                                        double coefficient) = 0;
 
   // Changes the constant term in the linear objective.
@@ -1645,7 +1707,7 @@ class MPSolverInterface {
   // Clears the objective from all its terms.
   virtual void ClearObjective() = 0;
 
-  virtual void BranchingPriorityChangedForVariable(int var_index) {}
+  virtual void BranchingPriorityChangedForVariable(int /*var_index*/) {}
   // ------ Query statistics on the solution and the solve ------
   // Returns the number of simplex iterations. The problem must be discrete,
   // otherwise it crashes, or returns kUnknownNumberOfIterations in NDEBUG mode.
@@ -1666,7 +1728,7 @@ class MPSolverInterface {
 
   // Checks whether the solution is synchronized with the model, i.e. whether
   // the model has changed since the solution was computed last.
-  // If it isn't, it crashes in NDEBUG, and returns false othwerwise.
+  // If it isn't, it crashes in NDEBUG, and returns false otherwise.
   bool CheckSolutionIsSynchronized() const;
   // Checks whether a feasible solution exists. The behavior is similar to
   // CheckSolutionIsSynchronized() above.
@@ -1728,10 +1790,12 @@ class MPSolverInterface {
 
   // See MPSolver::SetStartingLpBasis().
   virtual void SetStartingLpBasis(
-      const std::vector<MPSolver::BasisStatus>& variable_statuses,
-      const std::vector<MPSolver::BasisStatus>& constraint_statuses) {
+      const std::vector<MPSolver::BasisStatus>& /*variable_statuses*/,
+      const std::vector<MPSolver::BasisStatus>& /*constraint_statuses*/) {
     LOG(FATAL) << "Not supported by this solver.";
   }
+
+  virtual double infinity() { return std::numeric_limits<double>::infinity(); }
 
   virtual bool InterruptSolve() { return false; }
 
@@ -1739,7 +1803,7 @@ class MPSolverInterface {
   virtual bool NextSolution() { return false; }
 
   // See MPSolver::SetCallback() for details.
-  virtual void SetCallback(MPCallback* mp_callback) {
+  virtual void SetCallback(MPCallback* /*mp_callback*/) {
     LOG(FATAL) << "Callbacks not supported for this solver.";
   }
 

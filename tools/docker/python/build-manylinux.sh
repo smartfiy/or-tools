@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# Copyright 2010-2022 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Build all the wheel artifacts for the platforms supported by manylinux2014 and
 # export them to the specified location.
 set -exo pipefail
@@ -22,7 +35,7 @@ DESCRIPTION
 
 \tYou MUST define the following variables before running this script:
 \t* PLATFORM: x86_64 aarch64
-\t* PYTHON_VERSION: 3 36 37 38 39 310
+\t* PYTHON_VERSION: 3 38 39 310 311 312
 note: PYTHON_VERSION=3 will generate for all pythons which could take time...
 
 OPTIONS
@@ -74,7 +87,7 @@ function build_wheel() {
   # shellcheck source=/dev/null
   source "${VENV_DIR}/bin/activate"
   pip install -U pip setuptools wheel absl-py  # absl-py is needed by make test_python
-  pip install -U mypy-protobuf  # need to generate protobuf mypy files
+  pip install -U mypy mypy-protobuf  # need to generate protobuf mypy files
 
   echo "current dir: $(pwd)"
 

@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,16 +14,24 @@
 #ifndef OR_TOOLS_SAT_CP_MODEL_PRESOLVE_H_
 #define OR_TOOLS_SAT_CP_MODEL_PRESOLVE_H_
 
+#include <array>
 #include <cstdint>
+#include <deque>
+#include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_utils.h"
 #include "ortools/sat/presolve_context.h"
 #include "ortools/sat/presolve_util.h"
 #include "ortools/sat/sat_parameters.pb.h"
+#include "ortools/sat/util.h"
 #include "ortools/util/affine_relation.h"
 #include "ortools/util/bitset.h"
+#include "ortools/util/logging.h"
 #include "ortools/util/sorted_interval_list.h"
 #include "ortools/util/time_limit.h"
 
@@ -84,6 +92,8 @@ class CpModelPresolver {
   CpSolverStatus InfeasibleStatus();
 
   // Runs the inner loop of the presolver.
+  bool ProcessChangedVariables(std::vector<bool>* in_queue,
+                               std::deque<int>* queue);
   void PresolveToFixPoint();
 
   // Runs the probing.
@@ -105,13 +115,16 @@ class CpModelPresolver {
   bool PresolveElement(ConstraintProto* ct);
   bool PresolveIntAbs(ConstraintProto* ct);
   bool PresolveIntDiv(ConstraintProto* ct);
-  bool PresolveIntMod(ConstraintProto* ct);
+  bool PresolveIntMod(int c, ConstraintProto* ct);
   bool PresolveIntProd(ConstraintProto* ct);
   bool PresolveInterval(int c, ConstraintProto* ct);
   bool PresolveInverse(ConstraintProto* ct);
+  bool DivideLinMaxByGcd(int c, ConstraintProto* ct);
   bool PresolveLinMax(ConstraintProto* ct);
+  bool PresolveLinMaxWhenAllBoolean(ConstraintProto* ct);
   bool PresolveTable(ConstraintProto* ct);
-
+  void DetectDuplicateIntervals(
+      int c, google::protobuf::RepeatedField<int32_t>* intervals);
   bool PresolveCumulative(ConstraintProto* ct);
   bool PresolveNoOverlap(ConstraintProto* ct);
   bool PresolveNoOverlap2D(int c, ConstraintProto* ct);
@@ -137,25 +150,35 @@ class CpModelPresolver {
                                             int64_t* offset);
   bool CanonicalizeLinearExpression(const ConstraintProto& ct,
                                     LinearExpressionProto* exp);
-  bool CanonicalizeLinMax(ConstraintProto* ct);
+  bool CanonicalizeLinearArgument(const ConstraintProto& ct,
+                                  LinearArgumentProto* proto);
 
   // For the linear constraints, we have more than one function.
   bool CanonicalizeLinear(ConstraintProto* ct);
-  bool PropagateDomainsInLinear(int c, ConstraintProto* ct);
+  bool PropagateDomainsInLinear(int ct_index, ConstraintProto* ct);
   bool RemoveSingletonInLinear(ConstraintProto* ct);
   bool PresolveSmallLinear(ConstraintProto* ct);
   bool PresolveLinearOfSizeOne(ConstraintProto* ct);
   bool PresolveLinearOfSizeTwo(ConstraintProto* ct);
   bool PresolveLinearOnBooleans(ConstraintProto* ct);
+  bool PresolveDiophantine(ConstraintProto* ct);
   bool AddVarAffineRepresentativeFromLinearEquality(int target_index,
                                                     ConstraintProto* ct);
   bool PresolveLinearEqualityWithModulo(ConstraintProto* ct);
 
-  bool DetectAndProcessOneSidedLinearConstraint(int c, ConstraintProto* ct);
+  // It can be interesting to know for a given linear constraint that a subset
+  // of its variables are in at most one relation.
+  void DetectAndProcessAtMostOneInLinear(int ct_index, ConstraintProto* ct,
+                                         ActivityBoundHelper* helper);
 
-  // SetPPC is short for set packing, partitioning and covering constraints.
-  // These are sum of booleans <=, = and >= 1 respectively.
-  bool ProcessSetPPC();
+  // If a constraint is of the form "a * expr_X + expr_Y" and expr_Y can only
+  // take small values compared to a, depending on the bounds, the constraint
+  // can be equivalent to a constraint on expr_X only.
+  //
+  // For instance "10'001 X + 9'999 Y <= 105'000, with X, Y in [0, 100]" can
+  // be rewritten as X + Y <= 10 ! This can easily happen after scaling to
+  // integer cofficient a floating point constraint.
+  void TryToReduceCoefficientsOfLinearConstraint(int c, ConstraintProto* ct);
 
   // This detects and converts constraints of the form:
   // "X = sum Boolean * value", with "sum Boolean <= 1".
@@ -167,14 +190,35 @@ class CpModelPresolver {
                                  int64_t* num_unique_terms,
                                  int64_t* num_multiple_terms);
 
-  // Removes dominated constraints or fixes some variables for given pair of
-  // setppc constraints. This assumes that literals in constraint c1 is subset
-  // of literals in constraint c2.
-  bool ProcessSetPPCSubset(int c1, int c2, const std::vector<int>& c2_minus_c1,
-                           const std::vector<int>& original_constraint_index,
-                           std::vector<bool>* marked_for_removal);
+  // Remove duplicate constraints. This also merge domain of linear constraints
+  // with duplicate linear expressions.
+  void DetectDuplicateConstraints();
 
-  void PresolvePureSatPart();
+  // Detects variable that must take different values.
+  void DetectDifferentVariables();
+
+  // Detects if a linear constraint is "included" in another one, and do
+  // related presolve.
+  void DetectDominatedLinearConstraints();
+
+  // SetPPC is short for set packing, partitioning and covering constraints.
+  // These are sum of booleans <=, = and >= 1 respectively.
+  // We detect inclusion of these constraint which allows a few simplifications.
+  void ProcessSetPPC();
+
+  // Detect if one constraints has a subset of enforcement of another.
+  void DetectIncludedEnforcement();
+
+  // Removes dominated constraints or fixes some variables for given pair of
+  // setppc constraints included in each other.
+  bool ProcessSetPPCSubset(int subset_c, int superset_c,
+                           absl::flat_hash_set<int>* tmp_set,
+                           bool* remove_subset, bool* remove_superset,
+                           bool* stop_processing_superset);
+
+  // Run SAT specific presolve code.
+  // Returns false on UNSAT.
+  bool PresolvePureSatPart();
 
   // Extracts AtMostOne constraint from Linear constraint.
   void ExtractAtMostOneFromLinear(ConstraintProto* ct);
@@ -184,19 +228,65 @@ class CpModelPresolver {
 
   void ExtractEnforcementLiteralFromLinearConstraint(int ct_index,
                                                      ConstraintProto* ct);
+  void LowerThanCoeffStrengthening(bool from_lower_bound, int64_t min_magnitude,
+                                   int64_t rhs, ConstraintProto* ct);
 
   // Extracts cliques from bool_and and small at_most_one constraints and
   // transforms them into maximal cliques.
   void TransformIntoMaxCliques();
 
   // Converts bool_or and at_most_one of size 2 to bool_and.
-  void ExtractBoolAnd();
+  void ConvertToBoolAnd();
 
+  // Try to reformulate the objective in term of "base" variables. This is
+  // mainly useful for core based approach where having more terms in the
+  // objective (but with a same trivial lower bound) should help.
   void ExpandObjective();
 
+  // This makes a big difference on the flatzinc mznc2017_aes_opt* problems.
+  // Where, with this, the core based approach can find small cores and close
+  // them quickly.
+  //
+  // TODO(user): Is it by chance or there is a underlying deep reason? try to
+  // merge this with what ExpandObjective() is doing.
+  void ShiftObjectiveWithExactlyOnes();
+
+  void MaybeTransferLinear1ToAnotherVariable(int var);
+  void ProcessVariableOnlyUsedInEncoding(int var);
   void TryToSimplifyDomain(int var);
 
+  void LookAtVariableWithDegreeTwo(int var);
+  void ProcessVariableInTwoAtMostOrExactlyOne(int var);
+
   void MergeNoOverlapConstraints();
+
+  // Assumes that all [constraint_index, multiple] in block are linear
+  // constraint that contains multiple * common_part and perform the
+  // substitution.
+  void RemoveCommonPart(
+      const absl::flat_hash_map<int, int64_t>& common_var_coeff_map,
+      const std::vector<std::pair<int, int64_t>>& block);
+
+  // Try to identify many linear constraints that share a common linear
+  // expression. We have two slightly different heuristic.
+  //
+  // TODO(user): consolidate them.
+  void FindAlmostIdenticalLinearConstraints();
+  void FindBigHorizontalLinearOverlap();
+  void FindBigVerticalLinearOverlap();
+
+  // Heuristic to merge clauses that differ in only one literal.
+  // The idea is to regroup a bunch of clauses into a single bool_and.
+  // This serves a bunch of purpose:
+  // - Smaller model.
+  // - Stronger dual reasoning since less locks.
+  // - If the negation of the rhs of the bool_and are in at most one, we will
+  //   have a stronger LP relaxation.
+  //
+  // TODO(user): If the merge procedure is successful we might want to develop
+  // a custom propagators for such bool_and. It should in theory be more
+  // efficient than the two watcher literal scheme for clauses. Investigate!
+  void MergeClauses();
 
   // Boths function are responsible for dealing with affine relations.
   // The second one returns false on UNSAT.
@@ -211,9 +301,38 @@ class CpModelPresolver {
   std::vector<int>* postsolve_mapping_;
   PresolveContext* context_;
   SolverLogger* logger_;
+  TimeLimit* time_limit_;
 
   // Used by CanonicalizeLinearExpressionInternal().
   std::vector<std::pair<int, int64_t>> tmp_terms_;
+
+  // Used by DetectAndProcessAtMostOneInLinear().
+  std::vector<std::array<int64_t, 2>> conditional_mins_;
+  std::vector<std::array<int64_t, 2>> conditional_maxs_;
+
+  // Used by ProcessSetPPCSubset() and DetectAndProcessAtMostOneInLinear() to
+  // propagate linear with an at_most_one or exactly_one included inside.
+  absl::flat_hash_map<int, int> temp_map_;
+  absl::flat_hash_set<int> temp_set_;
+  ConstraintProto temp_ct_;
+
+  // Use by TryToReduceCoefficientsOfLinearConstraint().
+  struct RdEntry {
+    int64_t magnitude;
+    int64_t max_variation;
+    int index;
+  };
+  std::vector<RdEntry> rd_entries_;
+  std::vector<int> rd_vars_;
+  std::vector<int64_t> rd_coeffs_;
+  std::vector<int64_t> rd_magnitudes_;
+  std::vector<int64_t> rd_lbs_;
+  std::vector<int64_t> rd_ubs_;
+  std::vector<int64_t> rd_divisors_;
+  MaxBoundedSubsetSum lb_feasible_;
+  MaxBoundedSubsetSum lb_infeasible_;
+  MaxBoundedSubsetSum ub_feasible_;
+  MaxBoundedSubsetSum ub_infeasible_;
 };
 
 // This helper class perform copy with simplification from a model and a
@@ -236,43 +355,74 @@ class ModelCopy {
   // It returns false iff the model is proven infeasible.
   //
   // It does not clear the constraints part of the working model of the context.
-  bool ImportAndSimplifyConstraints(
-      const CpModelProto& in_model,
-      const std::vector<int>& ignored_constraints);
+  //
+  // Note(user): If first_copy is true, we will reorder the scheduling
+  // constraint so that they only use reference to previously defined intervals.
+  // This allow to be more efficient later in a few preprocessing steps.
+  bool ImportAndSimplifyConstraints(const CpModelProto& in_model,
+                                    const std::vector<int>& ignored_constraints,
+                                    bool first_copy = false);
+
+  // Copy variables from the in_model to the working model.
+  // It reads the 'ignore_names' parameters from the context, and keeps or
+  // deletes names accordingly.
+  void ImportVariablesAndMaybeIgnoreNames(const CpModelProto& in_model);
 
  private:
   // Overwrites the out_model to be unsat. Returns false.
-  bool CreateUnsatModel();
+  // The arguments are used to log which constraint caused unsat.
+  bool CreateUnsatModel(int c, const ConstraintProto& ct);
 
-  void CopyEnforcementLiterals(const ConstraintProto& orig,
-                               ConstraintProto* dest);
-  bool OneEnforcementLiteralIsFalse(const ConstraintProto& ct) const;
+  // Returns false if the constraint is never enforced and can be skipped.
+  bool PrepareEnforcementCopy(const ConstraintProto& ct);
+  bool PrepareEnforcementCopyWithDup(const ConstraintProto& ct);
+  void FinishEnforcementCopy(ConstraintProto* ct);
 
   // All these functions return false if the constraint is found infeasible.
   bool CopyBoolOr(const ConstraintProto& ct);
+  bool CopyBoolOrWithDupSupport(const ConstraintProto& ct);
+  bool FinishBoolOrCopy();
+
   bool CopyBoolAnd(const ConstraintProto& ct);
+  bool CopyBoolAndWithDupSupport(const ConstraintProto& ct);
+
   bool CopyLinear(const ConstraintProto& ct);
   bool CopyAtMostOne(const ConstraintProto& ct);
   bool CopyExactlyOne(const ConstraintProto& ct);
-  bool CopyInterval(const ConstraintProto& ct, int c);
+  bool CopyInterval(const ConstraintProto& ct, int c, bool ignore_names);
+
+  // These function remove unperformed intervals. Note that they requires
+  // interval to appear before (validated) as they test unperformed by testing
+  // if interval_mapping_ is empty.
+  void CopyAndMapNoOverlap(const ConstraintProto& ct);
+  void CopyAndMapNoOverlap2D(const ConstraintProto& ct);
+  void CopyAndMapCumulative(const ConstraintProto& ct);
 
   PresolveContext* context_;
-  int64_t skipped_non_zero_ = 0;
 
   // Temp vectors.
   std::vector<int> non_fixed_variables_;
   std::vector<int64_t> non_fixed_coefficients_;
   absl::flat_hash_map<int, int> interval_mapping_;
   int starting_constraint_index_ = 0;
+
   std::vector<int> temp_enforcement_literals_;
+  absl::flat_hash_set<int> temp_enforcement_literals_set_;
+
   std::vector<int> temp_literals_;
+  absl::flat_hash_set<int> temp_literals_set_;
 };
 
-// Import the constraints from the in_model to the presolve context.
+// Copy in_model to the model in the presolve context.
 // It performs on the fly simplification, and returns false if the
-// model is proved infeasible.
-bool ImportConstraintsWithBasicPresolveIntoContext(const CpModelProto& in_model,
-                                                   PresolveContext* context);
+// model is proved infeasible. If reads the parameters 'ignore_names' and keeps
+// or deletes variables and constraints names accordingly.
+//
+// This should only be called on the first copy of the user given model.
+// Note that this reorder all constraints that use intervals last. We loose the
+// user-defined order, but hopefully that should not matter too much.
+bool ImportModelWithBasicPresolveIntoContext(const CpModelProto& in_model,
+                                             PresolveContext* context);
 
 // Copies the non constraint, non variables part of the model.
 void CopyEverythingExceptVariablesAndConstraintsFieldsIntoContext(
@@ -290,11 +440,20 @@ CpSolverStatus PresolveCpModel(PresolveContext* context,
 // - We ignore names when comparing constraint.
 // - For linear constraints, we ignore the domain. This is because we can
 //   just merge them if the constraints are the same.
+// - We return the special kObjectiveConstraint (< 0) representative if a linear
+//   constraint is parallel to the objective and has no enforcement literals.
+//   The domain of such constraint can just be merged with the objective domain.
+//
+// If ignore_enforcement is true, we ignore enforcement literal, but do not
+// do the linear domain or objective special cases. This allow to cover some
+// other cases like:
+// - enforced constraint duplicate of non-enforced one.
+// - Two enforced constraints with singleton enforcement (vpphard).
 //
 // Visible here for testing. This is meant to be called at the end of the
 // presolve where constraints have been canonicalized.
 std::vector<std::pair<int, int>> FindDuplicateConstraints(
-    const CpModelProto& model_proto);
+    const CpModelProto& model_proto, bool ignore_enforcement = false);
 
 }  // namespace sat
 }  // namespace operations_research

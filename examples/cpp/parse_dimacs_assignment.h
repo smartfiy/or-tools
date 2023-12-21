@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,16 +20,19 @@
 #define OR_TOOLS_EXAMPLES_PARSE_DIMACS_ASSIGNMENT_H_
 
 #include <algorithm>
+#include <cinttypes>
 #include <cstdio>
 #include <cstring>
 #include <memory>
 #include <string>
 
-#include "ortools/base/commandlineflags.h"
-#include "ortools/base/filelineiter.h"
-#include "ortools/base/logging.h"
+#include "absl/flags/declare.h"
+#include "absl/flags/flag.h"
+#include "absl/log/check.h"
+#include "absl/strings/string_view.h"
 #include "ortools/graph/ebert_graph.h"
 #include "ortools/graph/linear_assignment.h"
+#include "ortools/util/filelineiter.h"
 
 ABSL_FLAG(bool, assignment_maximize_cost, false,
           "Negate costs so a max-cost assignment is found.");
@@ -44,7 +47,7 @@ class LinearSumAssignment;
 template <typename GraphType>
 class DimacsAssignmentParser {
  public:
-  explicit DimacsAssignmentParser(const std::string& filename)
+  explicit DimacsAssignmentParser(absl::string_view filename)
       : filename_(filename), graph_builder_(nullptr), assignment_(nullptr) {}
 
   // Reads an assignment problem description from the given file in
@@ -128,7 +131,7 @@ void DimacsAssignmentParser<GraphType>::ParseNodeLine(const std::string& line) {
   NodeIndex node_id;
   if (sscanf(line.c_str(), "%*c%d", &node_id) != 1) {
     state_.bad = true;
-    state_.reason = "Syntax error in node desciption.";
+    state_.reason = "Syntax error in node description.";
     state_.bad_line.reset(new std::string(line));
     return;
   }
@@ -159,7 +162,7 @@ void DimacsAssignmentParser<GraphType>::ParseArcLine(const std::string& line) {
   NodeIndex tail;
   NodeIndex head;
   CostValue cost;
-  if (sscanf(line.c_str(), "%*c%d%d%lld", &tail, &head, &cost) != 3) {
+  if (sscanf(line.c_str(), "%*c%d%d%" SCNd64, &tail, &head, &cost) != 3) {
     state_.bad = true;
     state_.reason = "Syntax error in arc descriptor.";
     state_.bad_line.reset(new std::string(line));

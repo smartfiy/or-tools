@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,10 +20,11 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "ortools/base/int_type.h"
-#include "ortools/base/integral_types.h"
+#include "absl/log/check.h"
+#include "absl/meta/type_traits.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/strong_vector.h"
+#include "ortools/base/types.h"
 #include "ortools/sat/cp_model.pb.h"
 #include "ortools/sat/cp_model_utils.h"
 #include "ortools/sat/integer.h"
@@ -31,6 +32,7 @@
 #include "ortools/sat/linear_constraint.h"
 #include "ortools/sat/model.h"
 #include "ortools/sat/sat_base.h"
+#include "ortools/util/strong_integers.h"
 
 namespace operations_research {
 namespace sat {
@@ -193,18 +195,6 @@ class CpModelMapping {
     return result;
   }
 
-  // Returns a heuristic set of values that could be created for the given
-  // variable when the constraints will be loaded.
-  // Note that the pointer is not stable across calls.
-  // It returns nullptr if the set is empty.
-  const absl::flat_hash_set<int64_t>& PotentialEncodedValues(int var) {
-    const auto& it = variables_to_encoded_values_.find(var);
-    if (it != variables_to_encoded_values_.end()) {
-      return it->second;
-    }
-    return empty_set_;
-  }
-
   // Returns the number of variables in the loaded proto.
   int NumProtoVariables() const { return integers_.size(); }
 
@@ -229,10 +219,6 @@ class CpModelMapping {
   // ExtractEncoding().
   absl::flat_hash_set<const ConstraintProto*> already_loaded_ct_;
   absl::flat_hash_set<const ConstraintProto*> is_half_encoding_ct_;
-
-  absl::flat_hash_map<int, absl::flat_hash_set<int64_t>>
-      variables_to_encoded_values_;
-  const absl::flat_hash_set<int64_t> empty_set_;
 };
 
 }  // namespace sat

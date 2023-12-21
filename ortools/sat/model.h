@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,15 +15,19 @@
 #define OR_TOOLS_SAT_MODEL_H_
 
 #include <cstddef>
+#include <cstdio>
+#include <ctime>
 #include <functional>
 #include <map>
 #include <memory>
+#include <new>
+#include <string>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/meta/type_traits.h"
 #include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
-#include "ortools/base/map_util.h"
 #include "ortools/base/typeid.h"
 
 namespace operations_research {
@@ -33,11 +37,11 @@ namespace sat {
  * Class that owns everything related to a particular optimization model.
  *
  * This class is actually a fully generic wrapper that can hold any type of
- * constraints, watchers, solvers and provide a mecanism to wire them together.
+ * constraints, watchers, solvers and provide a mechanism to wire them together.
  */
 class Model {
  public:
-  Model() {}
+  Model() = default;
 
   ~Model() {
     // The order of deletion seems to be platform dependent.
@@ -52,6 +56,10 @@ class Model {
    * name them for debugging or logging.
    */
   explicit Model(std::string name) : name_(name) {}
+
+  // This type is neither copyable nor movable.
+  Model(const Model&) = delete;
+  Model& operator=(const Model&) = delete;
 
   /**
    * This makes it possible  to have a nicer API on the client side, and it
@@ -125,8 +133,9 @@ class Model {
    */
   template <typename T>
   const T* Get() const {
-    return static_cast<const T*>(
-        gtl::FindWithDefault(singletons_, gtl::FastTypeId<T>(), nullptr));
+    const auto& it = singletons_.find(gtl::FastTypeId<T>());
+    return it != singletons_.end() ? static_cast<const T*>(it->second)
+                                   : nullptr;
   }
 
   /**
@@ -134,8 +143,8 @@ class Model {
    */
   template <typename T>
   T* Mutable() const {
-    return static_cast<T*>(
-        gtl::FindWithDefault(singletons_, gtl::FastTypeId<T>(), nullptr));
+    const auto& it = singletons_.find(gtl::FastTypeId<T>());
+    return it != singletons_.end() ? static_cast<T*>(it->second) : nullptr;
   }
 
   /**
@@ -144,8 +153,9 @@ class Model {
    * It will be destroyed when the model is.
    */
   template <typename T>
-  void TakeOwnership(T* t) {
+  T* TakeOwnership(T* t) {
     cleanup_list_.emplace_back(new Delete<T>(t));
+    return t;
   }
 
   /**
@@ -213,8 +223,6 @@ class Model {
   // don't care too much about efficiency here and this was easier to get
   // working.
   std::vector<std::unique_ptr<DeleteInterface>> cleanup_list_;
-
-  DISALLOW_COPY_AND_ASSIGN(Model);
 };
 
 }  // namespace sat

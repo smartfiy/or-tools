@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,17 +13,37 @@
 
 #include "ortools/sat/feasibility_pump.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <limits>
+#include <utility>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
+#include "absl/meta/type_traits.h"
+#include "ortools/base/logging.h"
+#include "ortools/base/strong_vector.h"
+#include "ortools/glop/parameters.pb.h"
+#include "ortools/glop/revised_simplex.h"
+#include "ortools/glop/status.h"
+#include "ortools/lp_data/lp_data.h"
+#include "ortools/lp_data/lp_data_utils.h"
 #include "ortools/lp_data/lp_types.h"
-#include "ortools/sat/cp_model.pb.h"
+#include "ortools/lp_data/sparse_column.h"
+#include "ortools/sat/cp_model_mapping.h"
 #include "ortools/sat/integer.h"
+#include "ortools/sat/linear_constraint.h"
+#include "ortools/sat/model.h"
 #include "ortools/sat/sat_base.h"
+#include "ortools/sat/sat_parameters.pb.h"
 #include "ortools/sat/sat_solver.h"
+#include "ortools/sat/synchronization.h"
 #include "ortools/util/saturated_arithmetic.h"
+#include "ortools/util/sorted_interval_list.h"
+#include "ortools/util/strong_integers.h"
+#include "ortools/util/time_limit.h"
 
 namespace operations_research {
 namespace sat {
@@ -169,7 +189,7 @@ bool FeasibilityPump::Solve() {
     if (integer_solution_is_feasible_) MaybePushToRepo();
   }
 
-  if (model_is_unsat_) return false;
+  if (sat_solver_->ModelIsUnsat()) return false;
 
   PrintStats();
   MaybePushToRepo();
@@ -191,7 +211,7 @@ void FeasibilityPump::MaybePushToRepo() {
         lp_solution[model_var] = GetLPSolutionValue(positive_var);
       }
     }
-    incomplete_solutions_->AddNewSolution(lp_solution);
+    incomplete_solutions_->AddSolution(lp_solution);
   }
 
   if (integer_solution_is_feasible_) {
@@ -203,7 +223,7 @@ void FeasibilityPump::MaybePushToRepo() {
         lp_solution[model_var] = GetIntegerSolutionValue(positive_var);
       }
     }
-    incomplete_solutions_->AddNewSolution(lp_solution);
+    incomplete_solutions_->AddSolution(lp_solution);
   }
 }
 
@@ -415,7 +435,7 @@ void FeasibilityPump::UpdateBoundsOfLpVariables() {
 }
 
 double FeasibilityPump::GetLPSolutionValue(IntegerVariable variable) const {
-  return lp_solution_[gtl::FindOrDie(mirror_lp_variable_, variable).value()];
+  return lp_solution_[mirror_lp_variable_.at(variable).value()];
 }
 
 double FeasibilityPump::GetVariableValueAtCpScale(ColIndex var) {
@@ -428,8 +448,7 @@ double FeasibilityPump::GetVariableValueAtCpScale(ColIndex var) {
 
 int64_t FeasibilityPump::GetIntegerSolutionValue(
     IntegerVariable variable) const {
-  return integer_solution_[gtl::FindOrDie(mirror_lp_variable_, variable)
-                               .value()];
+  return integer_solution_[mirror_lp_variable_.at(variable).value()];
 }
 
 bool FeasibilityPump::Round() {
@@ -548,7 +567,7 @@ bool FeasibilityPump::ActiveLockBasedRounding() {
 
 bool FeasibilityPump::PropagationRounding() {
   if (!lp_solution_is_set_) return false;
-  sat_solver_->ResetToLevelZero();
+  if (!sat_solver_->ResetToLevelZero()) return false;
 
   // Compute an order in which we will fix variables and do the propagation.
   std::vector<int> rounding_order;
@@ -581,7 +600,8 @@ bool FeasibilityPump::PropagationRounding() {
     if (time_limit_->LimitReached()) return false;
     // Get the bounds of the variable.
     const IntegerVariable var = integer_variables_[var_index];
-    const Domain& domain = (*domains_)[var];
+    CHECK(VariableIsPositive(var));
+    const Domain& domain = (*domains_)[GetPositiveOnlyIndex(var)];
 
     const IntegerValue lb = integer_trail_->LowerBound(var);
     const IntegerValue ub = integer_trail_->UpperBound(var);
@@ -603,7 +623,7 @@ bool FeasibilityPump::PropagationRounding() {
         (domain.Contains(ceil_value) && ub.value() >= ceil_value);
     if (domain.IsEmpty()) {
       integer_solution_[var_index] = rounded_value;
-      model_is_unsat_ = true;
+      sat_solver_->NotifyThatModelIsUnsat();
       return false;
     }
 
@@ -658,20 +678,12 @@ bool FeasibilityPump::PropagationRounding() {
           integer_encoder_->GetOrCreateLiteralAssociatedToEquality(var, value);
     }
 
-    if (!sat_solver_->FinishPropagation()) {
-      model_is_unsat_ = true;
-      return false;
-    }
+    if (!sat_solver_->FinishPropagation()) return false;
     sat_solver_->EnqueueDecisionAndBacktrackOnConflict(to_enqueue);
-
-    if (sat_solver_->IsModelUnsat()) {
-      model_is_unsat_ = true;
-      return false;
-    }
+    if (sat_solver_->ModelIsUnsat()) return false;
   }
-  sat_solver_->ResetToLevelZero();
   integer_solution_is_set_ = true;
-  return true;
+  return sat_solver_->ResetToLevelZero();
 }
 
 void FeasibilityPump::FillIntegerSolutionStats() {

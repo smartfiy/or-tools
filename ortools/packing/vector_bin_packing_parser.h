@@ -1,4 +1,4 @@
-// Copyright 2010-2021 Google LLC
+// Copyright 2010-2022 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,7 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
+#include "absl/strings/string_view.h"
+#include "ortools/base/types.h"
 #include "ortools/packing/vector_bin_packing.pb.h"
 
 namespace operations_research {
@@ -54,8 +55,8 @@ class VbpParser {
 
   void ProcessLine(const std::string& line);
   void ReportError(const std::string& line);
-  int strtoint32(const std::string& word);
-  int64_t strtoint64(const std::string& word);
+  int strtoint32(absl::string_view word);
+  int64_t strtoint64(absl::string_view word);
 
   LoadStatus load_status_ = NOT_STARTED;
   int num_declared_items_ = -1;
