@@ -107,6 +107,7 @@ file(GLOB_RECURSE proto_go_files RELATIVE ${PROJECT_SOURCE_DIR}
   "ortools/constraint_solver/solver_parameters.proto"
   "ortools/constraint_solver/routing_parameters.proto"
   "ortools/constraint_solver/routing_enums.proto"
+  "ortools/constraint_solver/routing_ils.proto"
   "ortools/sat/sat_parameters.proto"
   "ortools/util/optional_boolean.proto"
   )
