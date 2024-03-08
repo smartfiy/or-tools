@@ -21,6 +21,8 @@
 
 syntax = "proto3";
 
+option go_package = "github.com/airspacetechnologies/or-tools/go/ortools/constraintsolver";
+
 import "ortools/constraint_solver/routing_enums.proto";
 
 package operations_research;
