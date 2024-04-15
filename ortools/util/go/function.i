@@ -22,7 +22,11 @@
 
 // Go type corresponding to the given CType
 #define GO_TYPE_int64_t int64
+#define GO_TYPE_void 
 #define GO_TYPE(x) GO_TYPE_ ## x
+#define GO_RETURN_int64_t return
+#define GO_RETURN_void 
+#define GO_RETURN(x) GO_RETURN_ ## x
 
 // These are the things we actually use
 #define param(num,type) $typemap(gotype,type) arg ## num
@@ -43,8 +47,18 @@
 #define GET_MACRO(_1,_2,_3,_4,_5,NAME,...) NAME
 %define FOR_EACH(action,...) GET_MACRO(__VA_ARGS__, FE_5, FE_4, FE_3, FE_2, FE_1, FE_0)(action,__VA_ARGS__) %enddef
 
+// HACK: Work around SWIG bug not honoring ##__VA_ARGS__ or __VA_OPT__ which
+// should be available in version 4.3.0.
+// Instead of extending FOR_EACH with these to support zero-argument callbacks,
+// we use the following macro to define a function signature, and check if one
+// exists with zero arguments.
+%define DEF(Name, Ret, ...)
+  #define Name##Ret##Args##__VA_ARGS__
+%enddef
+
 // Definition
 %define STD_FUNCTION_AS_GO(Name, Ret, ...)
+DEF(Name, Ret, __VA_ARGS__)
 
 %feature("director") Name##Impl;
 
@@ -62,7 +76,6 @@
     IsGo##Name##Wrapper()
     Delete()
     Wrap() Name
-
   }
 
   type go##Name##Wrapper struct {
@@ -79,16 +92,32 @@
   }
 
   func (g *go##Name##Wrapper) Wrap() Name {
-	  return g.wrapped
+    return g.wrapped
   }
 
   type overwrittenMethodsOn##Name##Impl struct {
-    i Name##Impl
-    goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret)
+    i Name##Impl%}
+#if defined Name##Ret##Args
+%insert(go_header)
+%{    goCb func() GO_TYPE(Ret)
   }
-
-  func NewGo##Name##Wrapper(goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret)) Go##Name##Wrapper {
-    om := &overwrittenMethodsOn##Name##Impl{
+%}
+#else
+%insert(go_header)
+%{    goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret)
+  }
+%}
+#endif
+#if defined Name##Ret##Args
+%insert(go_header)
+%{  func NewGo##Name##Wrapper(goCb func() GO_TYPE(Ret)) Go##Name##Wrapper {%}
+#else
+%insert(go_header)
+%{
+  func NewGo##Name##Wrapper(goCb func(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret)) Go##Name##Wrapper {%}
+#endif
+%insert(go_header)
+%{    om := &overwrittenMethodsOn##Name##Impl{
       goCb: goCb,
     }
     om.i = NewDirector##Name##Impl(om)
@@ -100,15 +129,30 @@
 
     return g
   }
-
-  // callback implementation
-  func (o *overwrittenMethodsOn##Name##Impl) Call(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret) {
-    return o.goCb(FOR_EACH(unpack, __VA_ARGS__))
+%}
+#if defined Name##Ret##Args
+%insert(go_header)
+%{  // callback implementation
+  func (o *overwrittenMethodsOn##Name##Impl) Call() GO_TYPE(Ret) {
+    GO_RETURN(Ret) o.goCb()
   }
 %}
+#else
+%insert(go_header)
+%{  // callback implementation
+  func (o *overwrittenMethodsOn##Name##Impl) Call(FOR_EACH(lvalgo, __VA_ARGS__)) GO_TYPE(Ret) {
+    GO_RETURN(Ret) o.goCb(FOR_EACH(unpack, __VA_ARGS__))
+  }
+%}
+#endif
 
+#if defined Name##Ret##Args
+%rename(Name) std::function<Ret()>;
+%rename(call) std::function<Ret(__VA_ARGS__)>::operator();
+#else
 %rename(Name) std::function<Ret(__VA_ARGS__)>;
 %rename(call) std::function<Ret(__VA_ARGS__)>::operator();
+#endif
 
 namespace std {
   struct function<Ret(__VA_ARGS__)> {
@@ -122,9 +166,15 @@ namespace std {
     function<Ret(__VA_ARGS__)>(Ret(*const)(__VA_ARGS__));
 
     %extend {
+
       function<Ret(__VA_ARGS__)>(Name##Impl *in) {
-        return new std::function<Ret(__VA_ARGS__)>([=](FOR_EACH(lvalref,__VA_ARGS__)){
-             return in->call(FOR_EACH(forward,__VA_ARGS__));
+#if defined Name##Ret##Args
+        return new std::function<Ret(__VA_ARGS__)>([=](){
+          return in->call();
+#else
+        return new std::function<Ret(__VA_ARGS__)>([=](FOR_EACH(lvalref, ##__VA_ARGS__)){
+          return in->call(FOR_EACH(forward, ##__VA_ARGS__));
+#endif
        });
       }
     }
