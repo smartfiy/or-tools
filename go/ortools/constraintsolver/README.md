@@ -16,5 +16,5 @@ examples via cmake:
 make go_constraintsolver_vrppd_test
 make go_constraintsolver_vrptw_test
 make go_constraintsolver_pdptw_test
-make go_constraintsolver_pdptw_test
+make go_constraintsolver_cpdptw_test
 ```

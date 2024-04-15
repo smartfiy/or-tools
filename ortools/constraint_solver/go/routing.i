@@ -25,6 +25,7 @@ class RoutingModelParameters;
 class RoutingSearchParameters;
 typedef std::function<int64_t(int64_t)> RoutingTransitCallback1;
 typedef std::function<int64_t(int64_t, int64_t)> RoutingTransitCallback2;
+typedef std::function<void()> AtSolutionCallback;
 }  // namespace operations_research
 
 // Include the files we want to wrap a first time.
