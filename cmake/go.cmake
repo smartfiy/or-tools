@@ -61,7 +61,15 @@ set_target_properties(goortools PROPERTIES
 # note: macOS is APPLE and also UNIX !
 if(APPLE)
   target_link_options(goortools PRIVATE -undefined dynamic_lookup)
-  set_target_properties(goortools PROPERTIES INSTALL_RPATH "@loader_path")
+
+  # Use absolute install path to work around bug with MacOS 14/XCode 15:
+  # https://developer.apple.com/forums/thread/737920?answerId=766944022#766944022
+  set_target_properties(goortools PROPERTIES BUILD_WITH_INSTALL_RPATH FALSE)
+  set_target_properties(goortools PROPERTIES BUILD_WITH_INSTALL_NAME_DIR TRUE)
+  set_target_properties(goortools PROPERTIES SKIP_BUILD_RPATH TRUE)
+  set_target_properties(goortools PROPERTIES INSTALL_NAME_DIR "/usr/local/lib")
+  # set_target_properties(goortools PROPERTIES INSTALL_RPATH "@loader_path")
+
   # Xcode fails to build if library doesn't contains at least one source file.
   if(XCODE)
     file(GENERATE
