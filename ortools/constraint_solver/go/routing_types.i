@@ -48,10 +48,10 @@
 }
 
 // Convert std::vector<ns IndexT> to/from int slices.
-VECTOR_AS_GO_SLICE_NAMESPACE(ns, IndexT, int)
+VECTOR_AS_GO_SLICE_NAMESPACE(ns, IndexT, int, C.int)
 // TODO: 2d slice conversion?
 // Convert std::vector<std::vector<IndexT>> to/from two-dimensional int slices.
-// VECTOR_AS_GO_SLICE_NAMESPACE(ns, std::vector<IndexT>, int)
+// VECTOR_AS_GO_SLICE_NAMESPACE(ns, std::vector<IndexT>, int, C.int)
 
 %enddef  // DEFINE_INDEX_TYPE
 
@@ -62,9 +62,9 @@ VECTOR_AS_GO_SLICE_NAMESPACE(ns, IndexT, int)
 %define DEFINE_INDEX_TYPE_TYPEDEF(IndexT, NewIndexT)
 %apply IndexT { NewIndexT };
 %apply std::vector<IndexT> { std::vector<NewIndexT> };
-%apply std::vector<IndexT>* { std::vector<NewIndexT>* };
+// %apply std::vector<IndexT>* { std::vector<NewIndexT>* };
 %apply const std::vector<IndexT>& { std::vector<NewIndexT>& };
-%apply const std::vector<std::vector<IndexT> >& { const std::vector<std::vector<NewIndexT> >& };
+// %apply const std::vector<std::vector<IndexT> >& { const std::vector<std::vector<NewIndexT> >& };
 %enddef  // DEFINE_INDEX_TYPE_TYPEDEF
 
 DEFINE_INDEX_TYPE(operations_research::, RoutingNodeIndex);
