@@ -5,7 +5,7 @@ It has Go bindings and binaries for use with Go projects.
 
 ## Install (Mac)
  1. Download binaries for Mac:
-    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v9.9-go1.22.1/or-tools_universal_macOS-14.4.1_go_v9.9.4013.tar.gz`
+    `https://github.com/AirspaceTechnologies/or-tools/releases/download/v9.9-go1.23.1/or-tools_universal_macOS-14.4.1_go_v9.9.4013.tar.gz`
  1. Install/extract to `/usr/local/lib`:
     `sudo tar -xf or-tools_universal_macOS-14.4.1_go_v9.9.4013.tar.gz --strip 1 -C /usr/local/lib`
  1. Clean module download cache if necessary:
