@@ -114,17 +114,23 @@ func TestConstraintSolver_CPDPTW(t *testing.T) {
 		true,                   // start cumul to zero
 		"Capacity")
 
-	// Add time window constraints for each location except depot.
+	// Add time window constraints for each location except depot and 'copy' the
+	// slack var in the solution object (aka Assignment) to print it.
 	for i := 1; i < len(data.timeWindows); i++ {
 		index := manager.NodeToIndex(i)
 		timeDimension.CumulVar(index).SetRange(data.timeWindows[i][0],
 			data.timeWindows[i][1])
+		routing.AddToAssignment(timeDimension.SlackVar(index))
 	}
-	// Add time window constraints for each vehicle start node.
+	// Add time window constraints for each vehicle start node and 'copy' the
+	// slack var in the solution object (aka Assignment) to print it.
+	// Warning: Slack var is not defined for vehicle end nodes and should not be
+	// added to the assignment
 	for i := 0; i < len(data.vehicleCapacities); i++ {
 		index := routing.Start(i)
 		timeDimension.CumulVar(index).SetRange(data.timeWindows[0][0],
 			data.timeWindows[0][1])
+		routing.AddToAssignment(timeDimension.SlackVar(index))
 	}
 
 	// Instantiate route start and end times to produce feasible times.
@@ -229,27 +235,34 @@ func printSolutionCPDPTW(t *testing.T, data DataModelCPDPTW, manager RoutingInde
 	// Display routes
 	timeDimension := routing.GetDimensionOrDie("Time")
 	capacityDimension := routing.GetDimensionOrDie("Capacity")
-	var totalTime, totalLoad, tMin, tMax, capacity int64
+	var totalTime, totalLoad, tMin, tMax, sMin, sMax, capacity int64
 	for vehicleId := 0; vehicleId < len(data.vehicleCapacities); vehicleId++ {
 		index := routing.Start(vehicleId)
 		t.Logf("Route for vehicle %v:", vehicleId)
 		var route string
 		for !routing.IsEnd(index) {
 			timeVar := timeDimension.CumulVar(index)
+			slackVar := timeDimension.SlackVar(index)
 			capacityVar := capacityDimension.CumulVar(index)
 			if solution == nil {
 				tMin = timeVar.Min()
 				tMax = timeVar.Max()
+				sMin = slackVar.Min()
+				sMax = slackVar.Max()
 				capacity = capacityVar.Value()
 			} else {
 				tMin = (*solution).Min(timeVar)
 				tMax = (*solution).Max(timeVar)
+				sMin = (*solution).Min(slackVar)
+				sMax = (*solution).Max(slackVar)
 				capacity = (*solution).Value(capacityVar)
 			}
-			route += fmt.Sprintf("%v Time(%v, %v) Load:%v -> ",
+			route += fmt.Sprintf("%v Time(%v, %v) Slack(%v, %v) Load:%v -> ",
 				manager.IndexToNode(index),
 				tMin,
 				tMax,
+				sMin,
+				sMax,
 				capacity)
 			if solution == nil {
 				index = routing.NextVar(index).Value()

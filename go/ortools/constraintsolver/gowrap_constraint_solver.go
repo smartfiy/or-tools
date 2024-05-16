@@ -1054,71 +1054,71 @@ typedef long long swig_type_1021;
 typedef _goslice_ swig_type_1022;
 typedef _goslice_ swig_type_1023;
 typedef long long swig_type_1024;
-typedef _goslice_ swig_type_1025;
-typedef _goslice_ swig_type_1026;
-typedef long long swig_type_1027;
+typedef long long swig_type_1025;
+typedef long long swig_type_1026;
+typedef _goslice_ swig_type_1027;
 typedef _goslice_ swig_type_1028;
-typedef _goslice_ swig_type_1029;
+typedef long long swig_type_1029;
 typedef _goslice_ swig_type_1030;
-typedef _gostring_ swig_type_1031;
+typedef _goslice_ swig_type_1031;
 typedef _goslice_ swig_type_1032;
-typedef _goslice_ swig_type_1033;
-typedef long long swig_type_1034;
-typedef long long swig_type_1035;
+typedef _gostring_ swig_type_1033;
+typedef _goslice_ swig_type_1034;
+typedef _goslice_ swig_type_1035;
 typedef long long swig_type_1036;
-typedef _goslice_ swig_type_1037;
-typedef _goslice_ swig_type_1038;
+typedef long long swig_type_1037;
+typedef long long swig_type_1038;
 typedef _goslice_ swig_type_1039;
-typedef long long swig_type_1040;
+typedef _goslice_ swig_type_1040;
 typedef _goslice_ swig_type_1041;
-typedef _goslice_ swig_type_1042;
-typedef long long swig_type_1043;
-typedef long long swig_type_1044;
-typedef _gostring_ swig_type_1045;
-typedef _goslice_ swig_type_1046;
-typedef long long swig_type_1047;
-typedef long long swig_type_1048;
-typedef _gostring_ swig_type_1049;
+typedef long long swig_type_1042;
+typedef _goslice_ swig_type_1043;
+typedef _goslice_ swig_type_1044;
+typedef long long swig_type_1045;
+typedef long long swig_type_1046;
+typedef _gostring_ swig_type_1047;
+typedef _goslice_ swig_type_1048;
+typedef long long swig_type_1049;
 typedef long long swig_type_1050;
-typedef _goslice_ swig_type_1051;
-typedef _gostring_ swig_type_1052;
+typedef _gostring_ swig_type_1051;
+typedef long long swig_type_1052;
 typedef _goslice_ swig_type_1053;
-typedef long long swig_type_1054;
+typedef _gostring_ swig_type_1054;
 typedef _goslice_ swig_type_1055;
-typedef _gostring_ swig_type_1056;
-typedef long long swig_type_1057;
-typedef long long swig_type_1058;
+typedef long long swig_type_1056;
+typedef _goslice_ swig_type_1057;
+typedef _gostring_ swig_type_1058;
 typedef long long swig_type_1059;
-typedef _gostring_ swig_type_1060;
+typedef long long swig_type_1060;
 typedef long long swig_type_1061;
-typedef long long swig_type_1062;
-typedef _gostring_ swig_type_1063;
-typedef _goslice_ swig_type_1064;
-typedef long long swig_type_1065;
-typedef _gostring_ swig_type_1066;
+typedef _gostring_ swig_type_1062;
+typedef long long swig_type_1063;
+typedef long long swig_type_1064;
+typedef _gostring_ swig_type_1065;
+typedef _goslice_ swig_type_1066;
 typedef long long swig_type_1067;
 typedef _gostring_ swig_type_1068;
-typedef _gostring_ swig_type_1069;
+typedef long long swig_type_1069;
 typedef _gostring_ swig_type_1070;
 typedef _gostring_ swig_type_1071;
 typedef _gostring_ swig_type_1072;
-typedef _goslice_ swig_type_1073;
-typedef _goslice_ swig_type_1074;
-typedef long long swig_type_1075;
-typedef long long swig_type_1076;
-typedef _goslice_ swig_type_1077;
+typedef _gostring_ swig_type_1073;
+typedef _gostring_ swig_type_1074;
+typedef _goslice_ swig_type_1075;
+typedef _goslice_ swig_type_1076;
+typedef long long swig_type_1077;
 typedef long long swig_type_1078;
 typedef _goslice_ swig_type_1079;
-typedef _goslice_ swig_type_1080;
-typedef long long swig_type_1081;
+typedef long long swig_type_1080;
+typedef _goslice_ swig_type_1081;
 typedef _goslice_ swig_type_1082;
 typedef long long swig_type_1083;
-typedef long long swig_type_1084;
-typedef _goslice_ swig_type_1085;
+typedef _goslice_ swig_type_1084;
+typedef long long swig_type_1085;
 typedef long long swig_type_1086;
 typedef _goslice_ swig_type_1087;
 typedef long long swig_type_1088;
-typedef long long swig_type_1089;
+typedef _goslice_ swig_type_1089;
 typedef long long swig_type_1090;
 typedef long long swig_type_1091;
 typedef long long swig_type_1092;
@@ -1127,10 +1127,10 @@ typedef long long swig_type_1094;
 typedef long long swig_type_1095;
 typedef long long swig_type_1096;
 typedef long long swig_type_1097;
-typedef _goslice_ swig_type_1098;
-typedef _goslice_ swig_type_1099;
-typedef long long swig_type_1100;
-typedef long long swig_type_1101;
+typedef long long swig_type_1098;
+typedef long long swig_type_1099;
+typedef _goslice_ swig_type_1100;
+typedef _goslice_ swig_type_1101;
 typedef long long swig_type_1102;
 typedef long long swig_type_1103;
 typedef long long swig_type_1104;
@@ -1139,34 +1139,34 @@ typedef long long swig_type_1106;
 typedef long long swig_type_1107;
 typedef long long swig_type_1108;
 typedef long long swig_type_1109;
-typedef _gostring_ swig_type_1110;
-typedef _gostring_ swig_type_1111;
-typedef long long swig_type_1112;
-typedef long long swig_type_1113;
+typedef long long swig_type_1110;
+typedef long long swig_type_1111;
+typedef _gostring_ swig_type_1112;
+typedef _gostring_ swig_type_1113;
 typedef long long swig_type_1114;
 typedef long long swig_type_1115;
 typedef long long swig_type_1116;
-typedef _goslice_ swig_type_1117;
-typedef _goslice_ swig_type_1118;
-typedef long long swig_type_1119;
-typedef long long swig_type_1120;
+typedef long long swig_type_1117;
+typedef long long swig_type_1118;
+typedef _goslice_ swig_type_1119;
+typedef _goslice_ swig_type_1120;
 typedef long long swig_type_1121;
 typedef long long swig_type_1122;
 typedef long long swig_type_1123;
-typedef _goslice_ swig_type_1124;
-typedef _goslice_ swig_type_1125;
+typedef long long swig_type_1124;
+typedef long long swig_type_1125;
 typedef _goslice_ swig_type_1126;
 typedef _goslice_ swig_type_1127;
 typedef _goslice_ swig_type_1128;
 typedef _goslice_ swig_type_1129;
 typedef _goslice_ swig_type_1130;
-typedef long long swig_type_1131;
-typedef long long swig_type_1132;
-typedef _goslice_ swig_type_1133;
-typedef _gostring_ swig_type_1134;
-typedef _gostring_ swig_type_1135;
-typedef long long swig_type_1136;
-typedef long long swig_type_1137;
+typedef _goslice_ swig_type_1131;
+typedef _goslice_ swig_type_1132;
+typedef long long swig_type_1133;
+typedef long long swig_type_1134;
+typedef _goslice_ swig_type_1135;
+typedef _gostring_ swig_type_1136;
+typedef _gostring_ swig_type_1137;
 typedef long long swig_type_1138;
 typedef long long swig_type_1139;
 typedef long long swig_type_1140;
@@ -1193,20 +1193,20 @@ typedef long long swig_type_1160;
 typedef long long swig_type_1161;
 typedef long long swig_type_1162;
 typedef long long swig_type_1163;
-typedef _goslice_ swig_type_1164;
+typedef long long swig_type_1164;
 typedef long long swig_type_1165;
-typedef long long swig_type_1166;
+typedef _goslice_ swig_type_1166;
 typedef long long swig_type_1167;
-typedef _gostring_ swig_type_1168;
-typedef _gostring_ swig_type_1169;
-typedef long long swig_type_1170;
-typedef long long swig_type_1171;
-typedef _goslice_ swig_type_1172;
+typedef long long swig_type_1168;
+typedef long long swig_type_1169;
+typedef _gostring_ swig_type_1170;
+typedef _gostring_ swig_type_1171;
+typedef long long swig_type_1172;
 typedef long long swig_type_1173;
 typedef _goslice_ swig_type_1174;
-typedef _goslice_ swig_type_1175;
-typedef _gostring_ swig_type_1176;
-typedef _gostring_ swig_type_1177;
+typedef long long swig_type_1175;
+typedef _goslice_ swig_type_1176;
+typedef _goslice_ swig_type_1177;
 typedef _gostring_ swig_type_1178;
 typedef _gostring_ swig_type_1179;
 typedef _gostring_ swig_type_1180;
@@ -1215,8 +1215,8 @@ typedef _gostring_ swig_type_1182;
 typedef _gostring_ swig_type_1183;
 typedef _gostring_ swig_type_1184;
 typedef _gostring_ swig_type_1185;
-typedef long long swig_type_1186;
-typedef long long swig_type_1187;
+typedef _gostring_ swig_type_1186;
+typedef _gostring_ swig_type_1187;
 typedef long long swig_type_1188;
 typedef long long swig_type_1189;
 typedef long long swig_type_1190;
@@ -1255,15 +1255,15 @@ typedef long long swig_type_1222;
 typedef long long swig_type_1223;
 typedef long long swig_type_1224;
 typedef long long swig_type_1225;
-typedef _goslice_ swig_type_1226;
+typedef long long swig_type_1226;
 typedef long long swig_type_1227;
-typedef long long swig_type_1228;
-typedef _goslice_ swig_type_1229;
+typedef _goslice_ swig_type_1228;
+typedef long long swig_type_1229;
 typedef long long swig_type_1230;
-typedef long long swig_type_1231;
-typedef _gostring_ swig_type_1232;
+typedef _goslice_ swig_type_1231;
+typedef long long swig_type_1232;
 typedef long long swig_type_1233;
-typedef long long swig_type_1234;
+typedef _gostring_ swig_type_1234;
 typedef long long swig_type_1235;
 typedef long long swig_type_1236;
 typedef long long swig_type_1237;
@@ -1271,7 +1271,9 @@ typedef long long swig_type_1238;
 typedef long long swig_type_1239;
 typedef long long swig_type_1240;
 typedef long long swig_type_1241;
-typedef _goslice_ swig_type_1242;
+typedef long long swig_type_1242;
+typedef long long swig_type_1243;
+typedef _goslice_ swig_type_1244;
 extern void _wrap_Swig_free_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_Swig_malloc_constraintsolver_e5a2167dd134d32d(swig_intgo arg1);
 extern uintptr_t _wrap_new_IntTupleSet__SWIG_0_constraintsolver_e5a2167dd134d32d(swig_intgo arg1);
@@ -3806,23 +3808,25 @@ extern uintptr_t _wrap_new_RoutingIndexManager_constraintsolver_e5a2167dd134d32d
 extern swig_intgo _wrap_RoutingIndexManager_GetNumberOfNodes_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_RoutingIndexManager_GetNumberOfVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_RoutingIndexManager_GetNumberOfIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1024 _wrap_RoutingIndexManager_NodeToIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1025 _wrap_RoutingIndexManager_NodesToIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1026 arg2);
-extern swig_intgo _wrap_RoutingIndexManager_IndexToNode_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1027 arg2);
+extern swig_type_1024 _wrap_RoutingIndexManager_GetStartIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1025 _wrap_RoutingIndexManager_GetEndIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1026 _wrap_RoutingIndexManager_NodeToIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1027 _wrap_RoutingIndexManager_NodesToIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1028 arg2);
+extern swig_intgo _wrap_RoutingIndexManager_IndexToNode_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1029 arg2);
 extern void _wrap_delete_RoutingIndexManager_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1028 _wrap_DefaultRoutingModelParameters_constraintsolver_e5a2167dd134d32d(void);
-extern swig_type_1029 _wrap_DefaultRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(void);
-extern swig_type_1030 _wrap_DefaultSecondaryRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(void);
-extern swig_type_1031 _wrap_FindErrorInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(swig_type_1032 arg1);
-extern uintptr_t _wrap_FindErrorsInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(swig_type_1033 arg1);
+extern swig_type_1030 _wrap_DefaultRoutingModelParameters_constraintsolver_e5a2167dd134d32d(void);
+extern swig_type_1031 _wrap_DefaultRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(void);
+extern swig_type_1032 _wrap_DefaultSecondaryRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(void);
+extern swig_type_1033 _wrap_FindErrorInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(swig_type_1034 arg1);
+extern uintptr_t _wrap_FindErrorsInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(swig_type_1035 arg1);
 extern uintptr_t _wrap_new_PathsMetadata_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern _Bool _wrap_PathsMetadata_IsStart_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1034 arg2);
-extern _Bool _wrap_PathsMetadata_IsEnd_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1035 arg2);
-extern swig_intgo _wrap_PathsMetadata_GetPath_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1036 arg2);
+extern _Bool _wrap_PathsMetadata_IsStart_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1036 arg2);
+extern _Bool _wrap_PathsMetadata_IsEnd_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1037 arg2);
+extern swig_intgo _wrap_PathsMetadata_GetPath_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1038 arg2);
 extern swig_intgo _wrap_PathsMetadata_NumPaths_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1037 _wrap_PathsMetadata_Paths_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1038 _wrap_PathsMetadata_Starts_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1039 _wrap_PathsMetadata_Ends_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1039 _wrap_PathsMetadata_Paths_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1040 _wrap_PathsMetadata_Starts_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1041 _wrap_PathsMetadata_Ends_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_delete_PathsMetadata_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_ROUTING_NOT_SOLVED_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_ROUTING_SUCCESS_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
@@ -3835,29 +3839,29 @@ extern swig_intgo _wrap_ROUTING_OPTIMAL_RoutingModel_constraintsolver_e5a2167dd1
 extern swig_intgo _wrap_PICKUP_AND_DELIVERY_NO_ORDER_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_PICKUP_AND_DELIVERY_LIFO_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_PICKUP_AND_DELIVERY_FIFO_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
-extern swig_type_1040 _wrap_RoutingModel_kNoPenalty_get_constraintsolver_e5a2167dd134d32d(void);
+extern swig_type_1042 _wrap_RoutingModel_kNoPenalty_get_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_RoutingModel_kNoDisjunction_get_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_RoutingModel_kNoDimension_get_constraintsolver_e5a2167dd134d32d(void);
 extern uintptr_t _wrap_new_RoutingModel__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern uintptr_t _wrap_new_RoutingModel__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1041 arg2);
+extern uintptr_t _wrap_new_RoutingModel__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1043 arg2);
 extern void _wrap_delete_RoutingModel_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_kTransitEvaluatorSignUnknown_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_kTransitEvaluatorSignPositiveOrZero_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_kTransitEvaluatorSignNegativeOrZero_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
-extern swig_intgo _wrap_RoutingModel_RegisterUnaryTransitVector_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1042 arg2);
+extern swig_intgo _wrap_RoutingModel_RegisterUnaryTransitVector_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1044 arg2);
 extern swig_intgo _wrap_RoutingModel_RegisterUnaryTransitCallback__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3);
 extern swig_intgo _wrap_RoutingModel_RegisterUnaryTransitCallback__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern swig_intgo _wrap_RoutingModel_RegisterTransitMatrix_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern swig_intgo _wrap_RoutingModel_RegisterTransitCallback__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3);
 extern swig_intgo _wrap_RoutingModel_RegisterTransitCallback__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
-extern _Bool _wrap_RoutingModel_AddDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_type_1043 arg3, swig_type_1044 arg4, _Bool arg5, swig_type_1045 arg6);
-extern _Bool _wrap_RoutingModel_AddDimensionWithVehicleTransits_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1046 arg2, swig_type_1047 arg3, swig_type_1048 arg4, _Bool arg5, swig_type_1049 arg6);
-extern _Bool _wrap_RoutingModel_AddDimensionWithVehicleCapacity_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_type_1050 arg3, swig_type_1051 arg4, _Bool arg5, swig_type_1052 arg6);
-extern _Bool _wrap_RoutingModel_AddDimensionWithVehicleTransitAndCapacity_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1053 arg2, swig_type_1054 arg3, swig_type_1055 arg4, _Bool arg5, swig_type_1056 arg6);
-extern uintptr_t _wrap_RoutingModel_AddConstantDimensionWithSlack_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1057 arg2, swig_type_1058 arg3, swig_type_1059 arg4, _Bool arg5, swig_type_1060 arg6);
-extern uintptr_t _wrap_RoutingModel_AddConstantDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1061 arg2, swig_type_1062 arg3, _Bool arg4, swig_type_1063 arg5);
-extern uintptr_t _wrap_RoutingModel_AddVectorDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1064 arg2, swig_type_1065 arg3, _Bool arg4, swig_type_1066 arg5);
-extern uintptr_t _wrap_RoutingModel_AddMatrixDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1067 arg3, _Bool arg4, swig_type_1068 arg5);
+extern _Bool _wrap_RoutingModel_AddDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_type_1045 arg3, swig_type_1046 arg4, _Bool arg5, swig_type_1047 arg6);
+extern _Bool _wrap_RoutingModel_AddDimensionWithVehicleTransits_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1048 arg2, swig_type_1049 arg3, swig_type_1050 arg4, _Bool arg5, swig_type_1051 arg6);
+extern _Bool _wrap_RoutingModel_AddDimensionWithVehicleCapacity_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_type_1052 arg3, swig_type_1053 arg4, _Bool arg5, swig_type_1054 arg6);
+extern _Bool _wrap_RoutingModel_AddDimensionWithVehicleTransitAndCapacity_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1055 arg2, swig_type_1056 arg3, swig_type_1057 arg4, _Bool arg5, swig_type_1058 arg6);
+extern uintptr_t _wrap_RoutingModel_AddConstantDimensionWithSlack_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1059 arg2, swig_type_1060 arg3, swig_type_1061 arg4, _Bool arg5, swig_type_1062 arg6);
+extern uintptr_t _wrap_RoutingModel_AddConstantDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1063 arg2, swig_type_1064 arg3, _Bool arg4, swig_type_1065 arg5);
+extern uintptr_t _wrap_RoutingModel_AddVectorDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1066 arg2, swig_type_1067 arg3, _Bool arg4, swig_type_1068 arg5);
+extern uintptr_t _wrap_RoutingModel_AddMatrixDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1069 arg3, _Bool arg4, swig_type_1070 arg5);
 extern uintptr_t _wrap_RoutingModel_GetUnaryDimensions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_GetDimensionsWithGlobalCumulOptimizers_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_GetDimensionsWithLocalCumulOptimizers_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
@@ -3867,35 +3871,35 @@ extern uintptr_t _wrap_RoutingModel_GetMutableGlobalCumulLPOptimizer_constraints
 extern uintptr_t _wrap_RoutingModel_GetMutableGlobalCumulMPOptimizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern uintptr_t _wrap_RoutingModel_GetMutableLocalCumulLPOptimizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern _Bool _wrap_RoutingModel_HasDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_RoutingModel_GetDimensionOrDie_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1069 arg2);
-extern uintptr_t _wrap_RoutingModel_GetMutableDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1070 arg2);
-extern void _wrap_RoutingModel_SetPrimaryConstrainedDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1071 arg2);
-extern swig_type_1072 _wrap_RoutingModel_GetPrimaryConstrainedDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern uintptr_t _wrap_RoutingModel_GetDimensionOrDie_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1071 arg2);
+extern uintptr_t _wrap_RoutingModel_GetMutableDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1072 arg2);
+extern void _wrap_RoutingModel_SetPrimaryConstrainedDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1073 arg2);
+extern swig_type_1074 _wrap_RoutingModel_GetPrimaryConstrainedDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_AddResourceGroup_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_GetResourceGroups_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_GetResourceGroup_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1073 _wrap_RoutingModel_GetDimensionResourceGroupIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
+extern swig_type_1075 _wrap_RoutingModel_GetDimensionResourceGroupIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern swig_intgo _wrap_RoutingModel_GetDimensionResourceGroupIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
-extern swig_intgo _wrap_RoutingModel_AddDisjunction__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1074 arg2, swig_type_1075 arg3, swig_type_1076 arg4);
-extern swig_intgo _wrap_RoutingModel_AddDisjunction__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1077 arg2, swig_type_1078 arg3);
-extern swig_intgo _wrap_RoutingModel_AddDisjunction__SWIG_2_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1079 arg2);
-extern swig_type_1080 _wrap_RoutingModel_GetDisjunctionIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1081 arg2);
-extern swig_type_1082 _wrap_RoutingModel_GetDisjunctionNodeIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1083 _wrap_RoutingModel_GetDisjunctionPenalty_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1084 _wrap_RoutingModel_GetDisjunctionMaxCardinality_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_intgo _wrap_RoutingModel_AddDisjunction__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1076 arg2, swig_type_1077 arg3, swig_type_1078 arg4);
+extern swig_intgo _wrap_RoutingModel_AddDisjunction__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1079 arg2, swig_type_1080 arg3);
+extern swig_intgo _wrap_RoutingModel_AddDisjunction__SWIG_2_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1081 arg2);
+extern swig_type_1082 _wrap_RoutingModel_GetDisjunctionIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1083 arg2);
+extern swig_type_1084 _wrap_RoutingModel_GetDisjunctionNodeIndices_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1085 _wrap_RoutingModel_GetDisjunctionPenalty_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1086 _wrap_RoutingModel_GetDisjunctionMaxCardinality_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern swig_intgo _wrap_RoutingModel_GetNumberOfDisjunctions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern _Bool _wrap_RoutingModel_HasMandatoryDisjunctions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern _Bool _wrap_RoutingModel_HasMaxCardinalityConstrainedDisjunctions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_RoutingModel_IgnoreDisjunctionsAlreadyForcedToZero_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern void _wrap_RoutingModel_AddSoftSameVehicleConstraint_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1085 arg2, swig_type_1086 arg3);
-extern void _wrap_RoutingModel_SetAllowedVehiclesForIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1087 arg2, swig_type_1088 arg3);
-extern _Bool _wrap_RoutingModel_IsVehicleAllowedForIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_type_1089 arg3);
-extern void _wrap_RoutingModel_AddPickupAndDelivery_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1090 arg2, swig_type_1091 arg3);
+extern void _wrap_RoutingModel_AddSoftSameVehicleConstraint_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1087 arg2, swig_type_1088 arg3);
+extern void _wrap_RoutingModel_SetAllowedVehiclesForIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1089 arg2, swig_type_1090 arg3);
+extern _Bool _wrap_RoutingModel_IsVehicleAllowedForIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_type_1091 arg3);
+extern void _wrap_RoutingModel_AddPickupAndDelivery_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1092 arg2, swig_type_1093 arg3);
 extern void _wrap_RoutingModel_AddPickupAndDeliverySets_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3);
-extern uintptr_t _wrap_RoutingModel_GetPickupPositions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1092 arg2);
-extern uintptr_t _wrap_RoutingModel_GetDeliveryPositions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1093 arg2);
-extern _Bool _wrap_RoutingModel_IsPickup_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1094 arg2);
-extern _Bool _wrap_RoutingModel_IsDelivery_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1095 arg2);
+extern uintptr_t _wrap_RoutingModel_GetPickupPositions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1094 arg2);
+extern uintptr_t _wrap_RoutingModel_GetDeliveryPositions_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1095 arg2);
+extern _Bool _wrap_RoutingModel_IsPickup_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1096 arg2);
+extern _Bool _wrap_RoutingModel_IsDelivery_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1097 arg2);
 extern void _wrap_RoutingModel_SetPickupAndDeliveryPolicyOfAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern void _wrap_RoutingModel_SetPickupAndDeliveryPolicyOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3);
 extern swig_intgo _wrap_RoutingModel_GetPickupAndDeliveryPolicyOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
@@ -3904,31 +3908,31 @@ extern swig_intgo _wrap_TYPE_ADDED_TO_VEHICLE_RoutingModel_constraintsolver_e5a2
 extern swig_intgo _wrap_ADDED_TYPE_REMOVED_FROM_VEHICLE_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_TYPE_ON_VEHICLE_UP_TO_VISIT_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
 extern swig_intgo _wrap_TYPE_SIMULTANEOUSLY_ADDED_AND_REMOVED_RoutingModel_constraintsolver_e5a2167dd134d32d(void);
-extern void _wrap_RoutingModel_SetVisitType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1096 arg2, swig_intgo arg3, swig_intgo arg4);
-extern swig_intgo _wrap_RoutingModel_GetVisitType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1097 arg2);
-extern swig_type_1098 _wrap_RoutingModel_GetSingleNodesOfType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1099 _wrap_RoutingModel_GetPairIndicesOfType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_intgo _wrap_RoutingModel_GetVisitTypePolicy_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1100 arg2);
+extern void _wrap_RoutingModel_SetVisitType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1098 arg2, swig_intgo arg3, swig_intgo arg4);
+extern swig_intgo _wrap_RoutingModel_GetVisitType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1099 arg2);
+extern swig_type_1100 _wrap_RoutingModel_GetSingleNodesOfType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1101 _wrap_RoutingModel_GetPairIndicesOfType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_intgo _wrap_RoutingModel_GetVisitTypePolicy_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1102 arg2);
 extern swig_intgo _wrap_RoutingModel_GetNumberOfVisitTypes_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_RoutingModel_AddRequiredTypeAlternativesWhenAddingType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3);
 extern void _wrap_RoutingModel_AddRequiredTypeAlternativesWhenRemovingType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, uintptr_t arg3);
 extern uintptr_t _wrap_RoutingModel_GetRequiredTypeAlternativesWhenAddingType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern uintptr_t _wrap_RoutingModel_GetRequiredTypeAlternativesWhenRemovingType_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1101 _wrap_RoutingModel_UnperformedPenalty_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1102 arg2);
-extern swig_type_1103 _wrap_RoutingModel_UnperformedPenaltyOrValue_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1104 arg2, swig_type_1105 arg3);
-extern swig_type_1106 _wrap_RoutingModel_GetDepot_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1103 _wrap_RoutingModel_UnperformedPenalty_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1104 arg2);
+extern swig_type_1105 _wrap_RoutingModel_UnperformedPenaltyOrValue_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1106 arg2, swig_type_1107 arg3);
+extern swig_type_1108 _wrap_RoutingModel_GetDepot_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_RoutingModel_SetMaximumNumberOfActiveVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern swig_intgo _wrap_RoutingModel_GetMaximumNumberOfActiveVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_RoutingModel_SetArcCostEvaluatorOfAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern void _wrap_RoutingModel_SetArcCostEvaluatorOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3);
-extern void _wrap_RoutingModel_SetFixedCostOfAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1107 arg2);
-extern void _wrap_RoutingModel_SetFixedCostOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1108 arg2, swig_intgo arg3);
-extern swig_type_1109 _wrap_RoutingModel_GetFixedCostOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern void _wrap_RoutingModel_SetPathEnergyCostOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1110 arg2, swig_type_1111 arg3, swig_type_1112 arg4, swig_intgo arg5);
-extern void _wrap_RoutingModel_SetAmortizedCostFactorsOfAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1113 arg2, swig_type_1114 arg3);
-extern void _wrap_RoutingModel_SetAmortizedCostFactorsOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1115 arg2, swig_type_1116 arg3, swig_intgo arg4);
-extern swig_type_1117 _wrap_RoutingModel_GetAmortizedLinearCostFactorOfVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1118 _wrap_RoutingModel_GetAmortizedQuadraticCostFactorOfVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern void _wrap_RoutingModel_SetFixedCostOfAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1109 arg2);
+extern void _wrap_RoutingModel_SetFixedCostOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1110 arg2, swig_intgo arg3);
+extern swig_type_1111 _wrap_RoutingModel_GetFixedCostOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern void _wrap_RoutingModel_SetPathEnergyCostOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1112 arg2, swig_type_1113 arg3, swig_type_1114 arg4, swig_intgo arg5);
+extern void _wrap_RoutingModel_SetAmortizedCostFactorsOfAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1115 arg2, swig_type_1116 arg3);
+extern void _wrap_RoutingModel_SetAmortizedCostFactorsOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1117 arg2, swig_type_1118 arg3, swig_intgo arg4);
+extern swig_type_1119 _wrap_RoutingModel_GetAmortizedLinearCostFactorOfVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1120 _wrap_RoutingModel_GetAmortizedQuadraticCostFactorOfVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_RoutingModel_SetVehicleUsedWhenEmpty_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, _Bool arg2, swig_intgo arg3);
 extern _Bool _wrap_RoutingModel_IsVehicleUsedWhenEmpty_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern void _wrap_RoutingModel_SetFirstSolutionEvaluator_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
@@ -3938,31 +3942,31 @@ extern void _wrap_RoutingModel_AddAtSolutionCallback__SWIG_0_constraintsolver_e5
 extern void _wrap_RoutingModel_AddAtSolutionCallback__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern void _wrap_RoutingModel_AddVariableMinimizedByFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern void _wrap_RoutingModel_AddVariableMaximizedByFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
-extern void _wrap_RoutingModel_AddWeightedVariableMinimizedByFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1119 arg3);
-extern void _wrap_RoutingModel_AddWeightedVariableMaximizedByFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1120 arg3);
-extern void _wrap_RoutingModel_AddVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1121 arg3);
-extern void _wrap_RoutingModel_AddWeightedVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1122 arg3, swig_type_1123 arg4);
+extern void _wrap_RoutingModel_AddWeightedVariableMinimizedByFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1121 arg3);
+extern void _wrap_RoutingModel_AddWeightedVariableMaximizedByFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1122 arg3);
+extern void _wrap_RoutingModel_AddVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1123 arg3);
+extern void _wrap_RoutingModel_AddWeightedVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1124 arg3, swig_type_1125 arg4);
 extern void _wrap_RoutingModel_CloseModel_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern void _wrap_RoutingModel_CloseModelWithParameters_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1124 arg2);
+extern void _wrap_RoutingModel_CloseModelWithParameters_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1126 arg2);
 extern uintptr_t _wrap_RoutingModel_Solve__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern uintptr_t _wrap_RoutingModel_Solve__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern uintptr_t _wrap_RoutingModel_SolveFromAssignmentWithParameters_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1125 arg3);
-extern uintptr_t _wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1126 arg3, _Bool arg4, uintptr_t arg5);
-extern uintptr_t _wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1127 arg3, _Bool arg4);
-extern uintptr_t _wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1128 arg3, uintptr_t arg4);
-extern uintptr_t _wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1129 arg3);
-extern uintptr_t _wrap_RoutingModel_SolveWithIteratedLocalSearch_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1130 arg2);
+extern uintptr_t _wrap_RoutingModel_SolveFromAssignmentWithParameters_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1127 arg3);
+extern uintptr_t _wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1128 arg3, _Bool arg4, uintptr_t arg5);
+extern uintptr_t _wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1129 arg3, _Bool arg4);
+extern uintptr_t _wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1130 arg3, uintptr_t arg4);
+extern uintptr_t _wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1131 arg3);
+extern uintptr_t _wrap_RoutingModel_SolveWithIteratedLocalSearch_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1132 arg2);
 extern void _wrap_RoutingModel_SetAssignmentFromOtherModelAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, uintptr_t arg4);
-extern swig_type_1131 _wrap_RoutingModel_ComputeLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1132 _wrap_RoutingModel_ObjectiveLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1133 _wrap_RoutingModel_ComputeLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1134 _wrap_RoutingModel_ObjectiveLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_RoutingModel_GetStatus_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern _Bool _wrap_RoutingModel_EnableDeepSerialization_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern uintptr_t _wrap_RoutingModel_ApplyLocks_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1133 arg2);
+extern uintptr_t _wrap_RoutingModel_ApplyLocks_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1135 arg2);
 extern _Bool _wrap_RoutingModel_ApplyLocksToAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, _Bool arg3);
 extern uintptr_t _wrap_RoutingModel_PreAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_MutablePreAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern _Bool _wrap_RoutingModel_WriteAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1134 arg2);
-extern uintptr_t _wrap_RoutingModel_ReadAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1135 arg2);
+extern _Bool _wrap_RoutingModel_WriteAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1136 arg2);
+extern uintptr_t _wrap_RoutingModel_ReadAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1137 arg2);
 extern uintptr_t _wrap_RoutingModel_RestoreAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern uintptr_t _wrap_RoutingModel_ReadAssignmentFromRoutes_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, _Bool arg3);
 extern _Bool _wrap_RoutingModel_RoutesToAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, _Bool arg3, _Bool arg4, uintptr_t arg5);
@@ -3971,44 +3975,44 @@ extern uintptr_t _wrap_RoutingModel_CompactAssignment_constraintsolver_e5a2167dd
 extern uintptr_t _wrap_RoutingModel_CompactAndCheckAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern void _wrap_RoutingModel_AddToAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern void _wrap_RoutingModel_AddIntervalToAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
-extern uintptr_t _wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, double arg2, swig_type_1136 arg3, swig_voidp arg4, _Bool arg5);
-extern uintptr_t _wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, double arg2, swig_type_1137 arg3, swig_voidp arg4);
+extern uintptr_t _wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, double arg2, swig_type_1138 arg3, swig_voidp arg4, _Bool arg5);
+extern uintptr_t _wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, double arg2, swig_type_1139 arg3, swig_voidp arg4);
 extern uintptr_t _wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_2_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, _Bool arg3);
 extern uintptr_t _wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_3_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern void _wrap_RoutingModel_AddLocalSearchFilter_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
-extern swig_type_1138 _wrap_RoutingModel_Start_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1139 _wrap_RoutingModel_End_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern _Bool _wrap_RoutingModel_IsStart_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1140 arg2);
-extern _Bool _wrap_RoutingModel_IsEnd_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1141 arg2);
-extern swig_intgo _wrap_RoutingModel_VehicleIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1142 arg2);
-extern swig_type_1143 _wrap_RoutingModel_Next_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1144 arg3);
+extern swig_type_1140 _wrap_RoutingModel_Start_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1141 _wrap_RoutingModel_End_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern _Bool _wrap_RoutingModel_IsStart_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1142 arg2);
+extern _Bool _wrap_RoutingModel_IsEnd_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1143 arg2);
+extern swig_intgo _wrap_RoutingModel_VehicleIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1144 arg2);
+extern swig_type_1145 _wrap_RoutingModel_Next_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1146 arg3);
 extern _Bool _wrap_RoutingModel_IsVehicleUsed_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3);
 extern uintptr_t _wrap_RoutingModel_Nexts_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_VehicleVars_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingModel_ResourceVars_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern uintptr_t _wrap_RoutingModel_NextVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1145 arg2);
-extern uintptr_t _wrap_RoutingModel_ActiveVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1146 arg2);
+extern uintptr_t _wrap_RoutingModel_NextVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1147 arg2);
+extern uintptr_t _wrap_RoutingModel_ActiveVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1148 arg2);
 extern uintptr_t _wrap_RoutingModel_ActiveVehicleVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern uintptr_t _wrap_RoutingModel_VehicleRouteConsideredVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern uintptr_t _wrap_RoutingModel_VehicleVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1147 arg2);
+extern uintptr_t _wrap_RoutingModel_VehicleVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1149 arg2);
 extern uintptr_t _wrap_RoutingModel_ResourceVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2, swig_intgo arg3);
 extern uintptr_t _wrap_RoutingModel_CostVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1148 _wrap_RoutingModel_GetArcCostForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1149 arg2, swig_type_1150 arg3, swig_type_1151 arg4);
+extern swig_type_1150 _wrap_RoutingModel_GetArcCostForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1151 arg2, swig_type_1152 arg3, swig_type_1153 arg4);
 extern _Bool _wrap_RoutingModel_CostsAreHomogeneousAcrossVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1152 _wrap_RoutingModel_GetHomogeneousCost_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1153 arg2, swig_type_1154 arg3);
-extern swig_type_1155 _wrap_RoutingModel_GetArcCostForFirstSolution_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1156 arg2, swig_type_1157 arg3);
-extern swig_type_1158 _wrap_RoutingModel_GetArcCostForClass_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1159 arg2, swig_type_1160 arg3, swig_type_1161 arg4);
-extern swig_intgo _wrap_RoutingModel_GetCostClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1162 arg2);
+extern swig_type_1154 _wrap_RoutingModel_GetHomogeneousCost_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1155 arg2, swig_type_1156 arg3);
+extern swig_type_1157 _wrap_RoutingModel_GetArcCostForFirstSolution_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1158 arg2, swig_type_1159 arg3);
+extern swig_type_1160 _wrap_RoutingModel_GetArcCostForClass_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1161 arg2, swig_type_1162 arg3, swig_type_1163 arg4);
+extern swig_intgo _wrap_RoutingModel_GetCostClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1164 arg2);
 extern _Bool _wrap_RoutingModel_HasVehicleWithCostClassIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern swig_intgo _wrap_RoutingModel_GetCostClassesCount_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_RoutingModel_GetNonZeroCostClassesCount_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_intgo _wrap_RoutingModel_GetVehicleClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1163 arg2);
+extern swig_intgo _wrap_RoutingModel_GetVehicleClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1165 arg2);
 extern swig_intgo _wrap_RoutingModel_GetVehicleOfClass_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern swig_intgo _wrap_RoutingModel_GetVehicleClassesCount_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1164 _wrap_RoutingModel_GetSameVehicleIndicesOfIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1166 _wrap_RoutingModel_GetSameVehicleIndicesOfIndex_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern uintptr_t _wrap_RoutingModel_GetVehicleTypeContainer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern _Bool _wrap_RoutingModel_ArcIsMoreConstrainedThanArc_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1165 arg2, swig_type_1166 arg3, swig_type_1167 arg4);
-extern swig_type_1168 _wrap_RoutingModel_DebugOutputAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1169 arg3);
+extern _Bool _wrap_RoutingModel_ArcIsMoreConstrainedThanArc_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1167 arg2, swig_type_1168 arg3, swig_type_1169 arg4);
+extern swig_type_1170 _wrap_RoutingModel_DebugOutputAssignment_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_type_1171 arg3);
 extern _Bool _wrap_RoutingModel_CheckIfAssignmentIsFeasible_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, _Bool arg3);
 extern uintptr_t _wrap_RoutingModel_solver_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern _Bool _wrap_RoutingModel_CheckLimit__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
@@ -4020,23 +4024,23 @@ extern uintptr_t _wrap_RoutingModel_GetMutableCPInterrupt_constraintsolver_e5a21
 extern void _wrap_RoutingModel_CancelSearch_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_RoutingModel_Nodes_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern swig_intgo _wrap_RoutingModel_Vehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1170 _wrap_RoutingModel_Size_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1171 _wrap_RoutingModel_GetNumberOfDecisionsInFirstSolution_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1172 arg2);
-extern swig_type_1173 _wrap_RoutingModel_GetNumberOfRejectsInFirstSolution_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1174 arg2);
+extern swig_type_1172 _wrap_RoutingModel_Size_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1173 _wrap_RoutingModel_GetNumberOfDecisionsInFirstSolution_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1174 arg2);
+extern swig_type_1175 _wrap_RoutingModel_GetNumberOfRejectsInFirstSolution_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1176 arg2);
 extern _Bool _wrap_RoutingModel_IsMatchingModel_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern _Bool _wrap_RoutingModel_AreRoutesInterdependent_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_voidp arg2);
 extern uintptr_t _wrap_RoutingModel_MakeGuidedSlackFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, uintptr_t arg3);
 extern uintptr_t _wrap_RoutingModel_MakeSelfDependentDimensionFinalizer_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2);
 extern uintptr_t _wrap_RoutingModel_GetPathsMetadata_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern uintptr_t _wrap_RoutingModel_SolveWithParameters_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1175 arg2);
-extern swig_type_1176 _wrap_RoutingModelVisitor_kLightElement_get_constraintsolver_e5a2167dd134d32d(void);
-extern swig_type_1177 _wrap_RoutingModelVisitor_kLightElement2_get_constraintsolver_e5a2167dd134d32d(void);
-extern swig_type_1178 _wrap_RoutingModelVisitor_kRemoveValues_get_constraintsolver_e5a2167dd134d32d(void);
+extern uintptr_t _wrap_RoutingModel_SolveWithParameters_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1177 arg2);
+extern swig_type_1178 _wrap_RoutingModelVisitor_kLightElement_get_constraintsolver_e5a2167dd134d32d(void);
+extern swig_type_1179 _wrap_RoutingModelVisitor_kLightElement2_get_constraintsolver_e5a2167dd134d32d(void);
+extern swig_type_1180 _wrap_RoutingModelVisitor_kRemoveValues_get_constraintsolver_e5a2167dd134d32d(void);
 extern uintptr_t _wrap_new_RoutingModelVisitor_constraintsolver_e5a2167dd134d32d(void);
 extern void _wrap_delete_RoutingModelVisitor_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1179 _wrap_RoutingModelVisitor_ToString_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
+extern swig_type_1181 _wrap_RoutingModelVisitor_ToString_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern uintptr_t _wrap_new_GlobalVehicleBreaksConstraint_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1180 _wrap_GlobalVehicleBreaksConstraint_ToString_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1182 _wrap_GlobalVehicleBreaksConstraint_ToString_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_GlobalVehicleBreaksConstraint_Post_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_GlobalVehicleBreaksConstraint_InitialPropagateWrapper_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_delete_GlobalVehicleBreaksConstraint_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
@@ -4050,10 +4054,10 @@ extern void _wrap_GlobalVehicleBreaksConstraint_EnqueueDelayedDemon_constraintso
 extern void _wrap_GlobalVehicleBreaksConstraint_EnqueueVar_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base, uintptr_t arg1);
 extern void _wrap_GlobalVehicleBreaksConstraint_ResetActionOnFail_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern void _wrap_GlobalVehicleBreaksConstraint_SetVariableToCleanOnFail_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base, uintptr_t arg1);
-extern swig_type_1181 _wrap_GlobalVehicleBreaksConstraint_Name_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
+extern swig_type_1183 _wrap_GlobalVehicleBreaksConstraint_Name_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern void _wrap_GlobalVehicleBreaksConstraint_SetName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base, uintptr_t arg1);
 extern _Bool _wrap_GlobalVehicleBreaksConstraint_HasName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
-extern swig_type_1182 _wrap_GlobalVehicleBreaksConstraint_BaseName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
+extern swig_type_1184 _wrap_GlobalVehicleBreaksConstraint_BaseName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern void _wrap_delete_TypeRegulationsChecker_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_new_TypeIncompatibilityChecker_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, _Bool arg2);
 extern void _wrap_delete_TypeIncompatibilityChecker_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
@@ -4063,7 +4067,7 @@ extern uintptr_t _wrap_new_TypeRegulationsConstraint_constraintsolver_e5a2167dd1
 extern void _wrap_TypeRegulationsConstraint_Post_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_TypeRegulationsConstraint_InitialPropagateWrapper_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_delete_TypeRegulationsConstraint_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1183 _wrap_TypeRegulationsConstraint_ToString_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
+extern swig_type_1185 _wrap_TypeRegulationsConstraint_ToString_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern void _wrap_TypeRegulationsConstraint_Accept_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base, uintptr_t arg1);
 extern _Bool _wrap_TypeRegulationsConstraint_IsCastConstraint_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern uintptr_t _wrap_TypeRegulationsConstraint_Var_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
@@ -4074,16 +4078,16 @@ extern void _wrap_TypeRegulationsConstraint_EnqueueDelayedDemon_constraintsolver
 extern void _wrap_TypeRegulationsConstraint_EnqueueVar_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base, uintptr_t arg1);
 extern void _wrap_TypeRegulationsConstraint_ResetActionOnFail_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern void _wrap_TypeRegulationsConstraint_SetVariableToCleanOnFail_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base, uintptr_t arg1);
-extern swig_type_1184 _wrap_TypeRegulationsConstraint_Name_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
+extern swig_type_1186 _wrap_TypeRegulationsConstraint_Name_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
 extern void _wrap_TypeRegulationsConstraint_SetName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base, uintptr_t arg1);
 extern _Bool _wrap_TypeRegulationsConstraint_HasName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
-extern swig_type_1185 _wrap_TypeRegulationsConstraint_BaseName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
-extern void _wrap_BoundCost_bound_set_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1186 arg2);
-extern swig_type_1187 _wrap_BoundCost_bound_get_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern void _wrap_BoundCost_cost_set_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1188 arg2);
-extern swig_type_1189 _wrap_BoundCost_cost_get_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1187 _wrap_TypeRegulationsConstraint_BaseName_constraintsolver_e5a2167dd134d32d(uintptr_t _swig_base);
+extern void _wrap_BoundCost_bound_set_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1188 arg2);
+extern swig_type_1189 _wrap_BoundCost_bound_get_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern void _wrap_BoundCost_cost_set_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1190 arg2);
+extern swig_type_1191 _wrap_BoundCost_cost_get_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_new_BoundCost__SWIG_0_constraintsolver_e5a2167dd134d32d(void);
-extern uintptr_t _wrap_new_BoundCost__SWIG_1_constraintsolver_e5a2167dd134d32d(swig_type_1190 arg1, swig_type_1191 arg2);
+extern uintptr_t _wrap_new_BoundCost__SWIG_1_constraintsolver_e5a2167dd134d32d(swig_type_1192 arg1, swig_type_1193 arg2);
 extern void _wrap_delete_BoundCost_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_new_SimpleBoundCosts_constraintsolver_e5a2167dd134d32d(swig_intgo arg1, uintptr_t arg2);
 extern uintptr_t _wrap_SimpleBoundCosts_BoundCost_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
@@ -4091,58 +4095,58 @@ extern swig_intgo _wrap_SimpleBoundCosts_Size_constraintsolver_e5a2167dd134d32d(
 extern void _wrap_delete_SimpleBoundCosts_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_delete_RoutingDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingDimension_Model_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1192 _wrap_RoutingDimension_GetTransitValue_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1193 arg2, swig_type_1194 arg3, swig_type_1195 arg4);
-extern swig_type_1196 _wrap_RoutingDimension_GetTransitValueFromClass_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1197 arg2, swig_type_1198 arg3, swig_type_1199 arg4);
-extern uintptr_t _wrap_RoutingDimension_CumulVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1200 arg2);
-extern uintptr_t _wrap_RoutingDimension_TransitVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1201 arg2);
-extern uintptr_t _wrap_RoutingDimension_FixedTransitVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1202 arg2);
-extern uintptr_t _wrap_RoutingDimension_SlackVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1203 arg2);
+extern swig_type_1194 _wrap_RoutingDimension_GetTransitValue_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1195 arg2, swig_type_1196 arg3, swig_type_1197 arg4);
+extern swig_type_1198 _wrap_RoutingDimension_GetTransitValueFromClass_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1199 arg2, swig_type_1200 arg3, swig_type_1201 arg4);
+extern uintptr_t _wrap_RoutingDimension_CumulVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1202 arg2);
+extern uintptr_t _wrap_RoutingDimension_TransitVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1203 arg2);
+extern uintptr_t _wrap_RoutingDimension_FixedTransitVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1204 arg2);
+extern uintptr_t _wrap_RoutingDimension_SlackVar_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1205 arg2);
 extern uintptr_t _wrap_RoutingDimension_Cumuls_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingDimension_FixedTransits_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingDimension_Transits_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingDimension_Slacks_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern void _wrap_RoutingDimension_SetSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1204 arg2, swig_intgo arg3);
-extern void _wrap_RoutingDimension_SetSpanCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1205 arg2, swig_intgo arg3);
-extern void _wrap_RoutingDimension_SetSpanCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1206 arg2);
-extern void _wrap_RoutingDimension_SetSlackCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1207 arg2, swig_intgo arg3);
-extern void _wrap_RoutingDimension_SetSlackCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1208 arg2);
-extern void _wrap_RoutingDimension_SetGlobalSpanCostCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1209 arg2);
-extern void _wrap_RoutingDimension_SetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1210 arg2, swig_type_1211 arg3, swig_type_1212 arg4);
-extern _Bool _wrap_RoutingDimension_HasCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1213 arg2);
-extern swig_type_1214 _wrap_RoutingDimension_GetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1215 arg2);
-extern swig_type_1216 _wrap_RoutingDimension_GetCumulVarSoftUpperBoundCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1217 arg2);
-extern void _wrap_RoutingDimension_SetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1218 arg2, swig_type_1219 arg3, swig_type_1220 arg4);
-extern _Bool _wrap_RoutingDimension_HasCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1221 arg2);
-extern swig_type_1222 _wrap_RoutingDimension_GetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1223 arg2);
-extern swig_type_1224 _wrap_RoutingDimension_GetCumulVarSoftLowerBoundCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1225 arg2);
+extern void _wrap_RoutingDimension_SetSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1206 arg2, swig_intgo arg3);
+extern void _wrap_RoutingDimension_SetSpanCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1207 arg2, swig_intgo arg3);
+extern void _wrap_RoutingDimension_SetSpanCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1208 arg2);
+extern void _wrap_RoutingDimension_SetSlackCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1209 arg2, swig_intgo arg3);
+extern void _wrap_RoutingDimension_SetSlackCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1210 arg2);
+extern void _wrap_RoutingDimension_SetGlobalSpanCostCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1211 arg2);
+extern void _wrap_RoutingDimension_SetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1212 arg2, swig_type_1213 arg3, swig_type_1214 arg4);
+extern _Bool _wrap_RoutingDimension_HasCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1215 arg2);
+extern swig_type_1216 _wrap_RoutingDimension_GetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1217 arg2);
+extern swig_type_1218 _wrap_RoutingDimension_GetCumulVarSoftUpperBoundCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1219 arg2);
+extern void _wrap_RoutingDimension_SetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1220 arg2, swig_type_1221 arg3, swig_type_1222 arg4);
+extern _Bool _wrap_RoutingDimension_HasCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1223 arg2);
+extern swig_type_1224 _wrap_RoutingDimension_GetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1225 arg2);
+extern swig_type_1226 _wrap_RoutingDimension_GetCumulVarSoftLowerBoundCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1227 arg2);
 extern void _wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_0_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_intgo arg4, swig_intgo arg5);
-extern void _wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_1226 arg4);
-extern void _wrap_RoutingDimension_SetBreakDistanceDurationOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1227 arg2, swig_type_1228 arg3, swig_intgo arg4);
+extern void _wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_1_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_1228 arg4);
+extern void _wrap_RoutingDimension_SetBreakDistanceDurationOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1229 arg2, swig_type_1230 arg3, swig_intgo arg4);
 extern void _wrap_RoutingDimension_InitializeBreaks_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern _Bool _wrap_RoutingDimension_HasBreakConstraints_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern void _wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_2_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_1229 arg4, uintptr_t arg5);
+extern void _wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_2_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3, swig_type_1231 arg4, uintptr_t arg5);
 extern uintptr_t _wrap_RoutingDimension_GetBreakIntervalsOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern swig_intgo _wrap_RoutingDimension_GetPreTravelEvaluatorOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern swig_intgo _wrap_RoutingDimension_GetPostTravelEvaluatorOfVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern uintptr_t _wrap_RoutingDimension_BaseDimension_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1230 _wrap_RoutingDimension_ShortestTransitionSlack_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1231 arg2);
-extern swig_type_1232 _wrap_RoutingDimension_Name_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1232 _wrap_RoutingDimension_ShortestTransitionSlack_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1233 arg2);
+extern swig_type_1234 _wrap_RoutingDimension_Name_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern void _wrap_RoutingDimension_SetPickupToDeliveryLimitFunctionForPair_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3);
 extern _Bool _wrap_RoutingDimension_HasPickupToDeliveryLimits_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern void _wrap_RoutingDimension_AddNodePrecedence_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1233 arg2, swig_type_1234 arg3, swig_type_1235 arg4);
-extern swig_type_1236 _wrap_RoutingDimension_GetSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1237 _wrap_RoutingDimension_GetSpanCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1238 _wrap_RoutingDimension_GetSlackCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern swig_type_1239 _wrap_RoutingDimension_GlobalSpanCostCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1240 _wrap_RoutingDimension_GetGlobalOptimizerOffset_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
-extern swig_type_1241 _wrap_RoutingDimension_GetLocalOptimizerOffsetForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern void _wrap_RoutingDimension_AddNodePrecedence_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1235 arg2, swig_type_1236 arg3, swig_type_1237 arg4);
+extern swig_type_1238 _wrap_RoutingDimension_GetSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1239 _wrap_RoutingDimension_GetSpanCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1240 _wrap_RoutingDimension_GetSlackCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
+extern swig_type_1241 _wrap_RoutingDimension_GlobalSpanCostCoefficient_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1242 _wrap_RoutingDimension_GetGlobalOptimizerOffset_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
+extern swig_type_1243 _wrap_RoutingDimension_GetLocalOptimizerOffsetForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern void _wrap_RoutingDimension_SetSoftSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3);
 extern _Bool _wrap_RoutingDimension_HasSoftSpanUpperBounds_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingDimension_GetSoftSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
 extern void _wrap_RoutingDimension_SetQuadraticCostSoftSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, uintptr_t arg2, swig_intgo arg3);
 extern _Bool _wrap_RoutingDimension_HasQuadraticCostSoftSpanUpperBounds_constraintsolver_e5a2167dd134d32d(uintptr_t arg1);
 extern uintptr_t _wrap_RoutingDimension_GetQuadraticCostSoftSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_intgo arg2);
-extern _Bool _wrap_SolveModelWithSat_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1242 arg2, uintptr_t arg3, uintptr_t arg4);
+extern _Bool _wrap_SolveModelWithSat_constraintsolver_e5a2167dd134d32d(uintptr_t arg1, swig_type_1244 arg2, uintptr_t arg3, uintptr_t arg4);
 #undef intgo
 */
 import "C"
@@ -4178,21 +4182,20 @@ type _ sync.Mutex
 
 
 type swig_goslice struct { arr uintptr; n int; c int }
-func swigCopyIntSlice(intSlice *[]int) []int {
-    newSlice := make([]int, len(*intSlice))
+
+
+func swigCopyintSliceIn(s []int) []C.int {
+    newSlice := make([] C.int, len(s))
     for i := range newSlice {
-        newSlice[i] = (*intSlice)[i]
+        newSlice[i] = C.int(s[i])
     }
-    p := *(*swig_goslice)(unsafe.Pointer(intSlice))
-    Swig_free(p.arr)
     return newSlice
 }
 
-
-func swigCopyintSlice (s *[] int ) [] int {
+func swigCopyintSliceOut(s *[]C.int) []int {
     newSlice := make([] int, len(*s))
     for i := range newSlice {
-        newSlice[i] = (*s)[i]
+        newSlice[i] = int((*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -4201,15 +4204,23 @@ func swigCopyintSlice (s *[] int ) [] int {
 
 
 type intSliceWithPointer struct {
-    slice [] int
+    slice []C.int
     ptr uintptr
 }
 
 
-func swigCopyint64_tSlice (s *[] int64 ) [] int64 {
+func swigCopyint64_tSliceIn(s []int64) []int64 {
+    newSlice := make([] int64, len(s))
+    for i := range newSlice {
+        newSlice[i] = int64(s[i])
+    }
+    return newSlice
+}
+
+func swigCopyint64_tSliceOut(s *[]int64) []int64 {
     newSlice := make([] int64, len(*s))
     for i := range newSlice {
-        newSlice[i] = (*s)[i]
+        newSlice[i] = int64((*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -4218,15 +4229,23 @@ func swigCopyint64_tSlice (s *[] int64 ) [] int64 {
 
 
 type int64_tSliceWithPointer struct {
-    slice [] int64
+    slice []int64
     ptr uintptr
 }
 
 
-func swigCopyRoutingNodeIndexSlice (s *[] int ) [] int {
+func swigCopyRoutingNodeIndexSliceIn(s []int) []C.int {
+    newSlice := make([] C.int, len(s))
+    for i := range newSlice {
+        newSlice[i] = C.int(s[i])
+    }
+    return newSlice
+}
+
+func swigCopyRoutingNodeIndexSliceOut(s *[]C.int) []int {
     newSlice := make([] int, len(*s))
     for i := range newSlice {
-        newSlice[i] = (*s)[i]
+        newSlice[i] = int((*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -4235,15 +4254,23 @@ func swigCopyRoutingNodeIndexSlice (s *[] int ) [] int {
 
 
 type RoutingNodeIndexSliceWithPointer struct {
-    slice [] int
+    slice []C.int
     ptr uintptr
 }
 
 
-func swigCopyRoutingCostClassIndexSlice (s *[] int ) [] int {
+func swigCopyRoutingCostClassIndexSliceIn(s []int) []C.int {
+    newSlice := make([] C.int, len(s))
+    for i := range newSlice {
+        newSlice[i] = C.int(s[i])
+    }
+    return newSlice
+}
+
+func swigCopyRoutingCostClassIndexSliceOut(s *[]C.int) []int {
     newSlice := make([] int, len(*s))
     for i := range newSlice {
-        newSlice[i] = (*s)[i]
+        newSlice[i] = int((*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -4252,15 +4279,23 @@ func swigCopyRoutingCostClassIndexSlice (s *[] int ) [] int {
 
 
 type RoutingCostClassIndexSliceWithPointer struct {
-    slice [] int
+    slice []C.int
     ptr uintptr
 }
 
 
-func swigCopyRoutingDimensionIndexSlice (s *[] int ) [] int {
+func swigCopyRoutingDimensionIndexSliceIn(s []int) []C.int {
+    newSlice := make([] C.int, len(s))
+    for i := range newSlice {
+        newSlice[i] = C.int(s[i])
+    }
+    return newSlice
+}
+
+func swigCopyRoutingDimensionIndexSliceOut(s *[]C.int) []int {
     newSlice := make([] int, len(*s))
     for i := range newSlice {
-        newSlice[i] = (*s)[i]
+        newSlice[i] = int((*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -4269,15 +4304,23 @@ func swigCopyRoutingDimensionIndexSlice (s *[] int ) [] int {
 
 
 type RoutingDimensionIndexSliceWithPointer struct {
-    slice [] int
+    slice []C.int
     ptr uintptr
 }
 
 
-func swigCopyRoutingDisjunctionIndexSlice (s *[] int ) [] int {
+func swigCopyRoutingDisjunctionIndexSliceIn(s []int) []C.int {
+    newSlice := make([] C.int, len(s))
+    for i := range newSlice {
+        newSlice[i] = C.int(s[i])
+    }
+    return newSlice
+}
+
+func swigCopyRoutingDisjunctionIndexSliceOut(s *[]C.int) []int {
     newSlice := make([] int, len(*s))
     for i := range newSlice {
-        newSlice[i] = (*s)[i]
+        newSlice[i] = int((*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -4286,15 +4329,23 @@ func swigCopyRoutingDisjunctionIndexSlice (s *[] int ) [] int {
 
 
 type RoutingDisjunctionIndexSliceWithPointer struct {
-    slice [] int
+    slice []C.int
     ptr uintptr
 }
 
 
-func swigCopyRoutingVehicleClassIndexSlice (s *[] int ) [] int {
+func swigCopyRoutingVehicleClassIndexSliceIn(s []int) []C.int {
+    newSlice := make([] C.int, len(s))
+    for i := range newSlice {
+        newSlice[i] = C.int(s[i])
+    }
+    return newSlice
+}
+
+func swigCopyRoutingVehicleClassIndexSliceOut(s *[]C.int) []int {
     newSlice := make([] int, len(*s))
     for i := range newSlice {
-        newSlice[i] = (*s)[i]
+        newSlice[i] = int((*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -4303,7 +4354,7 @@ func swigCopyRoutingVehicleClassIndexSlice (s *[] int ) [] int {
 
 
 type RoutingVehicleClassIndexSliceWithPointer struct {
-    slice [] int
+    slice []C.int
     ptr uintptr
 }
 
@@ -4536,34 +4587,27 @@ func (arg1 SwigcptrIntTupleSet) Clear() {
 	C._wrap_IntTupleSet_Clear_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
 }
 
-func (arg1 SwigcptrIntTupleSet) Insert__SWIG_0(arg2 [] int) (_swig_ret int) {
+func (arg1 SwigcptrIntTupleSet) Insert__SWIG_0(arg2 []int) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	swig_r = (int)(C._wrap_IntTupleSet_Insert__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1)(unsafe.Pointer(&_swig_i_1))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrIntTupleSet) Insert__SWIG_1(arg2 [] int64) (_swig_ret int) {
+func (arg1 SwigcptrIntTupleSet) Insert__SWIG_1(arg2 []int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	swig_r = (int)(C._wrap_IntTupleSet_Insert__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_2)(unsafe.Pointer(&_swig_i_1))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	return swig_r
 }
@@ -4571,14 +4615,14 @@ func (arg1 SwigcptrIntTupleSet) Insert__SWIG_1(arg2 [] int64) (_swig_ret int) {
 func (p SwigcptrIntTupleSet) Insert(a ...interface{}) int {
 	argc := len(a)
 	if argc == 1 {
-		if _, ok := a[0].([] int); !ok {
+		if _, ok := a[0].([]int); !ok {
 			goto check_1
 		}
-		return p.Insert__SWIG_0(a[0].([] int))
+		return p.Insert__SWIG_0(a[0].([]int))
 	}
 check_1:
 	if argc == 1 {
-		return p.Insert__SWIG_1(a[0].([] int64))
+		return p.Insert__SWIG_1(a[0].([]int64))
 	}
 	panic("No match for overloaded function call")
 }
@@ -4642,34 +4686,27 @@ check_1:
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrIntTupleSet) Contains__SWIG_0(arg2 [] int) (_swig_ret bool) {
+func (arg1 SwigcptrIntTupleSet) Contains__SWIG_0(arg2 []int) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	swig_r = (bool)(C._wrap_IntTupleSet_Contains__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_12)(unsafe.Pointer(&_swig_i_1))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrIntTupleSet) Contains__SWIG_1(arg2 [] int64) (_swig_ret bool) {
+func (arg1 SwigcptrIntTupleSet) Contains__SWIG_1(arg2 []int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	swig_r = (bool)(C._wrap_IntTupleSet_Contains__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_13)(unsafe.Pointer(&_swig_i_1))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	return swig_r
 }
@@ -4677,14 +4714,14 @@ func (arg1 SwigcptrIntTupleSet) Contains__SWIG_1(arg2 [] int64) (_swig_ret bool)
 func (p SwigcptrIntTupleSet) Contains(a ...interface{}) bool {
 	argc := len(a)
 	if argc == 1 {
-		if _, ok := a[0].([] int); !ok {
+		if _, ok := a[0].([]int); !ok {
 			goto check_1
 		}
-		return p.Contains__SWIG_0(a[0].([] int))
+		return p.Contains__SWIG_0(a[0].([]int))
 	}
 check_1:
 	if argc == 1 {
-		return p.Contains__SWIG_1(a[0].([] int64))
+		return p.Contains__SWIG_1(a[0].([]int64))
 	}
 	panic("No match for overloaded function call")
 }
@@ -7179,19 +7216,14 @@ func (arg1 SwigcptrSolver) MakeIntVar__SWIG_0(arg2 int64, arg3 int64, arg4 strin
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeIntVar__SWIG_1(arg2 [] int64, arg3 string) (_swig_ret IntVar) {
+func (arg1 SwigcptrSolver) MakeIntVar__SWIG_1(arg2 []int64, arg3 string) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_Solver_MakeIntVar__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_70)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_71)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
@@ -7199,17 +7231,15 @@ func (arg1 SwigcptrSolver) MakeIntVar__SWIG_1(arg2 [] int64, arg3 string) (_swig
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeIntVar__SWIG_2(arg2 [] int, arg3 string) (_swig_ret IntVar) {
+func (arg1 SwigcptrSolver) MakeIntVar__SWIG_2(arg2 []int, arg3 string) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	_swig_i_2 := arg3
 	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_Solver_MakeIntVar__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_72)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_73)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -7228,32 +7258,25 @@ func (arg1 SwigcptrSolver) MakeIntVar__SWIG_3(arg2 int64, arg3 int64) (_swig_ret
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeIntVar__SWIG_4(arg2 [] int64) (_swig_ret IntVar) {
+func (arg1 SwigcptrSolver) MakeIntVar__SWIG_4(arg2 []int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_Solver_MakeIntVar__SWIG_4_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_76)(unsafe.Pointer(&_swig_i_1)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeIntVar__SWIG_5(arg2 [] int) (_swig_ret IntVar) {
+func (arg1 SwigcptrSolver) MakeIntVar__SWIG_5(arg2 []int) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_Solver_MakeIntVar__SWIG_5_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_77)(unsafe.Pointer(&_swig_i_1)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -7263,33 +7286,33 @@ func (arg1 SwigcptrSolver) MakeIntVar__SWIG_5(arg2 [] int) (_swig_ret IntVar) {
 func (p SwigcptrSolver) MakeIntVar(a ...interface{}) IntVar {
 	argc := len(a)
 	if argc == 1 {
-		if _, ok := a[0].([] int64); !ok {
+		if _, ok := a[0].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeIntVar__SWIG_4(a[0].([] int64))
+		return p.MakeIntVar__SWIG_4(a[0].([]int64))
 	}
 check_1:
 	if argc == 1 {
-		return p.MakeIntVar__SWIG_5(a[0].([] int))
+		return p.MakeIntVar__SWIG_5(a[0].([]int))
 	}
 	if argc == 2 {
-		if _, ok := a[0].([] int64); !ok {
+		if _, ok := a[0].([]int64); !ok {
 			goto check_3
 		}
 		if _, ok := a[1].(string); !ok {
 			goto check_3
 		}
-		return p.MakeIntVar__SWIG_1(a[0].([] int64), a[1].(string))
+		return p.MakeIntVar__SWIG_1(a[0].([]int64), a[1].(string))
 	}
 check_3:
 	if argc == 2 {
-		if _, ok := a[0].([] int); !ok {
+		if _, ok := a[0].([]int); !ok {
 			goto check_4
 		}
 		if _, ok := a[1].(string); !ok {
 			goto check_4
 		}
-		return p.MakeIntVar__SWIG_2(a[0].([] int), a[1].(string))
+		return p.MakeIntVar__SWIG_2(a[0].([]int), a[1].(string))
 	}
 check_4:
 	if argc == 2 {
@@ -7405,34 +7428,27 @@ check_2:
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeScalProd__SWIG_0(arg2 IntVarVector, arg3 [] int64) (_swig_ret IntExpr) {
+func (arg1 SwigcptrSolver) MakeScalProd__SWIG_0(arg2 IntVarVector, arg3 []int64) (_swig_ret IntExpr) {
 	var swig_r IntExpr
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (IntExpr)(SwigcptrIntExpr(C._wrap_Solver_MakeScalProd__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_83)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeScalProd__SWIG_1(arg2 IntVarVector, arg3 [] int) (_swig_ret IntExpr) {
+func (arg1 SwigcptrSolver) MakeScalProd__SWIG_1(arg2 IntVarVector, arg3 []int) (_swig_ret IntExpr) {
 	var swig_r IntExpr
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	swig_r = (IntExpr)(SwigcptrIntExpr(C._wrap_Solver_MakeScalProd__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_84)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -7442,14 +7458,14 @@ func (arg1 SwigcptrSolver) MakeScalProd__SWIG_1(arg2 IntVarVector, arg3 [] int) 
 func (p SwigcptrSolver) MakeScalProd(a ...interface{}) IntExpr {
 	argc := len(a)
 	if argc == 2 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeScalProd__SWIG_0(a[0].(IntVarVector), a[1].([] int64))
+		return p.MakeScalProd__SWIG_0(a[0].(IntVarVector), a[1].([]int64))
 	}
 check_1:
 	if argc == 2 {
-		return p.MakeScalProd__SWIG_1(a[0].(IntVarVector), a[1].([] int))
+		return p.MakeScalProd__SWIG_1(a[0].(IntVarVector), a[1].([]int))
 	}
 	panic("No match for overloaded function call")
 }
@@ -7586,34 +7602,27 @@ func (arg1 SwigcptrSolver) MakePower(arg2 IntExpr, arg3 int64) (_swig_ret IntExp
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeElement__SWIG_0(arg2 [] int64, arg3 IntVar) (_swig_ret IntExpr) {
+func (arg1 SwigcptrSolver) MakeElement__SWIG_0(arg2 []int64, arg3 IntVar) (_swig_ret IntExpr) {
 	var swig_r IntExpr
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
 	swig_r = (IntExpr)(SwigcptrIntExpr(C._wrap_Solver_MakeElement__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_89)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeElement__SWIG_1(arg2 [] int, arg3 IntVar) (_swig_ret IntExpr) {
+func (arg1 SwigcptrSolver) MakeElement__SWIG_1(arg2 []int, arg3 IntVar) (_swig_ret IntExpr) {
 	var swig_r IntExpr
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	_swig_i_2 := getSwigcptr(arg3)
 	swig_r = (IntExpr)(SwigcptrIntExpr(C._wrap_Solver_MakeElement__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_90)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -7661,17 +7670,17 @@ func (arg1 SwigcptrSolver) MakeElement__SWIG_4(arg2 IntVarVector, arg3 IntVar) (
 func (p SwigcptrSolver) MakeElement(a ...interface{}) IntExpr {
 	argc := len(a)
 	if argc == 2 {
-		if _, ok := a[0].([] int64); !ok {
+		if _, ok := a[0].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeElement__SWIG_0(a[0].([] int64), a[1].(IntVar))
+		return p.MakeElement__SWIG_0(a[0].([]int64), a[1].(IntVar))
 	}
 check_1:
 	if argc == 2 {
-		if _, ok := a[0].([] int); !ok {
+		if _, ok := a[0].([]int); !ok {
 			goto check_2
 		}
-		return p.MakeElement__SWIG_1(a[0].([] int), a[1].(IntVar))
+		return p.MakeElement__SWIG_1(a[0].([]int), a[1].(IntVar))
 	}
 check_2:
 	if argc == 2 {
@@ -8482,72 +8491,58 @@ check_1:
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_0(arg2 IntVarVector, arg3 [] int64, arg4 int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_0(arg2 IntVarVector, arg3 []int64, arg4 int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdEquality__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_124)(unsafe.Pointer(&_swig_i_2)), C.swig_type_125(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_1(arg2 IntVarVector, arg3 [] int, arg4 int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_1(arg2 IntVarVector, arg3 []int, arg4 int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := arg4
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdEquality__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_126)(unsafe.Pointer(&_swig_i_2)), C.swig_type_127(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_2(arg2 IntVarVector, arg3 [] int64, arg4 IntVar) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_2(arg2 IntVarVector, arg3 []int64, arg4 IntVar) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdEquality__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_128)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_3(arg2 IntVarVector, arg3 [] int, arg4 IntVar) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_3(arg2 IntVarVector, arg3 []int, arg4 IntVar) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdEquality__SWIG_3_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_129)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -8557,68 +8552,61 @@ func (arg1 SwigcptrSolver) MakeScalProdEquality__SWIG_3(arg2 IntVarVector, arg3 
 func (p SwigcptrSolver) MakeScalProdEquality(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
 		if _, ok := a[2].(SwigcptrIntVar); !ok {
 			goto check_1
 		}
-		return p.MakeScalProdEquality__SWIG_2(a[0].(IntVarVector), a[1].([] int64), a[2].(IntVar))
+		return p.MakeScalProdEquality__SWIG_2(a[0].(IntVarVector), a[1].([]int64), a[2].(IntVar))
 	}
 check_1:
 	if argc == 3 {
-		if _, ok := a[1].([] int); !ok {
+		if _, ok := a[1].([]int); !ok {
 			goto check_2
 		}
 		if _, ok := a[2].(SwigcptrIntVar); !ok {
 			goto check_2
 		}
-		return p.MakeScalProdEquality__SWIG_3(a[0].(IntVarVector), a[1].([] int), a[2].(IntVar))
+		return p.MakeScalProdEquality__SWIG_3(a[0].(IntVarVector), a[1].([]int), a[2].(IntVar))
 	}
 check_2:
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_3
 		}
-		return p.MakeScalProdEquality__SWIG_0(a[0].(IntVarVector), a[1].([] int64), a[2].(int64))
+		return p.MakeScalProdEquality__SWIG_0(a[0].(IntVarVector), a[1].([]int64), a[2].(int64))
 	}
 check_3:
 	if argc == 3 {
-		return p.MakeScalProdEquality__SWIG_1(a[0].(IntVarVector), a[1].([] int), a[2].(int64))
+		return p.MakeScalProdEquality__SWIG_1(a[0].(IntVarVector), a[1].([]int), a[2].(int64))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdGreaterOrEqual__SWIG_0(arg2 IntVarVector, arg3 [] int64, arg4 int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdGreaterOrEqual__SWIG_0(arg2 IntVarVector, arg3 []int64, arg4 int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdGreaterOrEqual__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_130)(unsafe.Pointer(&_swig_i_2)), C.swig_type_131(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdGreaterOrEqual__SWIG_1(arg2 IntVarVector, arg3 [] int, arg4 int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdGreaterOrEqual__SWIG_1(arg2 IntVarVector, arg3 []int, arg4 int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := arg4
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdGreaterOrEqual__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_132)(unsafe.Pointer(&_swig_i_2)), C.swig_type_133(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -8628,48 +8616,41 @@ func (arg1 SwigcptrSolver) MakeScalProdGreaterOrEqual__SWIG_1(arg2 IntVarVector,
 func (p SwigcptrSolver) MakeScalProdGreaterOrEqual(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeScalProdGreaterOrEqual__SWIG_0(a[0].(IntVarVector), a[1].([] int64), a[2].(int64))
+		return p.MakeScalProdGreaterOrEqual__SWIG_0(a[0].(IntVarVector), a[1].([]int64), a[2].(int64))
 	}
 check_1:
 	if argc == 3 {
-		return p.MakeScalProdGreaterOrEqual__SWIG_1(a[0].(IntVarVector), a[1].([] int), a[2].(int64))
+		return p.MakeScalProdGreaterOrEqual__SWIG_1(a[0].(IntVarVector), a[1].([]int), a[2].(int64))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdLessOrEqual__SWIG_0(arg2 IntVarVector, arg3 [] int64, arg4 int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdLessOrEqual__SWIG_0(arg2 IntVarVector, arg3 []int64, arg4 int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdLessOrEqual__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_134)(unsafe.Pointer(&_swig_i_2)), C.swig_type_135(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeScalProdLessOrEqual__SWIG_1(arg2 IntVarVector, arg3 [] int, arg4 int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeScalProdLessOrEqual__SWIG_1(arg2 IntVarVector, arg3 []int, arg4 int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := arg4
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeScalProdLessOrEqual__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_136)(unsafe.Pointer(&_swig_i_2)), C.swig_type_137(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -8679,14 +8660,14 @@ func (arg1 SwigcptrSolver) MakeScalProdLessOrEqual__SWIG_1(arg2 IntVarVector, ar
 func (p SwigcptrSolver) MakeScalProdLessOrEqual(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeScalProdLessOrEqual__SWIG_0(a[0].(IntVarVector), a[1].([] int64), a[2].(int64))
+		return p.MakeScalProdLessOrEqual__SWIG_0(a[0].(IntVarVector), a[1].([]int64), a[2].(int64))
 	}
 check_1:
 	if argc == 3 {
-		return p.MakeScalProdLessOrEqual__SWIG_1(a[0].(IntVarVector), a[1].([] int), a[2].(int64))
+		return p.MakeScalProdLessOrEqual__SWIG_1(a[0].(IntVarVector), a[1].([]int), a[2].(int64))
 	}
 	panic("No match for overloaded function call")
 }
@@ -8709,36 +8690,29 @@ func (arg1 SwigcptrSolver) MakeMaxEquality(arg2 IntVarVector, arg3 IntVar) (_swi
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeElementEquality__SWIG_0(arg2 [] int64, arg3 IntVar, arg4 IntVar) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeElementEquality__SWIG_0(arg2 []int64, arg3 IntVar, arg4 IntVar) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeElementEquality__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_138)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeElementEquality__SWIG_1(arg2 [] int, arg3 IntVar, arg4 IntVar) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeElementEquality__SWIG_1(arg2 []int, arg3 IntVar, arg4 IntVar) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	_swig_i_2 := getSwigcptr(arg3)
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeElementEquality__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_139)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -8768,23 +8742,23 @@ func (arg1 SwigcptrSolver) MakeElementEquality__SWIG_3(arg2 IntVarVector, arg3 I
 func (p SwigcptrSolver) MakeElementEquality(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 3 {
-		if _, ok := a[0].([] int64); !ok {
+		if _, ok := a[0].([]int64); !ok {
 			goto check_1
 		}
 		if _, ok := a[2].(SwigcptrIntVar); !ok {
 			goto check_1
 		}
-		return p.MakeElementEquality__SWIG_0(a[0].([] int64), a[1].(IntVar), a[2].(IntVar))
+		return p.MakeElementEquality__SWIG_0(a[0].([]int64), a[1].(IntVar), a[2].(IntVar))
 	}
 check_1:
 	if argc == 3 {
-		if _, ok := a[0].([] int); !ok {
+		if _, ok := a[0].([]int); !ok {
 			goto check_2
 		}
 		if _, ok := a[2].(SwigcptrIntVar); !ok {
 			goto check_2
 		}
-		return p.MakeElementEquality__SWIG_1(a[0].([] int), a[1].(IntVar), a[2].(IntVar))
+		return p.MakeElementEquality__SWIG_1(a[0].([]int), a[1].(IntVar), a[2].(IntVar))
 	}
 check_2:
 	if argc == 3 {
@@ -8884,34 +8858,27 @@ func (arg1 SwigcptrSolver) MakeIsBetweenVar(arg2 IntExpr, arg3 int64, arg4 int64
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeMemberCt__SWIG_0(arg2 IntExpr, arg3 [] int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeMemberCt__SWIG_0(arg2 IntExpr, arg3 []int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeMemberCt__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_150)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeMemberCt__SWIG_1(arg2 IntExpr, arg3 [] int) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeMemberCt__SWIG_1(arg2 IntExpr, arg3 []int) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeMemberCt__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_151)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -8921,53 +8888,46 @@ func (arg1 SwigcptrSolver) MakeMemberCt__SWIG_1(arg2 IntExpr, arg3 [] int) (_swi
 func (p SwigcptrSolver) MakeMemberCt(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 2 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeMemberCt__SWIG_0(a[0].(IntExpr), a[1].([] int64))
+		return p.MakeMemberCt__SWIG_0(a[0].(IntExpr), a[1].([]int64))
 	}
 check_1:
 	if argc == 2 {
-		return p.MakeMemberCt__SWIG_1(a[0].(IntExpr), a[1].([] int))
+		return p.MakeMemberCt__SWIG_1(a[0].(IntExpr), a[1].([]int))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_0(arg2 IntExpr, arg3 [] int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_0(arg2 IntExpr, arg3 []int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeNotMemberCt__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_152)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_1(arg2 IntExpr, arg3 [] int) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_1(arg2 IntExpr, arg3 []int) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeNotMemberCt__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_153)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_2(arg2 IntExpr, arg3 [] int64, arg4 [] int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_2(arg2 IntExpr, arg3 []int64, arg4 []int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
@@ -8983,18 +8943,24 @@ func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_2(arg2 IntExpr, arg3 [] int64, 
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_3(arg2 IntExpr, arg3 [] int, arg4 [] int) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_3(arg2 IntExpr, arg3 []int, arg4 []int) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	_swig_i_2 := arg3
-	_swig_i_3 := arg4
+	var _swig_i_2 []C.int
+
+    _swig_i_2 = swigCopyintSliceIn(arg3)
+
+	var _swig_i_3 []C.int
+
+    _swig_i_3 = swigCopyintSliceIn(arg4)
+
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeNotMemberCt__SWIG_3_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_156)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_157)(unsafe.Pointer(&_swig_i_3)))))
 	if Swig_escape_always_false {
-		Swig_escape_val = arg3
+		Swig_escape_val = _swig_i_2
 	}
 	if Swig_escape_always_false {
-		Swig_escape_val = arg4
+		Swig_escape_val = _swig_i_3
 	}
 	return swig_r
 }
@@ -9002,61 +8968,54 @@ func (arg1 SwigcptrSolver) MakeNotMemberCt__SWIG_3(arg2 IntExpr, arg3 [] int, ar
 func (p SwigcptrSolver) MakeNotMemberCt(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 2 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeNotMemberCt__SWIG_0(a[0].(IntExpr), a[1].([] int64))
+		return p.MakeNotMemberCt__SWIG_0(a[0].(IntExpr), a[1].([]int64))
 	}
 check_1:
 	if argc == 2 {
-		return p.MakeNotMemberCt__SWIG_1(a[0].(IntExpr), a[1].([] int))
+		return p.MakeNotMemberCt__SWIG_1(a[0].(IntExpr), a[1].([]int))
 	}
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_3
 		}
-		if _, ok := a[2].([] int64); !ok {
+		if _, ok := a[2].([]int64); !ok {
 			goto check_3
 		}
-		return p.MakeNotMemberCt__SWIG_2(a[0].(IntExpr), a[1].([] int64), a[2].([] int64))
+		return p.MakeNotMemberCt__SWIG_2(a[0].(IntExpr), a[1].([]int64), a[2].([]int64))
 	}
 check_3:
 	if argc == 3 {
-		return p.MakeNotMemberCt__SWIG_3(a[0].(IntExpr), a[1].([] int), a[2].([] int))
+		return p.MakeNotMemberCt__SWIG_3(a[0].(IntExpr), a[1].([]int), a[2].([]int))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeIsMemberCt__SWIG_0(arg2 IntExpr, arg3 [] int64, arg4 IntVar) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeIsMemberCt__SWIG_0(arg2 IntExpr, arg3 []int64, arg4 IntVar) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeIsMemberCt__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_158)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeIsMemberCt__SWIG_1(arg2 IntExpr, arg3 [] int, arg4 IntVar) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeIsMemberCt__SWIG_1(arg2 IntExpr, arg3 []int, arg4 IntVar) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeIsMemberCt__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_159)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -9066,46 +9025,39 @@ func (arg1 SwigcptrSolver) MakeIsMemberCt__SWIG_1(arg2 IntExpr, arg3 [] int, arg
 func (p SwigcptrSolver) MakeIsMemberCt(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeIsMemberCt__SWIG_0(a[0].(IntExpr), a[1].([] int64), a[2].(IntVar))
+		return p.MakeIsMemberCt__SWIG_0(a[0].(IntExpr), a[1].([]int64), a[2].(IntVar))
 	}
 check_1:
 	if argc == 3 {
-		return p.MakeIsMemberCt__SWIG_1(a[0].(IntExpr), a[1].([] int), a[2].(IntVar))
+		return p.MakeIsMemberCt__SWIG_1(a[0].(IntExpr), a[1].([]int), a[2].(IntVar))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeIsMemberVar__SWIG_0(arg2 IntExpr, arg3 [] int64) (_swig_ret IntVar) {
+func (arg1 SwigcptrSolver) MakeIsMemberVar__SWIG_0(arg2 IntExpr, arg3 []int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_Solver_MakeIsMemberVar__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_160)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeIsMemberVar__SWIG_1(arg2 IntExpr, arg3 [] int) (_swig_ret IntVar) {
+func (arg1 SwigcptrSolver) MakeIsMemberVar__SWIG_1(arg2 IntExpr, arg3 []int) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_Solver_MakeIsMemberVar__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_161)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -9115,14 +9067,14 @@ func (arg1 SwigcptrSolver) MakeIsMemberVar__SWIG_1(arg2 IntExpr, arg3 [] int) (_
 func (p SwigcptrSolver) MakeIsMemberVar(a ...interface{}) IntVar {
 	argc := len(a)
 	if argc == 2 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeIsMemberVar__SWIG_0(a[0].(IntExpr), a[1].([] int64))
+		return p.MakeIsMemberVar__SWIG_0(a[0].(IntExpr), a[1].([]int64))
 	}
 check_1:
 	if argc == 2 {
-		return p.MakeIsMemberVar__SWIG_1(a[0].(IntExpr), a[1].([] int))
+		return p.MakeIsMemberVar__SWIG_1(a[0].(IntExpr), a[1].([]int))
 	}
 	panic("No match for overloaded function call")
 }
@@ -9162,36 +9114,29 @@ check_1:
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeDistribute__SWIG_0(arg2 IntVarVector, arg3 [] int64, arg4 IntVarVector) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeDistribute__SWIG_0(arg2 IntVarVector, arg3 []int64, arg4 IntVarVector) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeDistribute__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_165)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeDistribute__SWIG_1(arg2 IntVarVector, arg3 [] int, arg4 IntVarVector) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeDistribute__SWIG_1(arg2 IntVarVector, arg3 []int, arg4 IntVarVector) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := getSwigcptr(arg4)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeDistribute__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_166)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -9218,49 +9163,35 @@ func (arg1 SwigcptrSolver) MakeDistribute__SWIG_3(arg2 IntVarVector, arg3 int64,
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeDistribute__SWIG_4(arg2 IntVarVector, arg3 [] int64, arg4 [] int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeDistribute__SWIG_4(arg2 IntVarVector, arg3 []int64, arg4 []int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
-	var _swig_i_3 [] int64
-
-    _swig_i_3 = arg4
-
+	_swig_i_2 := arg3
+	_swig_i_3 := arg4
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeDistribute__SWIG_4_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_170)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_171)(unsafe.Pointer(&_swig_i_3)))))
-
-
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_3
+		Swig_escape_val = arg4
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeDistribute__SWIG_5(arg2 IntVarVector, arg3 [] int, arg4 [] int) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeDistribute__SWIG_5(arg2 IntVarVector, arg3 []int, arg4 []int) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyintSliceIn(arg4)
 
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeDistribute__SWIG_5_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_172)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_173)(unsafe.Pointer(&_swig_i_3)))))
-
-
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -9270,64 +9201,43 @@ func (arg1 SwigcptrSolver) MakeDistribute__SWIG_5(arg2 IntVarVector, arg3 [] int
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeDistribute__SWIG_6(arg2 IntVarVector, arg3 [] int64, arg4 [] int64, arg5 [] int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeDistribute__SWIG_6(arg2 IntVarVector, arg3 []int64, arg4 []int64, arg5 []int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
-	var _swig_i_3 [] int64
-
-    _swig_i_3 = arg4
-
-	var _swig_i_4 [] int64
-
-    _swig_i_4 = arg5
-
+	_swig_i_2 := arg3
+	_swig_i_3 := arg4
+	_swig_i_4 := arg5
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeDistribute__SWIG_6_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_174)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_175)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_176)(unsafe.Pointer(&_swig_i_4)))))
-
-
-
-
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_3
+		Swig_escape_val = arg4
 	}
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_4
+		Swig_escape_val = arg5
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeDistribute__SWIG_7(arg2 IntVarVector, arg3 [] int, arg4 [] int, arg5 [] int) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeDistribute__SWIG_7(arg2 IntVarVector, arg3 []int, arg4 []int, arg5 []int) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyintSliceIn(arg4)
 
-	var _swig_i_4 [] int
+	var _swig_i_4 []C.int
 
-    _swig_i_4 = arg5
+    _swig_i_4 = swigCopyintSliceIn(arg5)
 
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeDistribute__SWIG_7_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_177)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_178)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_179)(unsafe.Pointer(&_swig_i_4)))))
-
-
-
-
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -9346,62 +9256,62 @@ func (p SwigcptrSolver) MakeDistribute(a ...interface{}) Constraint {
 		return p.MakeDistribute__SWIG_2(a[0].(IntVarVector), a[1].(IntVarVector))
 	}
 	if argc == 3 {
-		if _, ok := a[1].([] int); !ok {
+		if _, ok := a[1].([]int); !ok {
 			goto check_2
 		}
 		if _, ok := a[2].(IntVarVector); !ok {
 			goto check_2
 		}
-		return p.MakeDistribute__SWIG_1(a[0].(IntVarVector), a[1].([] int), a[2].(IntVarVector))
+		return p.MakeDistribute__SWIG_1(a[0].(IntVarVector), a[1].([]int), a[2].(IntVarVector))
 	}
 check_2:
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_3
 		}
 		if _, ok := a[2].(IntVarVector); !ok {
 			goto check_3
 		}
-		return p.MakeDistribute__SWIG_0(a[0].(IntVarVector), a[1].([] int64), a[2].(IntVarVector))
+		return p.MakeDistribute__SWIG_0(a[0].(IntVarVector), a[1].([]int64), a[2].(IntVarVector))
 	}
 check_3:
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_4
 		}
-		if _, ok := a[2].([] int64); !ok {
+		if _, ok := a[2].([]int64); !ok {
 			goto check_4
 		}
-		return p.MakeDistribute__SWIG_4(a[0].(IntVarVector), a[1].([] int64), a[2].([] int64))
+		return p.MakeDistribute__SWIG_4(a[0].(IntVarVector), a[1].([]int64), a[2].([]int64))
 	}
 check_4:
 	if argc == 3 {
-		return p.MakeDistribute__SWIG_5(a[0].(IntVarVector), a[1].([] int), a[2].([] int))
+		return p.MakeDistribute__SWIG_5(a[0].(IntVarVector), a[1].([]int), a[2].([]int))
 	}
 	if argc == 4 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_6
 		}
-		if _, ok := a[2].([] int64); !ok {
+		if _, ok := a[2].([]int64); !ok {
 			goto check_6
 		}
-		if _, ok := a[3].([] int64); !ok {
+		if _, ok := a[3].([]int64); !ok {
 			goto check_6
 		}
-		return p.MakeDistribute__SWIG_6(a[0].(IntVarVector), a[1].([] int64), a[2].([] int64), a[3].([] int64))
+		return p.MakeDistribute__SWIG_6(a[0].(IntVarVector), a[1].([]int64), a[2].([]int64), a[3].([]int64))
 	}
 check_6:
 	if argc == 4 {
-		if _, ok := a[1].([] int); !ok {
+		if _, ok := a[1].([]int); !ok {
 			goto check_7
 		}
-		if _, ok := a[2].([] int); !ok {
+		if _, ok := a[2].([]int); !ok {
 			goto check_7
 		}
-		if _, ok := a[3].([] int); !ok {
+		if _, ok := a[3].([]int); !ok {
 			goto check_7
 		}
-		return p.MakeDistribute__SWIG_7(a[0].(IntVarVector), a[1].([] int), a[2].([] int), a[3].([] int))
+		return p.MakeDistribute__SWIG_7(a[0].(IntVarVector), a[1].([]int), a[2].([]int), a[3].([]int))
 	}
 check_7:
 	if argc == 4 {
@@ -9484,7 +9394,7 @@ func (arg1 SwigcptrSolver) MakeLexicalLessOrEqual(arg2 IntVarVector, arg3 IntVar
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeLexicalLessOrEqualWithOffsets(arg2 IntVarVector, arg3 IntVarVector, arg4 [] int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeLexicalLessOrEqualWithOffsets(arg2 IntVarVector, arg3 IntVarVector, arg4 []int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
@@ -9497,7 +9407,7 @@ func (arg1 SwigcptrSolver) MakeLexicalLessOrEqualWithOffsets(arg2 IntVarVector, 
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeIsLexicalLessOrEqualWithOffsetsCt(arg2 IntVarVector, arg3 IntVarVector, arg4 [] int64, arg5 IntVar) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeIsLexicalLessOrEqualWithOffsetsCt(arg2 IntVarVector, arg3 IntVarVector, arg4 []int64, arg5 IntVar) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
@@ -9680,7 +9590,7 @@ check_1:
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakePathConnected(arg2 IntVarVector, arg3 [] int64, arg4 [] int64, arg5 IntVarVector) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakePathConnected(arg2 IntVarVector, arg3 []int64, arg4 []int64, arg5 IntVarVector) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
@@ -9715,38 +9625,31 @@ func (arg1 SwigcptrSolver) MakeAllowedAssignments(arg2 IntVarVector, arg3 IntTup
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeTransitionConstraint__SWIG_0(arg2 IntVarVector, arg3 IntTupleSet, arg4 int64, arg5 [] int64) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeTransitionConstraint__SWIG_0(arg2 IntVarVector, arg3 IntTupleSet, arg4 int64, arg5 []int64) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := getSwigcptr(arg3)
 	_swig_i_3 := arg4
-	var _swig_i_4 [] int64
-
-    _swig_i_4 = arg5
-
+	_swig_i_4 := arg5
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeTransitionConstraint__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), C.swig_type_187(_swig_i_3), *(*C.swig_type_188)(unsafe.Pointer(&_swig_i_4)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_4
+		Swig_escape_val = arg5
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeTransitionConstraint__SWIG_1(arg2 IntVarVector, arg3 IntTupleSet, arg4 int64, arg5 [] int) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeTransitionConstraint__SWIG_1(arg2 IntVarVector, arg3 IntTupleSet, arg4 int64, arg5 []int) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := getSwigcptr(arg3)
 	_swig_i_3 := arg4
-	var _swig_i_4 [] int
+	var _swig_i_4 []C.int
 
-    _swig_i_4 = arg5
+    _swig_i_4 = swigCopyintSliceIn(arg5)
 
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeTransitionConstraint__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), C.swig_type_189(_swig_i_3), *(*C.swig_type_190)(unsafe.Pointer(&_swig_i_4)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_4
 	}
@@ -9756,14 +9659,14 @@ func (arg1 SwigcptrSolver) MakeTransitionConstraint__SWIG_1(arg2 IntVarVector, a
 func (p SwigcptrSolver) MakeTransitionConstraint(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 4 {
-		if _, ok := a[3].([] int64); !ok {
+		if _, ok := a[3].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeTransitionConstraint__SWIG_0(a[0].(IntVarVector), a[1].(IntTupleSet), a[2].(int64), a[3].([] int64))
+		return p.MakeTransitionConstraint__SWIG_0(a[0].(IntVarVector), a[1].(IntTupleSet), a[2].(int64), a[3].([]int64))
 	}
 check_1:
 	if argc == 4 {
-		return p.MakeTransitionConstraint__SWIG_1(a[0].(IntVarVector), a[1].(IntTupleSet), a[2].(int64), a[3].([] int))
+		return p.MakeTransitionConstraint__SWIG_1(a[0].(IntVarVector), a[1].(IntTupleSet), a[2].(int64), a[3].([]int))
 	}
 	panic("No match for overloaded function call")
 }
@@ -10168,21 +10071,16 @@ func (arg1 SwigcptrSolver) MakeStrictDisjunctiveConstraint(arg2 IntervalVarVecto
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeCumulative__SWIG_0(arg2 IntervalVarVector, arg3 [] int64, arg4 int64, arg5 string) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeCumulative__SWIG_0(arg2 IntervalVarVector, arg3 []int64, arg4 int64, arg5 string) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeCumulative__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_227)(unsafe.Pointer(&_swig_i_2)), C.swig_type_228(_swig_i_3), *(*C.swig_type_229)(unsafe.Pointer(&_swig_i_4)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	if Swig_escape_always_false {
 		Swig_escape_val = arg5
@@ -10190,19 +10088,17 @@ func (arg1 SwigcptrSolver) MakeCumulative__SWIG_0(arg2 IntervalVarVector, arg3 [
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeCumulative__SWIG_1(arg2 IntervalVarVector, arg3 [] int, arg4 int64, arg5 string) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeCumulative__SWIG_1(arg2 IntervalVarVector, arg3 []int, arg4 int64, arg5 string) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeCumulative__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_230)(unsafe.Pointer(&_swig_i_2)), C.swig_type_231(_swig_i_3), *(*C.swig_type_232)(unsafe.Pointer(&_swig_i_4)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -10212,38 +10108,31 @@ func (arg1 SwigcptrSolver) MakeCumulative__SWIG_1(arg2 IntervalVarVector, arg3 [
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeCumulative__SWIG_2(arg2 IntervalVarVector, arg3 [] int64, arg4 IntVar, arg5 Absl_string_view) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeCumulative__SWIG_2(arg2 IntervalVarVector, arg3 []int64, arg4 IntVar, arg5 Absl_string_view) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := getSwigcptr(arg4)
 	_swig_i_4 := getSwigcptr(arg5)
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeCumulative__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_233)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), C.uintptr_t(_swig_i_4))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeCumulative__SWIG_3(arg2 IntervalVarVector, arg3 [] int, arg4 IntVar, arg5 string) (_swig_ret Constraint) {
+func (arg1 SwigcptrSolver) MakeCumulative__SWIG_3(arg2 IntervalVarVector, arg3 []int, arg4 IntVar, arg5 string) (_swig_ret Constraint) {
 	var swig_r Constraint
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := getSwigcptr(arg4)
 	_swig_i_4 := arg5
 	swig_r = (Constraint)(SwigcptrConstraint(C._wrap_Solver_MakeCumulative__SWIG_3_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_234)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3), *(*C.swig_type_235)(unsafe.Pointer(&_swig_i_4)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -10284,7 +10173,7 @@ func (arg1 SwigcptrSolver) MakeCumulative__SWIG_5(arg2 IntervalVarVector, arg3 I
 func (p SwigcptrSolver) MakeCumulative(a ...interface{}) Constraint {
 	argc := len(a)
 	if argc == 4 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
 		if _, ok := a[2].(SwigcptrIntVar); !ok {
@@ -10293,37 +10182,37 @@ func (p SwigcptrSolver) MakeCumulative(a ...interface{}) Constraint {
 		if _, ok := a[3].(SwigcptrAbsl_string_view); !ok {
 			goto check_1
 		}
-		return p.MakeCumulative__SWIG_2(a[0].(IntervalVarVector), a[1].([] int64), a[2].(IntVar), a[3].(Absl_string_view))
+		return p.MakeCumulative__SWIG_2(a[0].(IntervalVarVector), a[1].([]int64), a[2].(IntVar), a[3].(Absl_string_view))
 	}
 check_1:
 	if argc == 4 {
-		if _, ok := a[1].([] int); !ok {
+		if _, ok := a[1].([]int); !ok {
 			goto check_2
 		}
 		if _, ok := a[2].(SwigcptrIntVar); !ok {
 			goto check_2
 		}
-		return p.MakeCumulative__SWIG_3(a[0].(IntervalVarVector), a[1].([] int), a[2].(IntVar), a[3].(string))
+		return p.MakeCumulative__SWIG_3(a[0].(IntervalVarVector), a[1].([]int), a[2].(IntVar), a[3].(string))
 	}
 check_2:
 	if argc == 4 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_3
 		}
 		if _, ok := a[2].(int64); !ok {
 			goto check_3
 		}
-		return p.MakeCumulative__SWIG_0(a[0].(IntervalVarVector), a[1].([] int64), a[2].(int64), a[3].(string))
+		return p.MakeCumulative__SWIG_0(a[0].(IntervalVarVector), a[1].([]int64), a[2].(int64), a[3].(string))
 	}
 check_3:
 	if argc == 4 {
-		if _, ok := a[1].([] int); !ok {
+		if _, ok := a[1].([]int); !ok {
 			goto check_4
 		}
 		if _, ok := a[2].(int64); !ok {
 			goto check_4
 		}
-		return p.MakeCumulative__SWIG_1(a[0].(IntervalVarVector), a[1].([] int), a[2].(int64), a[3].(string))
+		return p.MakeCumulative__SWIG_1(a[0].(IntervalVarVector), a[1].([]int), a[2].(int64), a[3].(string))
 	}
 check_4:
 	if argc == 4 {
@@ -10643,36 +10532,29 @@ func (arg1 SwigcptrSolver) MakeOptimize(arg2 bool, arg3 IntVar, arg4 int64) (_sw
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeWeightedMinimize__SWIG_0(arg2 IntVarVector, arg3 [] int64, arg4 int64) (_swig_ret OptimizeVar) {
+func (arg1 SwigcptrSolver) MakeWeightedMinimize__SWIG_0(arg2 IntVarVector, arg3 []int64, arg4 int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	swig_r = (OptimizeVar)(SwigcptrOptimizeVar(C._wrap_Solver_MakeWeightedMinimize__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_242)(unsafe.Pointer(&_swig_i_2)), C.swig_type_243(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeWeightedMinimize__SWIG_1(arg2 IntVarVector, arg3 [] int, arg4 int64) (_swig_ret OptimizeVar) {
+func (arg1 SwigcptrSolver) MakeWeightedMinimize__SWIG_1(arg2 IntVarVector, arg3 []int, arg4 int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := arg4
 	swig_r = (OptimizeVar)(SwigcptrOptimizeVar(C._wrap_Solver_MakeWeightedMinimize__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_244)(unsafe.Pointer(&_swig_i_2)), C.swig_type_245(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -10682,48 +10564,41 @@ func (arg1 SwigcptrSolver) MakeWeightedMinimize__SWIG_1(arg2 IntVarVector, arg3 
 func (p SwigcptrSolver) MakeWeightedMinimize(a ...interface{}) OptimizeVar {
 	argc := len(a)
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeWeightedMinimize__SWIG_0(a[0].(IntVarVector), a[1].([] int64), a[2].(int64))
+		return p.MakeWeightedMinimize__SWIG_0(a[0].(IntVarVector), a[1].([]int64), a[2].(int64))
 	}
 check_1:
 	if argc == 3 {
-		return p.MakeWeightedMinimize__SWIG_1(a[0].(IntVarVector), a[1].([] int), a[2].(int64))
+		return p.MakeWeightedMinimize__SWIG_1(a[0].(IntVarVector), a[1].([]int), a[2].(int64))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeWeightedMaximize__SWIG_0(arg2 IntVarVector, arg3 [] int64, arg4 int64) (_swig_ret OptimizeVar) {
+func (arg1 SwigcptrSolver) MakeWeightedMaximize__SWIG_0(arg2 IntVarVector, arg3 []int64, arg4 int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	swig_r = (OptimizeVar)(SwigcptrOptimizeVar(C._wrap_Solver_MakeWeightedMaximize__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_246)(unsafe.Pointer(&_swig_i_2)), C.swig_type_247(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeWeightedMaximize__SWIG_1(arg2 IntVarVector, arg3 [] int, arg4 int64) (_swig_ret OptimizeVar) {
+func (arg1 SwigcptrSolver) MakeWeightedMaximize__SWIG_1(arg2 IntVarVector, arg3 []int, arg4 int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	_swig_i_3 := arg4
 	swig_r = (OptimizeVar)(SwigcptrOptimizeVar(C._wrap_Solver_MakeWeightedMaximize__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_248)(unsafe.Pointer(&_swig_i_2)), C.swig_type_249(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -10733,50 +10608,43 @@ func (arg1 SwigcptrSolver) MakeWeightedMaximize__SWIG_1(arg2 IntVarVector, arg3 
 func (p SwigcptrSolver) MakeWeightedMaximize(a ...interface{}) OptimizeVar {
 	argc := len(a)
 	if argc == 3 {
-		if _, ok := a[1].([] int64); !ok {
+		if _, ok := a[1].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeWeightedMaximize__SWIG_0(a[0].(IntVarVector), a[1].([] int64), a[2].(int64))
+		return p.MakeWeightedMaximize__SWIG_0(a[0].(IntVarVector), a[1].([]int64), a[2].(int64))
 	}
 check_1:
 	if argc == 3 {
-		return p.MakeWeightedMaximize__SWIG_1(a[0].(IntVarVector), a[1].([] int), a[2].(int64))
+		return p.MakeWeightedMaximize__SWIG_1(a[0].(IntVarVector), a[1].([]int), a[2].(int64))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeWeightedOptimize__SWIG_0(arg2 bool, arg3 IntVarVector, arg4 [] int64, arg5 int64) (_swig_ret OptimizeVar) {
+func (arg1 SwigcptrSolver) MakeWeightedOptimize__SWIG_0(arg2 bool, arg3 IntVarVector, arg4 []int64, arg5 int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
-	var _swig_i_3 [] int64
-
-    _swig_i_3 = arg4
-
+	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	swig_r = (OptimizeVar)(SwigcptrOptimizeVar(C._wrap_Solver_MakeWeightedOptimize__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C._Bool(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_250)(unsafe.Pointer(&_swig_i_3)), C.swig_type_251(_swig_i_4))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_3
+		Swig_escape_val = arg4
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeWeightedOptimize__SWIG_1(arg2 bool, arg3 IntVarVector, arg4 [] int, arg5 int64) (_swig_ret OptimizeVar) {
+func (arg1 SwigcptrSolver) MakeWeightedOptimize__SWIG_1(arg2 bool, arg3 IntVarVector, arg4 []int, arg5 int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyintSliceIn(arg4)
 
 	_swig_i_4 := arg5
 	swig_r = (OptimizeVar)(SwigcptrOptimizeVar(C._wrap_Solver_MakeWeightedOptimize__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C._Bool(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_252)(unsafe.Pointer(&_swig_i_3)), C.swig_type_253(_swig_i_4))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_3
 	}
@@ -10786,19 +10654,19 @@ func (arg1 SwigcptrSolver) MakeWeightedOptimize__SWIG_1(arg2 bool, arg3 IntVarVe
 func (p SwigcptrSolver) MakeWeightedOptimize(a ...interface{}) OptimizeVar {
 	argc := len(a)
 	if argc == 4 {
-		if _, ok := a[2].([] int64); !ok {
+		if _, ok := a[2].([]int64); !ok {
 			goto check_1
 		}
-		return p.MakeWeightedOptimize__SWIG_0(a[0].(bool), a[1].(IntVarVector), a[2].([] int64), a[3].(int64))
+		return p.MakeWeightedOptimize__SWIG_0(a[0].(bool), a[1].(IntVarVector), a[2].([]int64), a[3].(int64))
 	}
 check_1:
 	if argc == 4 {
-		return p.MakeWeightedOptimize__SWIG_1(a[0].(bool), a[1].(IntVarVector), a[2].([] int), a[3].(int64))
+		return p.MakeWeightedOptimize__SWIG_1(a[0].(bool), a[1].(IntVarVector), a[2].([]int), a[3].(int64))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrSolver) MakeLexicographicOptimize(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64) (_swig_ret OptimizeVar) {
+func (arg1 SwigcptrSolver) MakeLexicographicOptimize(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
@@ -10825,7 +10693,7 @@ func (arg1 SwigcptrSolver) MakeTabuSearch(arg2 bool, arg3 IntVar, arg4 int64, ar
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeLexicographicTabuSearch(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64, arg5 IntVarVector, arg6 int64, arg7 int64, arg8 float64) (_swig_ret ObjectiveMonitor) {
+func (arg1 SwigcptrSolver) MakeLexicographicTabuSearch(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64, arg5 IntVarVector, arg6 int64, arg7 int64, arg8 float64) (_swig_ret ObjectiveMonitor) {
 	var swig_r ObjectiveMonitor
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
@@ -10865,7 +10733,7 @@ func (arg1 SwigcptrSolver) MakeSimulatedAnnealing(arg2 bool, arg3 IntVar, arg4 i
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeLexicographicSimulatedAnnealing(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64, arg5 [] int64) (_swig_ret ObjectiveMonitor) {
+func (arg1 SwigcptrSolver) MakeLexicographicSimulatedAnnealing(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64, arg5 []int64) (_swig_ret ObjectiveMonitor) {
 	var swig_r ObjectiveMonitor
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
@@ -11511,53 +11379,38 @@ func (arg1 SwigcptrSolver) MakeAssignVariableValueOrDoNothing(arg2 IntVar, arg3 
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeAssignVariablesValues(arg2 IntVarVector, arg3 [] int64) (_swig_ret Decision) {
+func (arg1 SwigcptrSolver) MakeAssignVariablesValues(arg2 IntVarVector, arg3 []int64) (_swig_ret Decision) {
 	var swig_r Decision
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (Decision)(SwigcptrDecision(C._wrap_Solver_MakeAssignVariablesValues_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_305)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeAssignVariablesValuesOrDoNothing(arg2 IntVarVector, arg3 [] int64) (_swig_ret Decision) {
+func (arg1 SwigcptrSolver) MakeAssignVariablesValuesOrDoNothing(arg2 IntVarVector, arg3 []int64) (_swig_ret Decision) {
 	var swig_r Decision
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (Decision)(SwigcptrDecision(C._wrap_Solver_MakeAssignVariablesValuesOrDoNothing_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_306)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeAssignVariablesValuesOrFail(arg2 IntVarVector, arg3 [] int64) (_swig_ret Decision) {
+func (arg1 SwigcptrSolver) MakeAssignVariablesValuesOrFail(arg2 IntVarVector, arg3 []int64) (_swig_ret Decision) {
 	var swig_r Decision
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (Decision)(SwigcptrDecision(C._wrap_Solver_MakeAssignVariablesValuesOrFail_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_307)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
@@ -12425,19 +12278,14 @@ func (arg1 SwigcptrSolver) MakeMoveTowardTargetOperator__SWIG_0(arg2 Assignment)
 	return swig_r
 }
 
-func (arg1 SwigcptrSolver) MakeMoveTowardTargetOperator__SWIG_1(arg2 IntVarVector, arg3 [] int64) (_swig_ret LocalSearchOperator) {
+func (arg1 SwigcptrSolver) MakeMoveTowardTargetOperator__SWIG_1(arg2 IntVarVector, arg3 []int64) (_swig_ret LocalSearchOperator) {
 	var swig_r LocalSearchOperator
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	swig_r = (LocalSearchOperator)(SwigcptrLocalSearchOperator(C._wrap_Solver_MakeMoveTowardTargetOperator__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_316)(unsafe.Pointer(&_swig_i_2)))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
@@ -12448,7 +12296,7 @@ func (p SwigcptrSolver) MakeMoveTowardTargetOperator(a ...interface{}) LocalSear
 		return p.MakeMoveTowardTargetOperator__SWIG_0(a[0].(Assignment))
 	}
 	if argc == 2 {
-		return p.MakeMoveTowardTargetOperator__SWIG_1(a[0].(IntVarVector), a[1].([] int64))
+		return p.MakeMoveTowardTargetOperator__SWIG_1(a[0].(IntVarVector), a[1].([]int64))
 	}
 	panic("No match for overloaded function call")
 }
@@ -13229,8 +13077,8 @@ type Solver interface {
 	MakeSortingConstraint(arg2 IntVarVector, arg3 IntVarVector) (_swig_ret Constraint)
 	MakeLexicalLess(arg2 IntVarVector, arg3 IntVarVector) (_swig_ret Constraint)
 	MakeLexicalLessOrEqual(arg2 IntVarVector, arg3 IntVarVector) (_swig_ret Constraint)
-	MakeLexicalLessOrEqualWithOffsets(arg2 IntVarVector, arg3 IntVarVector, arg4 [] int64) (_swig_ret Constraint)
-	MakeIsLexicalLessOrEqualWithOffsetsCt(arg2 IntVarVector, arg3 IntVarVector, arg4 [] int64, arg5 IntVar) (_swig_ret Constraint)
+	MakeLexicalLessOrEqualWithOffsets(arg2 IntVarVector, arg3 IntVarVector, arg4 []int64) (_swig_ret Constraint)
+	MakeIsLexicalLessOrEqualWithOffsetsCt(arg2 IntVarVector, arg3 IntVarVector, arg4 []int64, arg5 IntVar) (_swig_ret Constraint)
 	MakeInversePermutationConstraint(arg2 IntVarVector, arg3 IntVarVector) (_swig_ret Constraint)
 	MakeIndexOfFirstMaxValueConstraint(arg2 IntVar, arg3 IntVarVector) (_swig_ret Constraint)
 	MakeIndexOfFirstMinValueConstraint(arg2 IntVar, arg3 IntVarVector) (_swig_ret Constraint)
@@ -13241,7 +13089,7 @@ type Solver interface {
 	MakeSubCircuit(arg2 IntVarVector) (_swig_ret Constraint)
 	MakeDelayedPathCumul(arg2 IntVarVector, arg3 IntVarVector, arg4 IntVarVector, arg5 IntVarVector) (_swig_ret Constraint)
 	MakePathCumul(a ...interface{}) Constraint
-	MakePathConnected(arg2 IntVarVector, arg3 [] int64, arg4 [] int64, arg5 IntVarVector) (_swig_ret Constraint)
+	MakePathConnected(arg2 IntVarVector, arg3 []int64, arg4 []int64, arg5 IntVarVector) (_swig_ret Constraint)
 	MakeMapDomain(arg2 IntVar, arg3 IntVarVector) (_swig_ret Constraint)
 	MakeAllowedAssignments(arg2 IntVarVector, arg3 IntTupleSet) (_swig_ret Constraint)
 	MakeTransitionConstraint(a ...interface{}) Constraint
@@ -13281,12 +13129,12 @@ type Solver interface {
 	MakeWeightedMinimize(a ...interface{}) OptimizeVar
 	MakeWeightedMaximize(a ...interface{}) OptimizeVar
 	MakeWeightedOptimize(a ...interface{}) OptimizeVar
-	MakeLexicographicOptimize(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64) (_swig_ret OptimizeVar)
+	MakeLexicographicOptimize(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64) (_swig_ret OptimizeVar)
 	MakeTabuSearch(arg2 bool, arg3 IntVar, arg4 int64, arg5 IntVarVector, arg6 int64, arg7 int64, arg8 float64) (_swig_ret ObjectiveMonitor)
-	MakeLexicographicTabuSearch(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64, arg5 IntVarVector, arg6 int64, arg7 int64, arg8 float64) (_swig_ret ObjectiveMonitor)
+	MakeLexicographicTabuSearch(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64, arg5 IntVarVector, arg6 int64, arg7 int64, arg8 float64) (_swig_ret ObjectiveMonitor)
 	MakeGenericTabuSearch(arg2 bool, arg3 IntVar, arg4 int64, arg5 IntVarVector, arg6 int64) (_swig_ret ObjectiveMonitor)
 	MakeSimulatedAnnealing(arg2 bool, arg3 IntVar, arg4 int64, arg5 int64) (_swig_ret ObjectiveMonitor)
-	MakeLexicographicSimulatedAnnealing(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64, arg5 [] int64) (_swig_ret ObjectiveMonitor)
+	MakeLexicographicSimulatedAnnealing(arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64, arg5 []int64) (_swig_ret ObjectiveMonitor)
 	MakeGuidedLocalSearch(a ...interface{}) ObjectiveMonitor
 	MakeLubyRestart(arg2 int) (_swig_ret SearchMonitor)
 	MakeConstantRestart(arg2 int) (_swig_ret SearchMonitor)
@@ -13313,9 +13161,9 @@ type Solver interface {
 	MakeSplitVariableDomain(arg2 IntVar, arg3 int64, arg4 bool) (_swig_ret Decision)
 	MakeAssignVariableValueOrFail(arg2 IntVar, arg3 int64) (_swig_ret Decision)
 	MakeAssignVariableValueOrDoNothing(arg2 IntVar, arg3 int64) (_swig_ret Decision)
-	MakeAssignVariablesValues(arg2 IntVarVector, arg3 [] int64) (_swig_ret Decision)
-	MakeAssignVariablesValuesOrDoNothing(arg2 IntVarVector, arg3 [] int64) (_swig_ret Decision)
-	MakeAssignVariablesValuesOrFail(arg2 IntVarVector, arg3 [] int64) (_swig_ret Decision)
+	MakeAssignVariablesValues(arg2 IntVarVector, arg3 []int64) (_swig_ret Decision)
+	MakeAssignVariablesValuesOrDoNothing(arg2 IntVarVector, arg3 []int64) (_swig_ret Decision)
+	MakeAssignVariablesValuesOrFail(arg2 IntVarVector, arg3 []int64) (_swig_ret Decision)
 	MakeFailDecision() (_swig_ret Decision)
 	MakeDecision(arg2 Std_function_Sl_void_Sp_operations_research_Solver_Sm__SP__Sg_, arg3 Std_function_Sl_void_Sp_operations_research_Solver_Sm__SP__Sg_) (_swig_ret Decision)
 	Compose(a ...interface{}) DecisionBuilder
@@ -15853,21 +15701,16 @@ func (arg1 SwigcptrModelVisitor) VisitIntegerArgument(arg2 string, arg3 int64) {
 	}
 }
 
-func (arg1 SwigcptrModelVisitor) VisitIntegerArrayArgument(arg2 string, arg3 [] int64) {
+func (arg1 SwigcptrModelVisitor) VisitIntegerArrayArgument(arg2 string, arg3 []int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	C._wrap_ModelVisitor_VisitIntegerArrayArgument_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_519)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_520)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 }
 
@@ -15978,7 +15821,7 @@ type ModelVisitor interface {
 	VisitIntervalVariable(arg2 IntervalVar, arg3 string, arg4 int64, arg5 IntervalVar)
 	VisitSequenceVariable(arg2 SequenceVar)
 	VisitIntegerArgument(arg2 string, arg3 int64)
-	VisitIntegerArrayArgument(arg2 string, arg3 [] int64)
+	VisitIntegerArrayArgument(arg2 string, arg3 []int64)
 	VisitIntegerMatrixArgument(arg2 string, arg3 IntTupleSet)
 	VisitIntegerExpressionArgument(arg2 string, arg3 IntExpr)
 	VisitIntegerVariableArrayArgument(arg2 string, arg3 IntVarVector)
@@ -17767,31 +17610,21 @@ func (arg1 SwigcptrIntVar) RemoveInterval(arg2 int64, arg3 int64) {
 	C._wrap_IntVar_RemoveInterval_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_557(_swig_i_1), C.swig_type_558(_swig_i_2))
 }
 
-func (arg1 SwigcptrIntVar) RemoveValues(arg2 [] int64) {
+func (arg1 SwigcptrIntVar) RemoveValues(arg2 []int64) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	C._wrap_IntVar_RemoveValues_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_559)(unsafe.Pointer(&_swig_i_1)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 }
 
-func (arg1 SwigcptrIntVar) SetValues(arg2 [] int64) {
+func (arg1 SwigcptrIntVar) SetValues(arg2 []int64) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	C._wrap_IntVar_SetValues_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_560)(unsafe.Pointer(&_swig_i_1)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 }
 
@@ -18136,8 +17969,8 @@ type IntVar interface {
 	Value() (_swig_ret int64)
 	RemoveValue(arg2 int64)
 	RemoveInterval(arg2 int64, arg3 int64)
-	RemoveValues(arg2 [] int64)
-	SetValues(arg2 [] int64)
+	RemoveValues(arg2 []int64)
+	SetValues(arg2 []int64)
 	WhenBound(a ...interface{})
 	WhenDomain(a ...interface{})
 	Size() (_swig_ret uint64)
@@ -19132,44 +18965,44 @@ func (arg1 SwigcptrSolutionCollector) PerformedValue(arg2 int, arg3 IntervalVar)
 	return swig_r
 }
 
-func (arg1 SwigcptrSolutionCollector) ForwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrSolutionCollector) ForwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
 	swig_r_p := C._wrap_SolutionCollector_ForwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrSolutionCollector) BackwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrSolutionCollector) BackwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
 	swig_r_p := C._wrap_SolutionCollector_BackwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrSolutionCollector) Unperformed(arg2 int, arg3 SequenceVar) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrSolutionCollector) Unperformed(arg2 int, arg3 SequenceVar) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
 	swig_r_p := C._wrap_SolutionCollector_Unperformed_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.uintptr_t(_swig_i_2))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
@@ -19328,9 +19161,9 @@ type SolutionCollector interface {
 	EndValue(arg2 int, arg3 IntervalVar) (_swig_ret int64)
 	DurationValue(arg2 int, arg3 IntervalVar) (_swig_ret int64)
 	PerformedValue(arg2 int, arg3 IntervalVar) (_swig_ret int64)
-	ForwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret [] int)
-	BackwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret [] int)
-	Unperformed(arg2 int, arg3 SequenceVar) (_swig_ret [] int)
+	ForwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret []int)
+	BackwardSequence(arg2 int, arg3 SequenceVar) (_swig_ret []int)
+	Unperformed(arg2 int, arg3 SequenceVar) (_swig_ret []int)
 	RestartSearch()
 	ExitSearch()
 	BeginNextDecision(arg1 DecisionBuilder)
@@ -19369,7 +19202,7 @@ func (p SwigcptrObjectiveMonitor) Swigcptr() uintptr {
 func (p SwigcptrObjectiveMonitor) SwigIsObjectiveMonitor() {
 }
 
-func NewObjectiveMonitor(arg1 Solver, arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64) (_swig_ret ObjectiveMonitor) {
+func NewObjectiveMonitor(arg1 Solver, arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64) (_swig_ret ObjectiveMonitor) {
 	var swig_r ObjectiveMonitor
 	_swig_i_0 := getSwigcptr(arg1)
 	_swig_i_1 := getSwigcptr(arg2)
@@ -19652,7 +19485,7 @@ func NewDirectorOptimizeVar__SWIG_0(v interface{}, arg1 Solver, arg2 bool, arg3 
 	return p
 }
 
-func NewDirectorOptimizeVar__SWIG_1(v interface{}, arg1 Solver, arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64) OptimizeVar {
+func NewDirectorOptimizeVar__SWIG_1(v interface{}, arg1 Solver, arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64) OptimizeVar {
 	p := &_swig_DirectorOptimizeVar{0, v}
 	_swig_i_0 := getSwigcptr(arg1)
 	_swig_i_1 := getSwigcptr(arg2)
@@ -19674,10 +19507,10 @@ func NewDirectorOptimizeVar(abi interface{}, a ...interface{}) OptimizeVar {
 		if _, ok := a[2].(IntVarVector); !ok {
 			goto check_1
 		}
-		if _, ok := a[3].([] int64); !ok {
+		if _, ok := a[3].([]int64); !ok {
 			goto check_1
 		}
-		return NewDirectorOptimizeVar__SWIG_1(abi, a[0].(Solver), a[1].(Std_vector_Sl_bool_Sg_), a[2].(IntVarVector), a[3].([] int64))
+		return NewDirectorOptimizeVar__SWIG_1(abi, a[0].(Solver), a[1].(Std_vector_Sl_bool_Sg_), a[2].(IntVarVector), a[3].([]int64))
 	}
 check_1:
 	if argc == 4 {
@@ -20382,7 +20215,7 @@ func NewOptimizeVar__SWIG_0(arg1 Solver, arg2 bool, arg3 IntVar, arg4 int64) (_s
 	return swig_r
 }
 
-func NewOptimizeVar__SWIG_1(arg1 Solver, arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 [] int64) (_swig_ret OptimizeVar) {
+func NewOptimizeVar__SWIG_1(arg1 Solver, arg2 Std_vector_Sl_bool_Sg_, arg3 IntVarVector, arg4 []int64) (_swig_ret OptimizeVar) {
 	var swig_r OptimizeVar
 	_swig_i_0 := getSwigcptr(arg1)
 	_swig_i_1 := getSwigcptr(arg2)
@@ -20404,10 +20237,10 @@ func NewOptimizeVar(a ...interface{}) OptimizeVar {
 		if _, ok := a[2].(IntVarVector); !ok {
 			goto check_1
 		}
-		if _, ok := a[3].([] int64); !ok {
+		if _, ok := a[3].([]int64); !ok {
 			goto check_1
 		}
-		return NewOptimizeVar__SWIG_1(a[0].(Solver), a[1].(Std_vector_Sl_bool_Sg_), a[2].(IntVarVector), a[3].([] int64))
+		return NewOptimizeVar__SWIG_1(a[0].(Solver), a[1].(Std_vector_Sl_bool_Sg_), a[2].(IntVarVector), a[3].([]int64))
 	}
 check_1:
 	if argc == 4 {
@@ -24013,27 +23846,21 @@ func (arg1 SwigcptrSequenceVar) RankNotLast(arg2 int) {
 	C._wrap_SequenceVar_RankNotLast_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))
 }
 
-func (arg1 SwigcptrSequenceVar) RankSequence(arg2 [] int, arg3 [] int, arg4 [] int) {
+func (arg1 SwigcptrSequenceVar) RankSequence(arg2 []int, arg3 []int, arg4 []int) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyintSliceIn(arg4)
 
 	C._wrap_SequenceVar_RankSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_675)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_676)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_677)(unsafe.Pointer(&_swig_i_3)))
-
-
-
-
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -24158,7 +23985,7 @@ type SequenceVar interface {
 	RankNotFirst(arg2 int)
 	RankLast(arg2 int)
 	RankNotLast(arg2 int)
-	RankSequence(arg2 [] int, arg3 [] int, arg4 [] int)
+	RankSequence(arg2 []int, arg3 []int, arg4 []int)
 	Interval(arg2 int) (_swig_ret IntervalVar)
 	Next(arg2 int) (_swig_ret IntVar)
 	Size() (_swig_ret int64)
@@ -24819,63 +24646,57 @@ func (arg1 SwigcptrSequenceVarElement) Restore() {
 	C._wrap_SequenceVarElement_Restore_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
 }
 
-func (arg1 SwigcptrSequenceVarElement) ForwardSequence() (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrSequenceVarElement) ForwardSequence() (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_SequenceVarElement_ForwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrSequenceVarElement) BackwardSequence() (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrSequenceVarElement) BackwardSequence() (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_SequenceVarElement_BackwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrSequenceVarElement) Unperformed() (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrSequenceVarElement) Unperformed() (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_SequenceVarElement_Unperformed_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrSequenceVarElement) SetSequence(arg2 [] int, arg3 [] int, arg4 [] int) {
+func (arg1 SwigcptrSequenceVarElement) SetSequence(arg2 []int, arg3 []int, arg4 []int) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyintSliceIn(arg4)
 
 	C._wrap_SequenceVarElement_SetSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_726)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_727)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_728)(unsafe.Pointer(&_swig_i_3)))
-
-
-
-
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -24887,43 +24708,37 @@ func (arg1 SwigcptrSequenceVarElement) SetSequence(arg2 [] int, arg3 [] int, arg
 	}
 }
 
-func (arg1 SwigcptrSequenceVarElement) SetForwardSequence(arg2 [] int) {
+func (arg1 SwigcptrSequenceVarElement) SetForwardSequence(arg2 []int) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	C._wrap_SequenceVarElement_SetForwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_729)(unsafe.Pointer(&_swig_i_1)))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
 }
 
-func (arg1 SwigcptrSequenceVarElement) SetBackwardSequence(arg2 [] int) {
+func (arg1 SwigcptrSequenceVarElement) SetBackwardSequence(arg2 []int) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	C._wrap_SequenceVarElement_SetBackwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_730)(unsafe.Pointer(&_swig_i_1)))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
 }
 
-func (arg1 SwigcptrSequenceVarElement) SetUnperformed(arg2 [] int) {
+func (arg1 SwigcptrSequenceVarElement) SetUnperformed(arg2 []int) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	C._wrap_SequenceVarElement_SetUnperformed_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_731)(unsafe.Pointer(&_swig_i_1)))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -24981,13 +24796,13 @@ type SequenceVarElement interface {
 	Var() (_swig_ret SequenceVar)
 	Store()
 	Restore()
-	ForwardSequence() (_swig_ret [] int)
-	BackwardSequence() (_swig_ret [] int)
-	Unperformed() (_swig_ret [] int)
-	SetSequence(arg2 [] int, arg3 [] int, arg4 [] int)
-	SetForwardSequence(arg2 [] int)
-	SetBackwardSequence(arg2 [] int)
-	SetUnperformed(arg2 [] int)
+	ForwardSequence() (_swig_ret []int)
+	BackwardSequence() (_swig_ret []int)
+	Unperformed() (_swig_ret []int)
+	SetSequence(arg2 []int, arg3 []int, arg4 []int)
+	SetForwardSequence(arg2 []int)
+	SetBackwardSequence(arg2 []int)
+	SetUnperformed(arg2 []int)
 	Bound() (_swig_ret bool)
 	ToString() (_swig_ret string)
 	Activate()
@@ -25665,67 +25480,61 @@ check_2:
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrAssignment) ForwardSequence(arg2 SequenceVar) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrAssignment) ForwardSequence(arg2 SequenceVar) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	swig_r_p := C._wrap_Assignment_ForwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrAssignment) BackwardSequence(arg2 SequenceVar) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrAssignment) BackwardSequence(arg2 SequenceVar) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	swig_r_p := C._wrap_Assignment_BackwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrAssignment) Unperformed(arg2 SequenceVar) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrAssignment) Unperformed(arg2 SequenceVar) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	swig_r_p := C._wrap_Assignment_Unperformed_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrAssignment) SetSequence(arg2 SequenceVar, arg3 [] int, arg4 [] int, arg5 [] int) {
+func (arg1 SwigcptrAssignment) SetSequence(arg2 SequenceVar, arg3 []int, arg4 []int, arg5 []int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyintSliceIn(arg4)
 
-	var _swig_i_4 [] int
+	var _swig_i_4 []C.int
 
-    _swig_i_4 = arg5
+    _swig_i_4 = swigCopyintSliceIn(arg5)
 
 	C._wrap_Assignment_SetSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_792)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_793)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_794)(unsafe.Pointer(&_swig_i_4)))
-
-
-
-
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -25737,46 +25546,40 @@ func (arg1 SwigcptrAssignment) SetSequence(arg2 SequenceVar, arg3 [] int, arg4 [
 	}
 }
 
-func (arg1 SwigcptrAssignment) SetForwardSequence(arg2 SequenceVar, arg3 [] int) {
+func (arg1 SwigcptrAssignment) SetForwardSequence(arg2 SequenceVar, arg3 []int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	C._wrap_Assignment_SetForwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_795)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
 }
 
-func (arg1 SwigcptrAssignment) SetBackwardSequence(arg2 SequenceVar, arg3 [] int) {
+func (arg1 SwigcptrAssignment) SetBackwardSequence(arg2 SequenceVar, arg3 []int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	C._wrap_Assignment_SetBackwardSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_796)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
 }
 
-func (arg1 SwigcptrAssignment) SetUnperformed(arg2 SequenceVar, arg3 [] int) {
+func (arg1 SwigcptrAssignment) SetUnperformed(arg2 SequenceVar, arg3 []int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
 	C._wrap_Assignment_SetUnperformed_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_797)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -26217,13 +26020,13 @@ type Assignment interface {
 	SetPerformedValue(arg2 IntervalVar, arg3 int64)
 	Add(a ...interface{}) interface{}
 	FastAdd(a ...interface{}) interface{}
-	ForwardSequence(arg2 SequenceVar) (_swig_ret [] int)
-	BackwardSequence(arg2 SequenceVar) (_swig_ret [] int)
-	Unperformed(arg2 SequenceVar) (_swig_ret [] int)
-	SetSequence(arg2 SequenceVar, arg3 [] int, arg4 [] int, arg5 [] int)
-	SetForwardSequence(arg2 SequenceVar, arg3 [] int)
-	SetBackwardSequence(arg2 SequenceVar, arg3 [] int)
-	SetUnperformed(arg2 SequenceVar, arg3 [] int)
+	ForwardSequence(arg2 SequenceVar) (_swig_ret []int)
+	BackwardSequence(arg2 SequenceVar) (_swig_ret []int)
+	Unperformed(arg2 SequenceVar) (_swig_ret []int)
+	SetSequence(arg2 SequenceVar, arg3 []int, arg4 []int, arg5 []int)
+	SetForwardSequence(arg2 SequenceVar, arg3 []int)
+	SetBackwardSequence(arg2 SequenceVar, arg3 []int)
+	SetUnperformed(arg2 SequenceVar, arg3 []int)
 	Activate(a ...interface{})
 	Deactivate(a ...interface{})
 	Activated(a ...interface{}) bool
@@ -26292,66 +26095,46 @@ func DeletePack(arg1 Pack) {
 	C._wrap_delete_Pack_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
 }
 
-func (arg1 SwigcptrPack) AddWeightedSumLessOrEqualConstantDimension__SWIG_0(arg2 [] int64, arg3 [] int64) {
+func (arg1 SwigcptrPack) AddWeightedSumLessOrEqualConstantDimension__SWIG_0(arg2 []int64, arg3 []int64) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_1 := arg2
+	_swig_i_2 := arg3
 	C._wrap_Pack_AddWeightedSumLessOrEqualConstantDimension__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_801)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_802)(unsafe.Pointer(&_swig_i_2)))
-
-
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 }
 
-func (arg1 SwigcptrPack) AddWeightedSumLessOrEqualConstantDimension__SWIG_1(arg2 RoutingTransitCallback1, arg3 [] int64) {
+func (arg1 SwigcptrPack) AddWeightedSumLessOrEqualConstantDimension__SWIG_1(arg2 RoutingTransitCallback1, arg3 []int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	C._wrap_Pack_AddWeightedSumLessOrEqualConstantDimension__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_803)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 }
 
-func (arg1 SwigcptrPack) AddWeightedSumLessOrEqualConstantDimension__SWIG_2(arg2 RoutingTransitCallback2, arg3 [] int64) {
+func (arg1 SwigcptrPack) AddWeightedSumLessOrEqualConstantDimension__SWIG_2(arg2 RoutingTransitCallback2, arg3 []int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	C._wrap_Pack_AddWeightedSumLessOrEqualConstantDimension__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_804)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 }
 
 func (p SwigcptrPack) AddWeightedSumLessOrEqualConstantDimension(a ...interface{}) {
 	argc := len(a)
 	if argc == 2 {
-		if _, ok := a[0].([] int64); !ok {
+		if _, ok := a[0].([]int64); !ok {
 			goto check_1
 		}
-		p.AddWeightedSumLessOrEqualConstantDimension__SWIG_0(a[0].([] int64), a[1].([] int64))
+		p.AddWeightedSumLessOrEqualConstantDimension__SWIG_0(a[0].([]int64), a[1].([]int64))
 		return
 	}
 check_1:
@@ -26359,29 +26142,24 @@ check_1:
 		if _, ok := a[0].(SwigcptrRoutingTransitCallback1); !ok {
 			goto check_2
 		}
-		p.AddWeightedSumLessOrEqualConstantDimension__SWIG_1(a[0].(RoutingTransitCallback1), a[1].([] int64))
+		p.AddWeightedSumLessOrEqualConstantDimension__SWIG_1(a[0].(RoutingTransitCallback1), a[1].([]int64))
 		return
 	}
 check_2:
 	if argc == 2 {
-		p.AddWeightedSumLessOrEqualConstantDimension__SWIG_2(a[0].(RoutingTransitCallback2), a[1].([] int64))
+		p.AddWeightedSumLessOrEqualConstantDimension__SWIG_2(a[0].(RoutingTransitCallback2), a[1].([]int64))
 		return
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrPack) AddWeightedSumEqualVarDimension__SWIG_0(arg2 [] int64, arg3 IntVarVector) {
+func (arg1 SwigcptrPack) AddWeightedSumEqualVarDimension__SWIG_0(arg2 []int64, arg3 IntVarVector) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
 	C._wrap_Pack_AddWeightedSumEqualVarDimension__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_805)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 }
 
@@ -26395,10 +26173,10 @@ func (arg1 SwigcptrPack) AddWeightedSumEqualVarDimension__SWIG_1(arg2 RoutingTra
 func (p SwigcptrPack) AddWeightedSumEqualVarDimension(a ...interface{}) {
 	argc := len(a)
 	if argc == 2 {
-		if _, ok := a[0].([] int64); !ok {
+		if _, ok := a[0].([]int64); !ok {
 			goto check_1
 		}
-		p.AddWeightedSumEqualVarDimension__SWIG_0(a[0].([] int64), a[1].(IntVarVector))
+		p.AddWeightedSumEqualVarDimension__SWIG_0(a[0].([]int64), a[1].(IntVarVector))
 		return
 	}
 check_1:
@@ -26409,33 +26187,23 @@ check_1:
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrPack) AddSumVariableWeightsLessOrEqualConstantDimension(arg2 IntVarVector, arg3 [] int64) {
+func (arg1 SwigcptrPack) AddSumVariableWeightsLessOrEqualConstantDimension(arg2 IntVarVector, arg3 []int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	C._wrap_Pack_AddSumVariableWeightsLessOrEqualConstantDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_806)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 }
 
-func (arg1 SwigcptrPack) AddWeightedSumOfAssignedDimension(arg2 [] int64, arg3 IntVar) {
+func (arg1 SwigcptrPack) AddWeightedSumOfAssignedDimension(arg2 []int64, arg3 IntVar) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := getSwigcptr(arg3)
 	C._wrap_Pack_AddWeightedSumOfAssignedDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_807)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 }
 
@@ -26687,8 +26455,8 @@ type Pack interface {
 	SwigIsPack()
 	AddWeightedSumLessOrEqualConstantDimension(a ...interface{})
 	AddWeightedSumEqualVarDimension(a ...interface{})
-	AddSumVariableWeightsLessOrEqualConstantDimension(arg2 IntVarVector, arg3 [] int64)
-	AddWeightedSumOfAssignedDimension(arg2 [] int64, arg3 IntVar)
+	AddSumVariableWeightsLessOrEqualConstantDimension(arg2 IntVarVector, arg3 []int64)
+	AddWeightedSumOfAssignedDimension(arg2 []int64, arg3 IntVar)
 	AddCountUsedBinDimension(arg2 IntVar)
 	AddCountAssignedItemsDimension(arg2 IntVar)
 	Post()
@@ -27658,28 +27426,20 @@ func (arg1 SwigcptrLocalSearchOperatorState) Revert(arg2 bool) {
 	C._wrap_LocalSearchOperatorState_Revert_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C._Bool(_swig_i_1))
 }
 
-func (arg1 SwigcptrLocalSearchOperatorState) CandidateIndicesChanged() (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrLocalSearchOperatorState) CandidateIndicesChanged() (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_LocalSearchOperatorState_CandidateIndicesChanged_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
-func (arg1 SwigcptrLocalSearchOperatorState) IncrementalIndicesChanged() (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrLocalSearchOperatorState) IncrementalIndicesChanged() (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_LocalSearchOperatorState_IncrementalIndicesChanged_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
 func (arg1 SwigcptrLocalSearchOperatorState) Resize(arg2 int) {
@@ -27722,8 +27482,8 @@ type LocalSearchOperatorState interface {
 	Commit()
 	CheckPoint()
 	Revert(arg2 bool)
-	CandidateIndicesChanged() (_swig_ret [] int64)
-	IncrementalIndicesChanged() (_swig_ret [] int64)
+	CandidateIndicesChanged() (_swig_ret []int64)
+	IncrementalIndicesChanged() (_swig_ret []int64)
 	Resize(arg2 int)
 	CandidateInverseValue(arg2 int64) (_swig_ret int64)
 	CommittedInverseValue(arg2 int64) (_swig_ret int64)
@@ -31102,33 +30862,23 @@ func (arg1 SwigcptrPropagationMonitor) RemoveInterval(arg2 IntVar, arg3 int64, a
 	C._wrap_PropagationMonitor_RemoveInterval_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_920(_swig_i_2), C.swig_type_921(_swig_i_3))
 }
 
-func (arg1 SwigcptrPropagationMonitor) SetValues(arg2 IntVar, arg3 [] int64) {
+func (arg1 SwigcptrPropagationMonitor) SetValues(arg2 IntVar, arg3 []int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	C._wrap_PropagationMonitor_SetValues_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_922)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 }
 
-func (arg1 SwigcptrPropagationMonitor) RemoveValues(arg2 IntVar, arg3 [] int64) {
+func (arg1 SwigcptrPropagationMonitor) RemoveValues(arg2 IntVar, arg3 []int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	C._wrap_PropagationMonitor_RemoveValues_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_923)(unsafe.Pointer(&_swig_i_2)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 }
 
@@ -31233,28 +30983,22 @@ func (arg1 SwigcptrPropagationMonitor) RankNotLast(arg2 SequenceVar, arg3 int) {
 	C._wrap_PropagationMonitor_RankNotLast_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2))
 }
 
-func (arg1 SwigcptrPropagationMonitor) RankSequence(arg2 SequenceVar, arg3 [] int, arg4 [] int, arg5 [] int) {
+func (arg1 SwigcptrPropagationMonitor) RankSequence(arg2 SequenceVar, arg3 []int, arg4 []int, arg5 []int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyintSliceIn(arg3)
 
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyintSliceIn(arg4)
 
-	var _swig_i_4 [] int
+	var _swig_i_4 []C.int
 
-    _swig_i_4 = arg5
+    _swig_i_4 = swigCopyintSliceIn(arg5)
 
 	C._wrap_PropagationMonitor_RankSequence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_936)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_937)(unsafe.Pointer(&_swig_i_3)), *(*C.swig_type_938)(unsafe.Pointer(&_swig_i_4)))
-
-
-
-
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -31426,8 +31170,8 @@ type PropagationMonitor interface {
 	RemoveValue(arg2 IntVar, arg3 int64)
 	SetValue(arg2 IntVar, arg3 int64)
 	RemoveInterval(arg2 IntVar, arg3 int64, arg4 int64)
-	SetValues(arg2 IntVar, arg3 [] int64)
-	RemoveValues(arg2 IntVar, arg3 [] int64)
+	SetValues(arg2 IntVar, arg3 []int64)
+	RemoveValues(arg2 IntVar, arg3 []int64)
 	SetStartMin(arg2 IntervalVar, arg3 int64)
 	SetStartMax(arg2 IntervalVar, arg3 int64)
 	SetStartRange(arg2 IntervalVar, arg3 int64, arg4 int64)
@@ -31442,7 +31186,7 @@ type PropagationMonitor interface {
 	RankNotFirst(arg2 SequenceVar, arg3 int)
 	RankLast(arg2 SequenceVar, arg3 int)
 	RankNotLast(arg2 SequenceVar, arg3 int)
-	RankSequence(arg2 SequenceVar, arg3 [] int, arg4 [] int, arg5 [] int)
+	RankSequence(arg2 SequenceVar, arg3 []int, arg4 []int, arg5 []int)
 	Install()
 	EnterSearch()
 	RestartSearch()
@@ -31950,29 +31694,19 @@ func (_swig_base SwigcptrBooleanVar) Var() (_swig_ret IntVar) {
 	return swig_r
 }
 
-func (_swig_base SwigcptrBooleanVar) RemoveValues(arg1 [] int64) {
-	var _swig_i_0 [] int64
-
-    _swig_i_0 = arg1
-
+func (_swig_base SwigcptrBooleanVar) RemoveValues(arg1 []int64) {
+	_swig_i_0 := arg1
 	C._wrap_BooleanVar_RemoveValues_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_base), *(*C.swig_type_958)(unsafe.Pointer(&_swig_i_0)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_0
+		Swig_escape_val = arg1
 	}
 }
 
-func (_swig_base SwigcptrBooleanVar) SetValues(arg1 [] int64) {
-	var _swig_i_0 [] int64
-
-    _swig_i_0 = arg1
-
+func (_swig_base SwigcptrBooleanVar) SetValues(arg1 []int64) {
+	_swig_i_0 := arg1
 	C._wrap_BooleanVar_SetValues_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_base), *(*C.swig_type_959)(unsafe.Pointer(&_swig_i_0)))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_0
+		Swig_escape_val = arg1
 	}
 }
 
@@ -32147,8 +31881,8 @@ type BooleanVar interface {
 	RawValue() (_swig_ret int)
 	IsVar() (_swig_ret bool)
 	Var() (_swig_ret IntVar)
-	RemoveValues(arg1 [] int64)
-	SetValues(arg1 [] int64)
+	RemoveValues(arg1 []int64)
+	SetValues(arg1 []int64)
 	OldMin() (_swig_ret int64)
 	OldMax() (_swig_ret int64)
 	Accept(arg1 ModelVisitor)
@@ -33141,38 +32875,28 @@ func (arg1 SwigcptrModelCache) InsertVarConstantConstantExpression(arg2 IntExpr,
 	C._wrap_ModelCache_InsertVarConstantConstantExpression_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), C.swig_type_985(_swig_i_3), C.swig_type_986(_swig_i_4), C.swig_intgo(_swig_i_5))
 }
 
-func (arg1 SwigcptrModelCache) FindVarConstantArrayExpression(arg2 IntVar, arg3 [] int64, arg4 Operations_researchModelCacheVarConstantArrayExpressionType) (_swig_ret IntExpr) {
+func (arg1 SwigcptrModelCache) FindVarConstantArrayExpression(arg2 IntVar, arg3 []int64, arg4 Operations_researchModelCacheVarConstantArrayExpressionType) (_swig_ret IntExpr) {
 	var swig_r IntExpr
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	swig_r = (IntExpr)(SwigcptrIntExpr(C._wrap_ModelCache_FindVarConstantArrayExpression_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_987)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrModelCache) InsertVarConstantArrayExpression(arg2 IntExpr, arg3 IntVar, arg4 [] int64, arg5 Operations_researchModelCacheVarConstantArrayExpressionType) {
+func (arg1 SwigcptrModelCache) InsertVarConstantArrayExpression(arg2 IntExpr, arg3 IntVar, arg4 []int64, arg5 Operations_researchModelCacheVarConstantArrayExpressionType) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := getSwigcptr(arg3)
-	var _swig_i_3 [] int64
-
-    _swig_i_3 = arg4
-
+	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	C._wrap_ModelCache_InsertVarConstantArrayExpression_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_988)(unsafe.Pointer(&_swig_i_3)), C.swig_intgo(_swig_i_4))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_3
+		Swig_escape_val = arg4
 	}
 }
 
@@ -33193,38 +32917,28 @@ func (arg1 SwigcptrModelCache) InsertVarArrayExpression(arg2 IntExpr, arg3 IntVa
 	C._wrap_ModelCache_InsertVarArrayExpression_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), C.swig_intgo(_swig_i_3))
 }
 
-func (arg1 SwigcptrModelCache) FindVarArrayConstantArrayExpression(arg2 IntVarVector, arg3 [] int64, arg4 Operations_researchModelCacheVarArrayConstantArrayExpressionType) (_swig_ret IntExpr) {
+func (arg1 SwigcptrModelCache) FindVarArrayConstantArrayExpression(arg2 IntVarVector, arg3 []int64, arg4 Operations_researchModelCacheVarArrayConstantArrayExpressionType) (_swig_ret IntExpr) {
 	var swig_r IntExpr
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
-	var _swig_i_2 [] int64
-
-    _swig_i_2 = arg3
-
+	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	swig_r = (IntExpr)(SwigcptrIntExpr(C._wrap_ModelCache_FindVarArrayConstantArrayExpression_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_989)(unsafe.Pointer(&_swig_i_2)), C.swig_intgo(_swig_i_3))))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_2
+		Swig_escape_val = arg3
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrModelCache) InsertVarArrayConstantArrayExpression(arg2 IntExpr, arg3 IntVarVector, arg4 [] int64, arg5 Operations_researchModelCacheVarArrayConstantArrayExpressionType) {
+func (arg1 SwigcptrModelCache) InsertVarArrayConstantArrayExpression(arg2 IntExpr, arg3 IntVarVector, arg4 []int64, arg5 Operations_researchModelCacheVarArrayConstantArrayExpressionType) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := getSwigcptr(arg3)
-	var _swig_i_3 [] int64
-
-    _swig_i_3 = arg4
-
+	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	C._wrap_ModelCache_InsertVarArrayConstantArrayExpression_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.uintptr_t(_swig_i_2), *(*C.swig_type_990)(unsafe.Pointer(&_swig_i_3)), C.swig_intgo(_swig_i_4))
-
-
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_3
+		Swig_escape_val = arg4
 	}
 }
 
@@ -33276,12 +32990,12 @@ type ModelCache interface {
 	InsertExprExprConstantExpression(arg2 IntExpr, arg3 IntExpr, arg4 IntExpr, arg5 int64, arg6 Operations_researchModelCacheExprExprConstantExpressionType)
 	FindVarConstantConstantExpression(arg2 IntVar, arg3 int64, arg4 int64, arg5 Operations_researchModelCacheVarConstantConstantExpressionType) (_swig_ret IntExpr)
 	InsertVarConstantConstantExpression(arg2 IntExpr, arg3 IntVar, arg4 int64, arg5 int64, arg6 Operations_researchModelCacheVarConstantConstantExpressionType)
-	FindVarConstantArrayExpression(arg2 IntVar, arg3 [] int64, arg4 Operations_researchModelCacheVarConstantArrayExpressionType) (_swig_ret IntExpr)
-	InsertVarConstantArrayExpression(arg2 IntExpr, arg3 IntVar, arg4 [] int64, arg5 Operations_researchModelCacheVarConstantArrayExpressionType)
+	FindVarConstantArrayExpression(arg2 IntVar, arg3 []int64, arg4 Operations_researchModelCacheVarConstantArrayExpressionType) (_swig_ret IntExpr)
+	InsertVarConstantArrayExpression(arg2 IntExpr, arg3 IntVar, arg4 []int64, arg5 Operations_researchModelCacheVarConstantArrayExpressionType)
 	FindVarArrayExpression(arg2 IntVarVector, arg3 Operations_researchModelCacheVarArrayExpressionType) (_swig_ret IntExpr)
 	InsertVarArrayExpression(arg2 IntExpr, arg3 IntVarVector, arg4 Operations_researchModelCacheVarArrayExpressionType)
-	FindVarArrayConstantArrayExpression(arg2 IntVarVector, arg3 [] int64, arg4 Operations_researchModelCacheVarArrayConstantArrayExpressionType) (_swig_ret IntExpr)
-	InsertVarArrayConstantArrayExpression(arg2 IntExpr, arg3 IntVarVector, arg4 [] int64, arg5 Operations_researchModelCacheVarArrayConstantArrayExpressionType)
+	FindVarArrayConstantArrayExpression(arg2 IntVarVector, arg3 []int64, arg4 Operations_researchModelCacheVarArrayConstantArrayExpressionType) (_swig_ret IntExpr)
+	InsertVarArrayConstantArrayExpression(arg2 IntExpr, arg3 IntVarVector, arg4 []int64, arg5 Operations_researchModelCacheVarArrayConstantArrayExpressionType)
 	FindVarArrayConstantExpression(arg2 IntVarVector, arg3 int64, arg4 Operations_researchModelCacheVarArrayConstantExpressionType) (_swig_ret IntExpr)
 	InsertVarArrayConstantExpression(arg2 IntExpr, arg3 IntVarVector, arg4 int64, arg5 Operations_researchModelCacheVarArrayConstantExpressionType)
 	Solver() (_swig_ret Solver)
@@ -33296,15 +33010,13 @@ func (p SwigcptrRevPartialSequence) Swigcptr() uintptr {
 func (p SwigcptrRevPartialSequence) SwigIsRevPartialSequence() {
 }
 
-func NewRevPartialSequence__SWIG_0(arg1 [] int) (_swig_ret RevPartialSequence) {
+func NewRevPartialSequence__SWIG_0(arg1 []int) (_swig_ret RevPartialSequence) {
 	var swig_r RevPartialSequence
-	var _swig_i_0 [] int
+	var _swig_i_0 []C.int
 
-    _swig_i_0 = arg1
+    _swig_i_0 = swigCopyintSliceIn(arg1)
 
 	swig_r = (RevPartialSequence)(SwigcptrRevPartialSequence(C._wrap_new_RevPartialSequence__SWIG_0_constraintsolver_e5a2167dd134d32d(*(*C.swig_type_993)(unsafe.Pointer(&_swig_i_0)))))
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_0
 	}
@@ -33321,10 +33033,10 @@ func NewRevPartialSequence__SWIG_1(arg1 int) (_swig_ret RevPartialSequence) {
 func NewRevPartialSequence(a ...interface{}) RevPartialSequence {
 	argc := len(a)
 	if argc == 1 {
-		if _, ok := a[0].([] int); !ok {
+		if _, ok := a[0].([]int); !ok {
 			goto check_1
 		}
-		return NewRevPartialSequence__SWIG_0(a[0].([] int))
+		return NewRevPartialSequence__SWIG_0(a[0].([]int))
 	}
 check_1:
 	if argc == 1 {
@@ -33455,24 +33167,18 @@ func PosIntDivDown(arg1 int64, arg2 int64) (_swig_ret int64) {
 	return swig_r
 }
 
-func ToInt64Vector(arg1 [] int) (_swig_ret [] int64) {
-	var swig_r [] int64
-	var _swig_i_0 [] int
+func ToInt64Vector(arg1 []int) (_swig_ret []int64) {
+	var swig_r []int64
+	var _swig_i_0 []C.int
 
-    _swig_i_0 = arg1
+    _swig_i_0 = swigCopyintSliceIn(arg1)
 
 	swig_r_p := C._wrap_ToInt64Vector_constraintsolver_e5a2167dd134d32d(*(*C.swig_type_1005)(unsafe.Pointer(&_swig_i_0)))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-
-
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_0
 	}
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	return swig_r
 }
 
 type SwigcptrRevInteger uintptr
@@ -34502,23 +34208,19 @@ func (p SwigcptrRoutingIndexManager) Swigcptr() uintptr {
 func (p SwigcptrRoutingIndexManager) SwigIsRoutingIndexManager() {
 }
 
-func NewRoutingIndexManager(arg1 int, arg2 int, arg3 [] int, arg4 [] int) (_swig_ret RoutingIndexManager) {
+func NewRoutingIndexManager(arg1 int, arg2 int, arg3 []int, arg4 []int) (_swig_ret RoutingIndexManager) {
 	var swig_r RoutingIndexManager
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	var _swig_i_2 [] int
+	var _swig_i_2 []C.int
 
-    _swig_i_2 = arg3
+    _swig_i_2 = swigCopyRoutingNodeIndexSliceIn(arg3)
 
-	var _swig_i_3 [] int
+	var _swig_i_3 []C.int
 
-    _swig_i_3 = arg4
+    _swig_i_3 = swigCopyRoutingNodeIndexSliceIn(arg4)
 
 	swig_r = (RoutingIndexManager)(SwigcptrRoutingIndexManager(C._wrap_new_RoutingIndexManager_constraintsolver_e5a2167dd134d32d(C.swig_intgo(_swig_i_0), C.swig_intgo(_swig_i_1), *(*C.swig_type_1022)(unsafe.Pointer(&_swig_i_2)), *(*C.swig_type_1023)(unsafe.Pointer(&_swig_i_3)))))
-
-
-
-
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -34549,6 +34251,22 @@ func (arg1 SwigcptrRoutingIndexManager) GetNumberOfIndices() (_swig_ret int) {
 	return swig_r
 }
 
+func (arg1 SwigcptrRoutingIndexManager) GetStartIndex(arg2 int) (_swig_ret int64) {
+	var swig_r int64
+	_swig_i_0 := arg1
+	_swig_i_1 := arg2
+	swig_r = (int64)(C._wrap_RoutingIndexManager_GetStartIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1)))
+	return swig_r
+}
+
+func (arg1 SwigcptrRoutingIndexManager) GetEndIndex(arg2 int) (_swig_ret int64) {
+	var swig_r int64
+	_swig_i_0 := arg1
+	_swig_i_1 := arg2
+	swig_r = (int64)(C._wrap_RoutingIndexManager_GetEndIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1)))
+	return swig_r
+}
+
 func (arg1 SwigcptrRoutingIndexManager) NodeToIndex(arg2 int) (_swig_ret int64) {
 	var swig_r int64
 	_swig_i_0 := arg1
@@ -34560,32 +34278,26 @@ func (arg1 SwigcptrRoutingIndexManager) NodeToIndex(arg2 int) (_swig_ret int64) 
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingIndexManager) NodesToIndices(arg2 [] int) (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrRoutingIndexManager) NodesToIndices(arg2 []int) (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyRoutingNodeIndexSliceIn(arg2)
 
-	swig_r_p := C._wrap_RoutingIndexManager_NodesToIndices_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1026)(unsafe.Pointer(&_swig_i_1)))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-
-
+	swig_r_p := C._wrap_RoutingIndexManager_NodesToIndices_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1028)(unsafe.Pointer(&_swig_i_1)))
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	return swig_r
 }
 
 func (arg1 SwigcptrRoutingIndexManager) IndexToNode(arg2 int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int)(C._wrap_RoutingIndexManager_IndexToNode_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1027(_swig_i_1)))
+	swig_r = (int)(C._wrap_RoutingIndexManager_IndexToNode_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1029(_swig_i_1)))
 	var swig_r_1 int
 {
   return int(swig_r);
@@ -34604,8 +34316,10 @@ type RoutingIndexManager interface {
 	GetNumberOfNodes() (_swig_ret int)
 	GetNumberOfVehicles() (_swig_ret int)
 	GetNumberOfIndices() (_swig_ret int)
+	GetStartIndex(arg2 int) (_swig_ret int64)
+	GetEndIndex(arg2 int) (_swig_ret int64)
 	NodeToIndex(arg2 int) (_swig_ret int64)
-	NodesToIndices(arg2 [] int) (_swig_ret [] int64)
+	NodesToIndices(arg2 []int) (_swig_ret []int64)
 	IndexToNode(arg2 int64) (_swig_ret int)
 }
 
@@ -34674,7 +34388,7 @@ func FindErrorInRoutingSearchParameters(arg1 RoutingSearchParameters) (_swig_ret
   }
   _swig_i_0 = bytes
 }
-	swig_r_p := C._wrap_FindErrorInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(*(*C.swig_type_1032)(unsafe.Pointer(&_swig_i_0)))
+	swig_r_p := C._wrap_FindErrorInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(*(*C.swig_type_1034)(unsafe.Pointer(&_swig_i_0)))
 	swig_r = *(*string)(unsafe.Pointer(&swig_r_p))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_0
@@ -34695,7 +34409,7 @@ func FindErrorsInRoutingSearchParameters(arg1 RoutingSearchParameters) (_swig_re
   }
   _swig_i_0 = bytes
 }
-	swig_r = (Std_vector_Sl_std_string_Sg_)(SwigcptrStd_vector_Sl_std_string_Sg_(C._wrap_FindErrorsInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(*(*C.swig_type_1033)(unsafe.Pointer(&_swig_i_0)))))
+	swig_r = (Std_vector_Sl_std_string_Sg_)(SwigcptrStd_vector_Sl_std_string_Sg_(C._wrap_FindErrorsInRoutingSearchParameters_constraintsolver_e5a2167dd134d32d(*(*C.swig_type_1035)(unsafe.Pointer(&_swig_i_0)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_0
 	}
@@ -34722,7 +34436,7 @@ func (arg1 SwigcptrPathsMetadata) IsStart(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_PathsMetadata_IsStart_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1034(_swig_i_1)))
+	swig_r = (bool)(C._wrap_PathsMetadata_IsStart_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1036(_swig_i_1)))
 	return swig_r
 }
 
@@ -34730,7 +34444,7 @@ func (arg1 SwigcptrPathsMetadata) IsEnd(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_PathsMetadata_IsEnd_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1035(_swig_i_1)))
+	swig_r = (bool)(C._wrap_PathsMetadata_IsEnd_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1037(_swig_i_1)))
 	return swig_r
 }
 
@@ -34738,7 +34452,7 @@ func (arg1 SwigcptrPathsMetadata) GetPath(arg2 int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int)(C._wrap_PathsMetadata_GetPath_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1036(_swig_i_1)))
+	swig_r = (int)(C._wrap_PathsMetadata_GetPath_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1038(_swig_i_1)))
 	return swig_r
 }
 
@@ -34749,40 +34463,28 @@ func (arg1 SwigcptrPathsMetadata) NumPaths() (_swig_ret int) {
 	return swig_r
 }
 
-func (arg1 SwigcptrPathsMetadata) Paths() (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrPathsMetadata) Paths() (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_PathsMetadata_Paths_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
-func (arg1 SwigcptrPathsMetadata) Starts() (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrPathsMetadata) Starts() (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_PathsMetadata_Starts_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
-func (arg1 SwigcptrPathsMetadata) Ends() (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrPathsMetadata) Ends() (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_PathsMetadata_Ends_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
 func DeletePathsMetadata(arg1 PathsMetadata) {
@@ -34797,9 +34499,9 @@ type PathsMetadata interface {
 	IsEnd(arg2 int64) (_swig_ret bool)
 	GetPath(arg2 int64) (_swig_ret int)
 	NumPaths() (_swig_ret int)
-	Paths() (_swig_ret [] int64)
-	Starts() (_swig_ret [] int64)
-	Ends() (_swig_ret [] int64)
+	Paths() (_swig_ret []int64)
+	Starts() (_swig_ret []int64)
+	Ends() (_swig_ret []int64)
 }
 
 type SwigcptrRoutingModel uintptr
@@ -34935,7 +34637,7 @@ func NewRoutingModel__SWIG_1(arg1 RoutingIndexManager, arg2 RoutingModelParamete
   }
   _swig_i_1 = bytes
 }
-	swig_r = (RoutingModel)(SwigcptrRoutingModel(C._wrap_new_RoutingModel__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1041)(unsafe.Pointer(&_swig_i_1)))))
+	swig_r = (RoutingModel)(SwigcptrRoutingModel(C._wrap_new_RoutingModel__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1043)(unsafe.Pointer(&_swig_i_1)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -34980,11 +34682,11 @@ func _swig_getRoutingModel_kTransitEvaluatorSignNegativeOrZero_RoutingModel() (_
 }
 
 var RoutingModelKTransitEvaluatorSignNegativeOrZero Operations_researchRoutingModelTransitEvaluatorSign = _swig_getRoutingModel_kTransitEvaluatorSignNegativeOrZero_RoutingModel()
-func (arg1 SwigcptrRoutingModel) RegisterUnaryTransitVector(arg2 [] int64) (_swig_ret int) {
+func (arg1 SwigcptrRoutingModel) RegisterUnaryTransitVector(arg2 []int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int)(C._wrap_RoutingModel_RegisterUnaryTransitVector_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1042)(unsafe.Pointer(&_swig_i_1))))
+	swig_r = (int)(C._wrap_RoutingModel_RegisterUnaryTransitVector_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1044)(unsafe.Pointer(&_swig_i_1))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -35063,27 +34765,25 @@ func (arg1 SwigcptrRoutingModel) AddDimension(arg2 int, arg3 int64, arg4 int64, 
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (bool)(C._wrap_RoutingModel_AddDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_type_1043(_swig_i_2), C.swig_type_1044(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_1045)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (bool)(C._wrap_RoutingModel_AddDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_type_1045(_swig_i_2), C.swig_type_1046(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_1047)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg6
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleTransits(arg2 [] int, arg3 int64, arg4 int64, arg5 bool, arg6 string) (_swig_ret bool) {
+func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleTransits(arg2 []int, arg3 int64, arg4 int64, arg5 bool, arg6 string) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (bool)(C._wrap_RoutingModel_AddDimensionWithVehicleTransits_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1046)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1047(_swig_i_2), C.swig_type_1048(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_1049)(unsafe.Pointer(&_swig_i_5))))
-
-
+	swig_r = (bool)(C._wrap_RoutingModel_AddDimensionWithVehicleTransits_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1048)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1049(_swig_i_2), C.swig_type_1050(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_1051)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -35093,7 +34793,7 @@ func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleTransits(arg2 [] int, ar
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleCapacity(arg2 int, arg3 int64, arg4 [] int64, arg5 bool, arg6 string) (_swig_ret bool) {
+func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleCapacity(arg2 int, arg3 int64, arg4 []int64, arg5 bool, arg6 string) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
@@ -35101,7 +34801,7 @@ func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleCapacity(arg2 int, arg3 
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (bool)(C._wrap_RoutingModel_AddDimensionWithVehicleCapacity_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_type_1050(_swig_i_2), *(*C.swig_type_1051)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), *(*C.swig_type_1052)(unsafe.Pointer(&_swig_i_5))))
+	swig_r = (bool)(C._wrap_RoutingModel_AddDimensionWithVehicleCapacity_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_type_1052(_swig_i_2), *(*C.swig_type_1053)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), *(*C.swig_type_1054)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -35111,20 +34811,18 @@ func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleCapacity(arg2 int, arg3 
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleTransitAndCapacity(arg2 [] int, arg3 int64, arg4 [] int64, arg5 bool, arg6 string) (_swig_ret bool) {
+func (arg1 SwigcptrRoutingModel) AddDimensionWithVehicleTransitAndCapacity(arg2 []int, arg3 int64, arg4 []int64, arg5 bool, arg6 string) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (bool)(C._wrap_RoutingModel_AddDimensionWithVehicleTransitAndCapacity_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1053)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1054(_swig_i_2), *(*C.swig_type_1055)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), *(*C.swig_type_1056)(unsafe.Pointer(&_swig_i_5))))
-
-
+	swig_r = (bool)(C._wrap_RoutingModel_AddDimensionWithVehicleTransitAndCapacity_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1055)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1056(_swig_i_2), *(*C.swig_type_1057)(unsafe.Pointer(&_swig_i_3)), C._Bool(_swig_i_4), *(*C.swig_type_1058)(unsafe.Pointer(&_swig_i_5))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -35145,7 +34843,7 @@ func (arg1 SwigcptrRoutingModel) AddConstantDimensionWithSlack(arg2 int64, arg3 
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
 	_swig_i_5 := arg6
-	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddConstantDimensionWithSlack_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1057(_swig_i_1), C.swig_type_1058(_swig_i_2), C.swig_type_1059(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_1060)(unsafe.Pointer(&_swig_i_5)))))
+	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddConstantDimensionWithSlack_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1059(_swig_i_1), C.swig_type_1060(_swig_i_2), C.swig_type_1061(_swig_i_3), C._Bool(_swig_i_4), *(*C.swig_type_1062)(unsafe.Pointer(&_swig_i_5)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg6
 	}
@@ -35159,21 +34857,21 @@ func (arg1 SwigcptrRoutingModel) AddConstantDimension(arg2 int64, arg3 int64, ar
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddConstantDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1061(_swig_i_1), C.swig_type_1062(_swig_i_2), C._Bool(_swig_i_3), *(*C.swig_type_1063)(unsafe.Pointer(&_swig_i_4)))))
+	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddConstantDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1063(_swig_i_1), C.swig_type_1064(_swig_i_2), C._Bool(_swig_i_3), *(*C.swig_type_1065)(unsafe.Pointer(&_swig_i_4)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg5
 	}
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) AddVectorDimension(arg2 [] int64, arg3 int64, arg4 bool, arg5 string) (_swig_ret Std_pair_Sl_int_Sc_bool_Sg_) {
+func (arg1 SwigcptrRoutingModel) AddVectorDimension(arg2 []int64, arg3 int64, arg4 bool, arg5 string) (_swig_ret Std_pair_Sl_int_Sc_bool_Sg_) {
 	var swig_r Std_pair_Sl_int_Sc_bool_Sg_
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddVectorDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1064)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1065(_swig_i_2), C._Bool(_swig_i_3), *(*C.swig_type_1066)(unsafe.Pointer(&_swig_i_4)))))
+	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddVectorDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1066)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1067(_swig_i_2), C._Bool(_swig_i_3), *(*C.swig_type_1068)(unsafe.Pointer(&_swig_i_4)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -35190,7 +34888,7 @@ func (arg1 SwigcptrRoutingModel) AddMatrixDimension(arg2 Std_vector_Sl_std_vecto
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddMatrixDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1067(_swig_i_2), C._Bool(_swig_i_3), *(*C.swig_type_1068)(unsafe.Pointer(&_swig_i_4)))))
+	swig_r = (Std_pair_Sl_int_Sc_bool_Sg_)(SwigcptrStd_pair_Sl_int_Sc_bool_Sg_(C._wrap_RoutingModel_AddMatrixDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1069(_swig_i_2), C._Bool(_swig_i_3), *(*C.swig_type_1070)(unsafe.Pointer(&_swig_i_4)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg5
 	}
@@ -35270,7 +34968,7 @@ func (arg1 SwigcptrRoutingModel) GetDimensionOrDie(arg2 string) (_swig_ret Routi
 	var swig_r RoutingDimension
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (RoutingDimension)(SwigcptrRoutingDimension(C._wrap_RoutingModel_GetDimensionOrDie_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1069)(unsafe.Pointer(&_swig_i_1)))))
+	swig_r = (RoutingDimension)(SwigcptrRoutingDimension(C._wrap_RoutingModel_GetDimensionOrDie_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1071)(unsafe.Pointer(&_swig_i_1)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -35281,7 +34979,7 @@ func (arg1 SwigcptrRoutingModel) GetMutableDimension(arg2 string) (_swig_ret Rou
 	var swig_r RoutingDimension
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (RoutingDimension)(SwigcptrRoutingDimension(C._wrap_RoutingModel_GetMutableDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1070)(unsafe.Pointer(&_swig_i_1)))))
+	swig_r = (RoutingDimension)(SwigcptrRoutingDimension(C._wrap_RoutingModel_GetMutableDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1072)(unsafe.Pointer(&_swig_i_1)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -35291,7 +34989,7 @@ func (arg1 SwigcptrRoutingModel) GetMutableDimension(arg2 string) (_swig_ret Rou
 func (arg1 SwigcptrRoutingModel) SetPrimaryConstrainedDimension(arg2 string) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_RoutingModel_SetPrimaryConstrainedDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1071)(unsafe.Pointer(&_swig_i_1)))
+	C._wrap_RoutingModel_SetPrimaryConstrainedDimension_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1073)(unsafe.Pointer(&_swig_i_1)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -35329,15 +35027,15 @@ func (arg1 SwigcptrRoutingModel) GetResourceGroup(arg2 int) (_swig_ret Operation
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) GetDimensionResourceGroupIndices(arg2 RoutingDimension) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrRoutingModel) GetDimensionResourceGroupIndices(arg2 RoutingDimension) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	swig_r_p := C._wrap_RoutingModel_GetDimensionResourceGroupIndices_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
@@ -35350,20 +35048,15 @@ func (arg1 SwigcptrRoutingModel) GetDimensionResourceGroupIndex(arg2 RoutingDime
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_0(arg2 [] int64, arg3 int64, arg4 int64) (_swig_ret int) {
+func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_0(arg2 []int64, arg3 int64, arg4 int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int)(C._wrap_RoutingModel_AddDisjunction__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1074)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1075(_swig_i_2), C.swig_type_1076(_swig_i_3)))
-
-
+	swig_r = (int)(C._wrap_RoutingModel_AddDisjunction__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1076)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1077(_swig_i_2), C.swig_type_1078(_swig_i_3)))
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	var swig_r_1 int
 {
@@ -35372,19 +35065,14 @@ func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_0(arg2 [] int64, arg3 int6
 	return swig_r_1
 }
 
-func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_1(arg2 [] int64, arg3 int64) (_swig_ret int) {
+func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_1(arg2 []int64, arg3 int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int)(C._wrap_RoutingModel_AddDisjunction__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1077)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1078(_swig_i_2)))
-
-
+	swig_r = (int)(C._wrap_RoutingModel_AddDisjunction__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1079)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1080(_swig_i_2)))
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	var swig_r_1 int
 {
@@ -35393,18 +35081,13 @@ func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_1(arg2 [] int64, arg3 int6
 	return swig_r_1
 }
 
-func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_2(arg2 [] int64) (_swig_ret int) {
+func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_2(arg2 []int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
-	swig_r = (int)(C._wrap_RoutingModel_AddDisjunction__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1079)(unsafe.Pointer(&_swig_i_1))))
-
-
+	_swig_i_1 := arg2
+	swig_r = (int)(C._wrap_RoutingModel_AddDisjunction__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1081)(unsafe.Pointer(&_swig_i_1))))
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	var swig_r_1 int
 {
@@ -35416,44 +35099,40 @@ func (arg1 SwigcptrRoutingModel) AddDisjunction__SWIG_2(arg2 [] int64) (_swig_re
 func (p SwigcptrRoutingModel) AddDisjunction(a ...interface{}) int {
 	argc := len(a)
 	if argc == 1 {
-		return p.AddDisjunction__SWIG_2(a[0].([] int64))
+		return p.AddDisjunction__SWIG_2(a[0].([]int64))
 	}
 	if argc == 2 {
-		return p.AddDisjunction__SWIG_1(a[0].([] int64), a[1].(int64))
+		return p.AddDisjunction__SWIG_1(a[0].([]int64), a[1].(int64))
 	}
 	if argc == 3 {
-		return p.AddDisjunction__SWIG_0(a[0].([] int64), a[1].(int64), a[2].(int64))
+		return p.AddDisjunction__SWIG_0(a[0].([]int64), a[1].(int64), a[2].(int64))
 	}
 	panic("No match for overloaded function call")
 }
 
-func (arg1 SwigcptrRoutingModel) GetDisjunctionIndices(arg2 int64) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrRoutingModel) GetDisjunctionIndices(arg2 int64) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r_p := C._wrap_RoutingModel_GetDisjunctionIndices_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1081(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r_p := C._wrap_RoutingModel_GetDisjunctionIndices_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1083(_swig_i_1))
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyRoutingDisjunctionIndexSlice(&swig_r)
+    swig_r_1 = swigCopyRoutingDisjunctionIndexSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrRoutingModel) GetDisjunctionNodeIndices(arg2 int) (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrRoutingModel) GetDisjunctionNodeIndices(arg2 int) (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	var _swig_i_1 int
 {
   _swig_i_1 = arg2
 }
 	swig_r_p := C._wrap_RoutingModel_GetDisjunctionNodeIndices_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
 func (arg1 SwigcptrRoutingModel) GetDisjunctionPenalty(arg2 int) (_swig_ret int64) {
@@ -35504,31 +35183,24 @@ func (arg1 SwigcptrRoutingModel) IgnoreDisjunctionsAlreadyForcedToZero() {
 	C._wrap_RoutingModel_IgnoreDisjunctionsAlreadyForcedToZero_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
 }
 
-func (arg1 SwigcptrRoutingModel) AddSoftSameVehicleConstraint(arg2 [] int64, arg3 int64) {
+func (arg1 SwigcptrRoutingModel) AddSoftSameVehicleConstraint(arg2 []int64, arg3 int64) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
+	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_AddSoftSameVehicleConstraint_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1085)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1086(_swig_i_2))
-
-
+	C._wrap_RoutingModel_AddSoftSameVehicleConstraint_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1087)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1088(_swig_i_2))
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 }
 
-func (arg1 SwigcptrRoutingModel) SetAllowedVehiclesForIndex(arg2 [] int, arg3 int64) {
+func (arg1 SwigcptrRoutingModel) SetAllowedVehiclesForIndex(arg2 []int, arg3 int64) {
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int
+	var _swig_i_1 []C.int
 
-    _swig_i_1 = arg2
+    _swig_i_1 = swigCopyintSliceIn(arg2)
 
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_SetAllowedVehiclesForIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1087)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1088(_swig_i_2))
-
-
+	C._wrap_RoutingModel_SetAllowedVehiclesForIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1089)(unsafe.Pointer(&_swig_i_1)), C.swig_type_1090(_swig_i_2))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -35539,7 +35211,7 @@ func (arg1 SwigcptrRoutingModel) IsVehicleAllowedForIndex(arg2 int, arg3 int64) 
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (bool)(C._wrap_RoutingModel_IsVehicleAllowedForIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_type_1089(_swig_i_2)))
+	swig_r = (bool)(C._wrap_RoutingModel_IsVehicleAllowedForIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1), C.swig_type_1091(_swig_i_2)))
 	return swig_r
 }
 
@@ -35547,7 +35219,7 @@ func (arg1 SwigcptrRoutingModel) AddPickupAndDelivery(arg2 int64, arg3 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_AddPickupAndDelivery_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1090(_swig_i_1), C.swig_type_1091(_swig_i_2))
+	C._wrap_RoutingModel_AddPickupAndDelivery_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1092(_swig_i_1), C.swig_type_1093(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingModel) AddPickupAndDeliverySets(arg2 int, arg3 int) {
@@ -35567,7 +35239,7 @@ func (arg1 SwigcptrRoutingModel) GetPickupPositions(arg2 int64) (_swig_ret Std_v
 	var swig_r Std_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (Std_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_)(SwigcptrStd_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_(C._wrap_RoutingModel_GetPickupPositions_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1092(_swig_i_1))))
+	swig_r = (Std_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_)(SwigcptrStd_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_(C._wrap_RoutingModel_GetPickupPositions_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1094(_swig_i_1))))
 	return swig_r
 }
 
@@ -35575,7 +35247,7 @@ func (arg1 SwigcptrRoutingModel) GetDeliveryPositions(arg2 int64) (_swig_ret Std
 	var swig_r Std_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (Std_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_)(SwigcptrStd_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_(C._wrap_RoutingModel_GetDeliveryPositions_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1093(_swig_i_1))))
+	swig_r = (Std_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_)(SwigcptrStd_vector_Sl_operations_research_RoutingModel_PickupDeliveryPosition_Sg_(C._wrap_RoutingModel_GetDeliveryPositions_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1095(_swig_i_1))))
 	return swig_r
 }
 
@@ -35583,7 +35255,7 @@ func (arg1 SwigcptrRoutingModel) IsPickup(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_RoutingModel_IsPickup_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1094(_swig_i_1)))
+	swig_r = (bool)(C._wrap_RoutingModel_IsPickup_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1096(_swig_i_1)))
 	return swig_r
 }
 
@@ -35591,7 +35263,7 @@ func (arg1 SwigcptrRoutingModel) IsDelivery(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_RoutingModel_IsDelivery_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1095(_swig_i_1)))
+	swig_r = (bool)(C._wrap_RoutingModel_IsDelivery_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1097(_swig_i_1)))
 	return swig_r
 }
 
@@ -35657,39 +35329,39 @@ func (arg1 SwigcptrRoutingModel) SetVisitType(arg2 int64, arg3 int, arg4 Operati
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingModel_SetVisitType_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1096(_swig_i_1), C.swig_intgo(_swig_i_2), C.swig_intgo(_swig_i_3))
+	C._wrap_RoutingModel_SetVisitType_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1098(_swig_i_1), C.swig_intgo(_swig_i_2), C.swig_intgo(_swig_i_3))
 }
 
 func (arg1 SwigcptrRoutingModel) GetVisitType(arg2 int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int)(C._wrap_RoutingModel_GetVisitType_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1097(_swig_i_1)))
+	swig_r = (int)(C._wrap_RoutingModel_GetVisitType_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1099(_swig_i_1)))
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) GetSingleNodesOfType(arg2 int) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrRoutingModel) GetSingleNodesOfType(arg2 int) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	swig_r_p := C._wrap_RoutingModel_GetSingleNodesOfType_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
 
-func (arg1 SwigcptrRoutingModel) GetPairIndicesOfType(arg2 int) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrRoutingModel) GetPairIndicesOfType(arg2 int) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	swig_r_p := C._wrap_RoutingModel_GetPairIndicesOfType_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
@@ -35698,7 +35370,7 @@ func (arg1 SwigcptrRoutingModel) GetVisitTypePolicy(arg2 int64) (_swig_ret Opera
 	var swig_r Operations_researchRoutingModelVisitTypePolicy
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (Operations_researchRoutingModelVisitTypePolicy)(C._wrap_RoutingModel_GetVisitTypePolicy_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1100(_swig_i_1)))
+	swig_r = (Operations_researchRoutingModelVisitTypePolicy)(C._wrap_RoutingModel_GetVisitTypePolicy_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1102(_swig_i_1)))
 	return swig_r
 }
 
@@ -35743,7 +35415,7 @@ func (arg1 SwigcptrRoutingModel) UnperformedPenalty(arg2 int64) (_swig_ret int64
 	var swig_r int64
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int64)(C._wrap_RoutingModel_UnperformedPenalty_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1102(_swig_i_1)))
+	swig_r = (int64)(C._wrap_RoutingModel_UnperformedPenalty_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1104(_swig_i_1)))
 	return swig_r
 }
 
@@ -35752,7 +35424,7 @@ func (arg1 SwigcptrRoutingModel) UnperformedPenaltyOrValue(arg2 int64, arg3 int6
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int64)(C._wrap_RoutingModel_UnperformedPenaltyOrValue_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1104(_swig_i_1), C.swig_type_1105(_swig_i_2)))
+	swig_r = (int64)(C._wrap_RoutingModel_UnperformedPenaltyOrValue_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1106(_swig_i_1), C.swig_type_1107(_swig_i_2)))
 	return swig_r
 }
 
@@ -35792,14 +35464,14 @@ func (arg1 SwigcptrRoutingModel) SetArcCostEvaluatorOfVehicle(arg2 int, arg3 int
 func (arg1 SwigcptrRoutingModel) SetFixedCostOfAllVehicles(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_RoutingModel_SetFixedCostOfAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1107(_swig_i_1))
+	C._wrap_RoutingModel_SetFixedCostOfAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1109(_swig_i_1))
 }
 
 func (arg1 SwigcptrRoutingModel) SetFixedCostOfVehicle(arg2 int64, arg3 int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_SetFixedCostOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1108(_swig_i_1), C.swig_intgo(_swig_i_2))
+	C._wrap_RoutingModel_SetFixedCostOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1110(_swig_i_1), C.swig_intgo(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingModel) GetFixedCostOfVehicle(arg2 int) (_swig_ret int64) {
@@ -35816,7 +35488,7 @@ func (arg1 SwigcptrRoutingModel) SetPathEnergyCostOfVehicle(arg2 string, arg3 st
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	C._wrap_RoutingModel_SetPathEnergyCostOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1110)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_1111)(unsafe.Pointer(&_swig_i_2)), C.swig_type_1112(_swig_i_3), C.swig_intgo(_swig_i_4))
+	C._wrap_RoutingModel_SetPathEnergyCostOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1112)(unsafe.Pointer(&_swig_i_1)), *(*C.swig_type_1113)(unsafe.Pointer(&_swig_i_2)), C.swig_type_1114(_swig_i_3), C.swig_intgo(_swig_i_4))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -35829,7 +35501,7 @@ func (arg1 SwigcptrRoutingModel) SetAmortizedCostFactorsOfAllVehicles(arg2 int64
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_SetAmortizedCostFactorsOfAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1113(_swig_i_1), C.swig_type_1114(_swig_i_2))
+	C._wrap_RoutingModel_SetAmortizedCostFactorsOfAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1115(_swig_i_1), C.swig_type_1116(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingModel) SetAmortizedCostFactorsOfVehicle(arg2 int64, arg3 int64, arg4 int) {
@@ -35837,31 +35509,23 @@ func (arg1 SwigcptrRoutingModel) SetAmortizedCostFactorsOfVehicle(arg2 int64, ar
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingModel_SetAmortizedCostFactorsOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1115(_swig_i_1), C.swig_type_1116(_swig_i_2), C.swig_intgo(_swig_i_3))
+	C._wrap_RoutingModel_SetAmortizedCostFactorsOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1117(_swig_i_1), C.swig_type_1118(_swig_i_2), C.swig_intgo(_swig_i_3))
 }
 
-func (arg1 SwigcptrRoutingModel) GetAmortizedLinearCostFactorOfVehicles() (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrRoutingModel) GetAmortizedLinearCostFactorOfVehicles() (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_RoutingModel_GetAmortizedLinearCostFactorOfVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) GetAmortizedQuadraticCostFactorOfVehicles() (_swig_ret [] int64) {
-	var swig_r [] int64
+func (arg1 SwigcptrRoutingModel) GetAmortizedQuadraticCostFactorOfVehicles() (_swig_ret []int64) {
+	var swig_r []int64
 	_swig_i_0 := arg1
 	swig_r_p := C._wrap_RoutingModel_GetAmortizedQuadraticCostFactorOfVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0))
-	swig_r = *(*[] int64)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int64
-
-    swig_r_1 = swigCopyint64_tSlice(&swig_r)
-
-	return swig_r_1
+	swig_r = *(*[]int64)(unsafe.Pointer(&swig_r_p))
+	return swig_r
 }
 
 func (arg1 SwigcptrRoutingModel) SetVehicleUsedWhenEmpty(arg2 bool, arg3 int) {
@@ -35939,21 +35603,21 @@ func (arg1 SwigcptrRoutingModel) AddWeightedVariableMinimizedByFinalizer(arg2 In
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_AddWeightedVariableMinimizedByFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1119(_swig_i_2))
+	C._wrap_RoutingModel_AddWeightedVariableMinimizedByFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1121(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingModel) AddWeightedVariableMaximizedByFinalizer(arg2 IntVar, arg3 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_AddWeightedVariableMaximizedByFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1120(_swig_i_2))
+	C._wrap_RoutingModel_AddWeightedVariableMaximizedByFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1122(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingModel) AddVariableTargetToFinalizer(arg2 IntVar, arg3 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
-	C._wrap_RoutingModel_AddVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1121(_swig_i_2))
+	C._wrap_RoutingModel_AddVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1123(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingModel) AddWeightedVariableTargetToFinalizer(arg2 IntVar, arg3 int64, arg4 int64) {
@@ -35961,7 +35625,7 @@ func (arg1 SwigcptrRoutingModel) AddWeightedVariableTargetToFinalizer(arg2 IntVa
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingModel_AddWeightedVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1122(_swig_i_2), C.swig_type_1123(_swig_i_3))
+	C._wrap_RoutingModel_AddWeightedVariableTargetToFinalizer_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1124(_swig_i_2), C.swig_type_1125(_swig_i_3))
 }
 
 func (arg1 SwigcptrRoutingModel) CloseModel() {
@@ -35980,7 +35644,7 @@ func (arg1 SwigcptrRoutingModel) CloseModelWithParameters(arg2 RoutingSearchPara
   }
   _swig_i_1 = bytes
 }
-	C._wrap_RoutingModel_CloseModelWithParameters_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1124)(unsafe.Pointer(&_swig_i_1)))
+	C._wrap_RoutingModel_CloseModelWithParameters_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1126)(unsafe.Pointer(&_swig_i_1)))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -36025,7 +35689,7 @@ func (arg1 SwigcptrRoutingModel) SolveFromAssignmentWithParameters(arg2 Assignme
   }
   _swig_i_2 = bytes
 }
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveFromAssignmentWithParameters_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1125)(unsafe.Pointer(&_swig_i_2)))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveFromAssignmentWithParameters_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1127)(unsafe.Pointer(&_swig_i_2)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -36047,7 +35711,7 @@ func (arg1 SwigcptrRoutingModel) FastSolveFromAssignmentWithParameters__SWIG_0(a
 }
 	_swig_i_3 := arg4
 	_swig_i_4 := getSwigcptr(arg5)
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1126)(unsafe.Pointer(&_swig_i_2)), C._Bool(_swig_i_3), C.uintptr_t(_swig_i_4))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1128)(unsafe.Pointer(&_swig_i_2)), C._Bool(_swig_i_3), C.uintptr_t(_swig_i_4))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -36068,7 +35732,7 @@ func (arg1 SwigcptrRoutingModel) FastSolveFromAssignmentWithParameters__SWIG_1(a
   _swig_i_2 = bytes
 }
 	_swig_i_3 := arg4
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1127)(unsafe.Pointer(&_swig_i_2)), C._Bool(_swig_i_3))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_FastSolveFromAssignmentWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1129)(unsafe.Pointer(&_swig_i_2)), C._Bool(_swig_i_3))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -36100,7 +35764,7 @@ func (arg1 SwigcptrRoutingModel) SolveFromAssignmentsWithParameters__SWIG_0(arg2
   _swig_i_2 = bytes
 }
 	_swig_i_3 := getSwigcptr(arg4)
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1128)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1130)(unsafe.Pointer(&_swig_i_2)), C.uintptr_t(_swig_i_3))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -36120,7 +35784,7 @@ func (arg1 SwigcptrRoutingModel) SolveFromAssignmentsWithParameters__SWIG_1(arg2
   }
   _swig_i_2 = bytes
 }
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1129)(unsafe.Pointer(&_swig_i_2)))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveFromAssignmentsWithParameters__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1131)(unsafe.Pointer(&_swig_i_2)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_2
 	}
@@ -36150,7 +35814,7 @@ func (arg1 SwigcptrRoutingModel) SolveWithIteratedLocalSearch(arg2 RoutingSearch
   }
   _swig_i_1 = bytes
 }
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveWithIteratedLocalSearch_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1130)(unsafe.Pointer(&_swig_i_1)))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveWithIteratedLocalSearch_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1132)(unsafe.Pointer(&_swig_i_1)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -36193,18 +35857,13 @@ func (arg1 SwigcptrRoutingModel) EnableDeepSerialization() (_swig_ret bool) {
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) ApplyLocks(arg2 [] int64) (_swig_ret IntVar) {
+func (arg1 SwigcptrRoutingModel) ApplyLocks(arg2 []int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
-	var _swig_i_1 [] int64
-
-    _swig_i_1 = arg2
-
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_ApplyLocks_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1133)(unsafe.Pointer(&_swig_i_1)))))
-
-
+	_swig_i_1 := arg2
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_ApplyLocks_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1135)(unsafe.Pointer(&_swig_i_1)))))
 	if Swig_escape_always_false {
-		Swig_escape_val = _swig_i_1
+		Swig_escape_val = arg2
 	}
 	return swig_r
 }
@@ -36236,7 +35895,7 @@ func (arg1 SwigcptrRoutingModel) WriteAssignment(arg2 string) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_RoutingModel_WriteAssignment_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1134)(unsafe.Pointer(&_swig_i_1))))
+	swig_r = (bool)(C._wrap_RoutingModel_WriteAssignment_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1136)(unsafe.Pointer(&_swig_i_1))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -36247,7 +35906,7 @@ func (arg1 SwigcptrRoutingModel) ReadAssignment(arg2 string) (_swig_ret Assignme
 	var swig_r Assignment
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_ReadAssignment_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1135)(unsafe.Pointer(&_swig_i_1)))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_ReadAssignment_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1137)(unsafe.Pointer(&_swig_i_1)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg2
 	}
@@ -36324,7 +35983,7 @@ func (arg1 SwigcptrRoutingModel) GetOrCreateNodeNeighborsByCostClass__SWIG_0(arg
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := arg5
-	swig_r = (Operations_research_RoutingModel_NodeNeighborsByCostClass)(SwigcptrOperations_research_RoutingModel_NodeNeighborsByCostClass(C._wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.double(_swig_i_1), C.swig_type_1136(_swig_i_2), C.swig_voidp(_swig_i_3), C._Bool(_swig_i_4))))
+	swig_r = (Operations_research_RoutingModel_NodeNeighborsByCostClass)(SwigcptrOperations_research_RoutingModel_NodeNeighborsByCostClass(C._wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.double(_swig_i_1), C.swig_type_1138(_swig_i_2), C.swig_voidp(_swig_i_3), C._Bool(_swig_i_4))))
 	return swig_r
 }
 
@@ -36334,7 +35993,7 @@ func (arg1 SwigcptrRoutingModel) GetOrCreateNodeNeighborsByCostClass__SWIG_1(arg
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (Operations_research_RoutingModel_NodeNeighborsByCostClass)(SwigcptrOperations_research_RoutingModel_NodeNeighborsByCostClass(C._wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.double(_swig_i_1), C.swig_type_1137(_swig_i_2), C.swig_voidp(_swig_i_3))))
+	swig_r = (Operations_research_RoutingModel_NodeNeighborsByCostClass)(SwigcptrOperations_research_RoutingModel_NodeNeighborsByCostClass(C._wrap_RoutingModel_GetOrCreateNodeNeighborsByCostClass__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.double(_swig_i_1), C.swig_type_1139(_swig_i_2), C.swig_voidp(_swig_i_3))))
 	return swig_r
 }
 
@@ -36398,7 +36057,7 @@ func (arg1 SwigcptrRoutingModel) IsStart(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_RoutingModel_IsStart_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1140(_swig_i_1)))
+	swig_r = (bool)(C._wrap_RoutingModel_IsStart_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1142(_swig_i_1)))
 	return swig_r
 }
 
@@ -36406,7 +36065,7 @@ func (arg1 SwigcptrRoutingModel) IsEnd(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_RoutingModel_IsEnd_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1141(_swig_i_1)))
+	swig_r = (bool)(C._wrap_RoutingModel_IsEnd_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1143(_swig_i_1)))
 	return swig_r
 }
 
@@ -36414,7 +36073,7 @@ func (arg1 SwigcptrRoutingModel) VehicleIndex(arg2 int64) (_swig_ret int) {
 	var swig_r int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int)(C._wrap_RoutingModel_VehicleIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1142(_swig_i_1)))
+	swig_r = (int)(C._wrap_RoutingModel_VehicleIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1144(_swig_i_1)))
 	return swig_r
 }
 
@@ -36423,7 +36082,7 @@ func (arg1 SwigcptrRoutingModel) Next(arg2 Assignment, arg3 int64) (_swig_ret in
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
-	swig_r = (int64)(C._wrap_RoutingModel_Next_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1144(_swig_i_2)))
+	swig_r = (int64)(C._wrap_RoutingModel_Next_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_type_1146(_swig_i_2)))
 	return swig_r
 }
 
@@ -36462,7 +36121,7 @@ func (arg1 SwigcptrRoutingModel) NextVar(arg2 int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_NextVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1145(_swig_i_1))))
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_NextVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1147(_swig_i_1))))
 	return swig_r
 }
 
@@ -36470,7 +36129,7 @@ func (arg1 SwigcptrRoutingModel) ActiveVar(arg2 int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_ActiveVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1146(_swig_i_1))))
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_ActiveVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1148(_swig_i_1))))
 	return swig_r
 }
 
@@ -36494,7 +36153,7 @@ func (arg1 SwigcptrRoutingModel) VehicleVar(arg2 int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_VehicleVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1147(_swig_i_1))))
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingModel_VehicleVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1149(_swig_i_1))))
 	return swig_r
 }
 
@@ -36520,7 +36179,7 @@ func (arg1 SwigcptrRoutingModel) GetArcCostForVehicle(arg2 int64, arg3 int64, ar
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int64)(C._wrap_RoutingModel_GetArcCostForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1149(_swig_i_1), C.swig_type_1150(_swig_i_2), C.swig_type_1151(_swig_i_3)))
+	swig_r = (int64)(C._wrap_RoutingModel_GetArcCostForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1151(_swig_i_1), C.swig_type_1152(_swig_i_2), C.swig_type_1153(_swig_i_3)))
 	return swig_r
 }
 
@@ -36536,7 +36195,7 @@ func (arg1 SwigcptrRoutingModel) GetHomogeneousCost(arg2 int64, arg3 int64) (_sw
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int64)(C._wrap_RoutingModel_GetHomogeneousCost_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1153(_swig_i_1), C.swig_type_1154(_swig_i_2)))
+	swig_r = (int64)(C._wrap_RoutingModel_GetHomogeneousCost_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1155(_swig_i_1), C.swig_type_1156(_swig_i_2)))
 	return swig_r
 }
 
@@ -36545,7 +36204,7 @@ func (arg1 SwigcptrRoutingModel) GetArcCostForFirstSolution(arg2 int64, arg3 int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	swig_r = (int64)(C._wrap_RoutingModel_GetArcCostForFirstSolution_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1156(_swig_i_1), C.swig_type_1157(_swig_i_2)))
+	swig_r = (int64)(C._wrap_RoutingModel_GetArcCostForFirstSolution_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1158(_swig_i_1), C.swig_type_1159(_swig_i_2)))
 	return swig_r
 }
 
@@ -36555,7 +36214,7 @@ func (arg1 SwigcptrRoutingModel) GetArcCostForClass(arg2 int64, arg3 int64, arg4
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int64)(C._wrap_RoutingModel_GetArcCostForClass_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1159(_swig_i_1), C.swig_type_1160(_swig_i_2), C.swig_type_1161(_swig_i_3)))
+	swig_r = (int64)(C._wrap_RoutingModel_GetArcCostForClass_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1161(_swig_i_1), C.swig_type_1162(_swig_i_2), C.swig_type_1163(_swig_i_3)))
 	return swig_r
 }
 
@@ -36563,7 +36222,7 @@ func (arg1 SwigcptrRoutingModel) GetCostClassIndexOfVehicle(arg2 int64) (_swig_r
 	var swig_r int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int)(C._wrap_RoutingModel_GetCostClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1162(_swig_i_1)))
+	swig_r = (int)(C._wrap_RoutingModel_GetCostClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1164(_swig_i_1)))
 	var swig_r_1 int
 {
   return int(swig_r);
@@ -36600,7 +36259,7 @@ func (arg1 SwigcptrRoutingModel) GetVehicleClassIndexOfVehicle(arg2 int64) (_swi
 	var swig_r int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int)(C._wrap_RoutingModel_GetVehicleClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1163(_swig_i_1)))
+	swig_r = (int)(C._wrap_RoutingModel_GetVehicleClassIndexOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1165(_swig_i_1)))
 	var swig_r_1 int
 {
   return int(swig_r);
@@ -36626,15 +36285,15 @@ func (arg1 SwigcptrRoutingModel) GetVehicleClassesCount() (_swig_ret int) {
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingModel) GetSameVehicleIndicesOfIndex(arg2 int) (_swig_ret [] int) {
-	var swig_r [] int
+func (arg1 SwigcptrRoutingModel) GetSameVehicleIndicesOfIndex(arg2 int) (_swig_ret []int) {
+	var swig_r []C.int
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	swig_r_p := C._wrap_RoutingModel_GetSameVehicleIndicesOfIndex_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_intgo(_swig_i_1))
-	swig_r = *(*[] int)(unsafe.Pointer(&swig_r_p))
-	var swig_r_1 [] int
+	swig_r = *(*[]C.int)(unsafe.Pointer(&swig_r_p))
+	var swig_r_1 []int
 
-    swig_r_1 = swigCopyintSlice(&swig_r)
+    swig_r_1 = swigCopyintSliceOut(&swig_r)
 
 	return swig_r_1
 }
@@ -36652,7 +36311,7 @@ func (arg1 SwigcptrRoutingModel) ArcIsMoreConstrainedThanArc(arg2 int64, arg3 in
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (bool)(C._wrap_RoutingModel_ArcIsMoreConstrainedThanArc_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1165(_swig_i_1), C.swig_type_1166(_swig_i_2), C.swig_type_1167(_swig_i_3)))
+	swig_r = (bool)(C._wrap_RoutingModel_ArcIsMoreConstrainedThanArc_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1167(_swig_i_1), C.swig_type_1168(_swig_i_2), C.swig_type_1169(_swig_i_3)))
 	return swig_r
 }
 
@@ -36661,7 +36320,7 @@ func (arg1 SwigcptrRoutingModel) DebugOutputAssignment(arg2 Assignment, arg3 str
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
-	swig_r_p := C._wrap_RoutingModel_DebugOutputAssignment_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1169)(unsafe.Pointer(&_swig_i_2)))
+	swig_r_p := C._wrap_RoutingModel_DebugOutputAssignment_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), *(*C.swig_type_1171)(unsafe.Pointer(&_swig_i_2)))
 	swig_r = *(*string)(unsafe.Pointer(&swig_r_p))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg3
@@ -36778,7 +36437,7 @@ func (arg1 SwigcptrRoutingModel) GetNumberOfDecisionsInFirstSolution(arg2 Routin
   }
   _swig_i_1 = bytes
 }
-	swig_r = (int64)(C._wrap_RoutingModel_GetNumberOfDecisionsInFirstSolution_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1172)(unsafe.Pointer(&_swig_i_1))))
+	swig_r = (int64)(C._wrap_RoutingModel_GetNumberOfDecisionsInFirstSolution_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1174)(unsafe.Pointer(&_swig_i_1))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -36797,7 +36456,7 @@ func (arg1 SwigcptrRoutingModel) GetNumberOfRejectsInFirstSolution(arg2 RoutingS
   }
   _swig_i_1 = bytes
 }
-	swig_r = (int64)(C._wrap_RoutingModel_GetNumberOfRejectsInFirstSolution_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1174)(unsafe.Pointer(&_swig_i_1))))
+	swig_r = (int64)(C._wrap_RoutingModel_GetNumberOfRejectsInFirstSolution_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1176)(unsafe.Pointer(&_swig_i_1))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -36855,7 +36514,7 @@ func (arg1 SwigcptrRoutingModel) SolveWithParameters(arg2 RoutingSearchParameter
   }
   _swig_i_1 = bytes
 }
-	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveWithParameters_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1175)(unsafe.Pointer(&_swig_i_1)))))
+	swig_r = (Assignment)(SwigcptrAssignment(C._wrap_RoutingModel_SolveWithParameters_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1177)(unsafe.Pointer(&_swig_i_1)))))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}
@@ -36865,17 +36524,17 @@ func (arg1 SwigcptrRoutingModel) SolveWithParameters(arg2 RoutingSearchParameter
 type RoutingModel interface {
 	Swigcptr() uintptr
 	SwigIsRoutingModel()
-	RegisterUnaryTransitVector(arg2 [] int64) (_swig_ret int)
+	RegisterUnaryTransitVector(arg2 []int64) (_swig_ret int)
 	RegisterUnaryTransitCallback(a ...interface{}) int
 	RegisterTransitMatrix(arg2 Std_vector_Sl_std_vector_Sl_long_SS_long_Sg__Sg_) (_swig_ret int)
 	RegisterTransitCallback(a ...interface{}) int
 	AddDimension(arg2 int, arg3 int64, arg4 int64, arg5 bool, arg6 string) (_swig_ret bool)
-	AddDimensionWithVehicleTransits(arg2 [] int, arg3 int64, arg4 int64, arg5 bool, arg6 string) (_swig_ret bool)
-	AddDimensionWithVehicleCapacity(arg2 int, arg3 int64, arg4 [] int64, arg5 bool, arg6 string) (_swig_ret bool)
-	AddDimensionWithVehicleTransitAndCapacity(arg2 [] int, arg3 int64, arg4 [] int64, arg5 bool, arg6 string) (_swig_ret bool)
+	AddDimensionWithVehicleTransits(arg2 []int, arg3 int64, arg4 int64, arg5 bool, arg6 string) (_swig_ret bool)
+	AddDimensionWithVehicleCapacity(arg2 int, arg3 int64, arg4 []int64, arg5 bool, arg6 string) (_swig_ret bool)
+	AddDimensionWithVehicleTransitAndCapacity(arg2 []int, arg3 int64, arg4 []int64, arg5 bool, arg6 string) (_swig_ret bool)
 	AddConstantDimensionWithSlack(arg2 int64, arg3 int64, arg4 int64, arg5 bool, arg6 string) (_swig_ret Std_pair_Sl_int_Sc_bool_Sg_)
 	AddConstantDimension(arg2 int64, arg3 int64, arg4 bool, arg5 string) (_swig_ret Std_pair_Sl_int_Sc_bool_Sg_)
-	AddVectorDimension(arg2 [] int64, arg3 int64, arg4 bool, arg5 string) (_swig_ret Std_pair_Sl_int_Sc_bool_Sg_)
+	AddVectorDimension(arg2 []int64, arg3 int64, arg4 bool, arg5 string) (_swig_ret Std_pair_Sl_int_Sc_bool_Sg_)
 	AddMatrixDimension(arg2 Std_vector_Sl_std_vector_Sl_long_SS_long_Sg__Sg_, arg3 int64, arg4 bool, arg5 string) (_swig_ret Std_pair_Sl_int_Sc_bool_Sg_)
 	GetUnaryDimensions() (_swig_ret Std_vector_Sl_operations_research_RoutingDimension_Sm__Sg_)
 	GetDimensionsWithGlobalCumulOptimizers() (_swig_ret Std_vector_Sl_operations_research_RoutingDimension_SS_const_Sm__Sg_)
@@ -36893,19 +36552,19 @@ type RoutingModel interface {
 	AddResourceGroup() (_swig_ret Operations_research_RoutingModel_ResourceGroup)
 	GetResourceGroups() (_swig_ret Std_vector_Sl_std_unique_ptr_Sl_operations_research_RoutingModel_ResourceGroup_Sg__Sg_)
 	GetResourceGroup(arg2 int) (_swig_ret Operations_research_RoutingModel_ResourceGroup)
-	GetDimensionResourceGroupIndices(arg2 RoutingDimension) (_swig_ret [] int)
+	GetDimensionResourceGroupIndices(arg2 RoutingDimension) (_swig_ret []int)
 	GetDimensionResourceGroupIndex(arg2 RoutingDimension) (_swig_ret int)
 	AddDisjunction(a ...interface{}) int
-	GetDisjunctionIndices(arg2 int64) (_swig_ret [] int)
-	GetDisjunctionNodeIndices(arg2 int) (_swig_ret [] int64)
+	GetDisjunctionIndices(arg2 int64) (_swig_ret []int)
+	GetDisjunctionNodeIndices(arg2 int) (_swig_ret []int64)
 	GetDisjunctionPenalty(arg2 int) (_swig_ret int64)
 	GetDisjunctionMaxCardinality(arg2 int) (_swig_ret int64)
 	GetNumberOfDisjunctions() (_swig_ret int)
 	HasMandatoryDisjunctions() (_swig_ret bool)
 	HasMaxCardinalityConstrainedDisjunctions() (_swig_ret bool)
 	IgnoreDisjunctionsAlreadyForcedToZero()
-	AddSoftSameVehicleConstraint(arg2 [] int64, arg3 int64)
-	SetAllowedVehiclesForIndex(arg2 [] int, arg3 int64)
+	AddSoftSameVehicleConstraint(arg2 []int64, arg3 int64)
+	SetAllowedVehiclesForIndex(arg2 []int, arg3 int64)
 	IsVehicleAllowedForIndex(arg2 int, arg3 int64) (_swig_ret bool)
 	AddPickupAndDelivery(arg2 int64, arg3 int64)
 	AddPickupAndDeliverySets(arg2 int, arg3 int)
@@ -36919,8 +36578,8 @@ type RoutingModel interface {
 	GetNumOfSingletonNodes() (_swig_ret int)
 	SetVisitType(arg2 int64, arg3 int, arg4 Operations_researchRoutingModelVisitTypePolicy)
 	GetVisitType(arg2 int64) (_swig_ret int)
-	GetSingleNodesOfType(arg2 int) (_swig_ret [] int)
-	GetPairIndicesOfType(arg2 int) (_swig_ret [] int)
+	GetSingleNodesOfType(arg2 int) (_swig_ret []int)
+	GetPairIndicesOfType(arg2 int) (_swig_ret []int)
 	GetVisitTypePolicy(arg2 int64) (_swig_ret Operations_researchRoutingModelVisitTypePolicy)
 	GetNumberOfVisitTypes() (_swig_ret int)
 	AddRequiredTypeAlternativesWhenAddingType(arg2 int, arg3 Absl_flat_hash_set_Sl_int_Sg_)
@@ -36940,8 +36599,8 @@ type RoutingModel interface {
 	SetPathEnergyCostOfVehicle(arg2 string, arg3 string, arg4 int64, arg5 int)
 	SetAmortizedCostFactorsOfAllVehicles(arg2 int64, arg3 int64)
 	SetAmortizedCostFactorsOfVehicle(arg2 int64, arg3 int64, arg4 int)
-	GetAmortizedLinearCostFactorOfVehicles() (_swig_ret [] int64)
-	GetAmortizedQuadraticCostFactorOfVehicles() (_swig_ret [] int64)
+	GetAmortizedLinearCostFactorOfVehicles() (_swig_ret []int64)
+	GetAmortizedQuadraticCostFactorOfVehicles() (_swig_ret []int64)
 	SetVehicleUsedWhenEmpty(arg2 bool, arg3 int)
 	IsVehicleUsedWhenEmpty(arg2 int) (_swig_ret bool)
 	SetFirstSolutionEvaluator(arg2 RoutingTransitCallback2)
@@ -36966,7 +36625,7 @@ type RoutingModel interface {
 	ObjectiveLowerBound() (_swig_ret int64)
 	GetStatus() (_swig_ret Operations_researchRoutingModelStatus)
 	EnableDeepSerialization() (_swig_ret bool)
-	ApplyLocks(arg2 [] int64) (_swig_ret IntVar)
+	ApplyLocks(arg2 []int64) (_swig_ret IntVar)
 	ApplyLocksToAllVehicles(arg2 Std_vector_Sl_std_vector_Sl_long_SS_long_Sg__Sg_, arg3 bool) (_swig_ret bool)
 	PreAssignment() (_swig_ret Assignment)
 	MutablePreAssignment() (_swig_ret Assignment)
@@ -37011,7 +36670,7 @@ type RoutingModel interface {
 	GetVehicleClassIndexOfVehicle(arg2 int64) (_swig_ret int)
 	GetVehicleOfClass(arg2 int) (_swig_ret int)
 	GetVehicleClassesCount() (_swig_ret int)
-	GetSameVehicleIndicesOfIndex(arg2 int) (_swig_ret [] int)
+	GetSameVehicleIndicesOfIndex(arg2 int) (_swig_ret []int)
 	GetVehicleTypeContainer() (_swig_ret Operations_research_RoutingModel_VehicleTypeContainer)
 	ArcIsMoreConstrainedThanArc(arg2 int64, arg3 int64, arg4 int64) (_swig_ret bool)
 	DebugOutputAssignment(arg2 Assignment, arg3 string) (_swig_ret string)
@@ -37546,7 +37205,7 @@ func (p SwigcptrBoundCost) SwigIsBoundCost() {
 func (arg1 SwigcptrBoundCost) SetBound(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_BoundCost_bound_set_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1186(_swig_i_1))
+	C._wrap_BoundCost_bound_set_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1188(_swig_i_1))
 }
 
 func (arg1 SwigcptrBoundCost) GetBound() (_swig_ret int64) {
@@ -37559,7 +37218,7 @@ func (arg1 SwigcptrBoundCost) GetBound() (_swig_ret int64) {
 func (arg1 SwigcptrBoundCost) SetCost(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_BoundCost_cost_set_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1188(_swig_i_1))
+	C._wrap_BoundCost_cost_set_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1190(_swig_i_1))
 }
 
 func (arg1 SwigcptrBoundCost) GetCost() (_swig_ret int64) {
@@ -37579,7 +37238,7 @@ func NewBoundCost__SWIG_1(arg1 int64, arg2 int64) (_swig_ret BoundCost) {
 	var swig_r BoundCost
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (BoundCost)(SwigcptrBoundCost(C._wrap_new_BoundCost__SWIG_1_constraintsolver_e5a2167dd134d32d(C.swig_type_1190(_swig_i_0), C.swig_type_1191(_swig_i_1))))
+	swig_r = (BoundCost)(SwigcptrBoundCost(C._wrap_new_BoundCost__SWIG_1_constraintsolver_e5a2167dd134d32d(C.swig_type_1192(_swig_i_0), C.swig_type_1193(_swig_i_1))))
 	return swig_r
 }
 
@@ -37679,7 +37338,7 @@ func (arg1 SwigcptrRoutingDimension) GetTransitValue(arg2 int64, arg3 int64, arg
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int64)(C._wrap_RoutingDimension_GetTransitValue_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1193(_swig_i_1), C.swig_type_1194(_swig_i_2), C.swig_type_1195(_swig_i_3)))
+	swig_r = (int64)(C._wrap_RoutingDimension_GetTransitValue_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1195(_swig_i_1), C.swig_type_1196(_swig_i_2), C.swig_type_1197(_swig_i_3)))
 	return swig_r
 }
 
@@ -37689,7 +37348,7 @@ func (arg1 SwigcptrRoutingDimension) GetTransitValueFromClass(arg2 int64, arg3 i
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	swig_r = (int64)(C._wrap_RoutingDimension_GetTransitValueFromClass_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1197(_swig_i_1), C.swig_type_1198(_swig_i_2), C.swig_type_1199(_swig_i_3)))
+	swig_r = (int64)(C._wrap_RoutingDimension_GetTransitValueFromClass_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1199(_swig_i_1), C.swig_type_1200(_swig_i_2), C.swig_type_1201(_swig_i_3)))
 	return swig_r
 }
 
@@ -37697,7 +37356,7 @@ func (arg1 SwigcptrRoutingDimension) CumulVar(arg2 int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_CumulVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1200(_swig_i_1))))
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_CumulVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1202(_swig_i_1))))
 	return swig_r
 }
 
@@ -37705,7 +37364,7 @@ func (arg1 SwigcptrRoutingDimension) TransitVar(arg2 int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_TransitVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1201(_swig_i_1))))
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_TransitVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1203(_swig_i_1))))
 	return swig_r
 }
 
@@ -37713,7 +37372,7 @@ func (arg1 SwigcptrRoutingDimension) FixedTransitVar(arg2 int64) (_swig_ret IntV
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_FixedTransitVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1202(_swig_i_1))))
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_FixedTransitVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1204(_swig_i_1))))
 	return swig_r
 }
 
@@ -37721,7 +37380,7 @@ func (arg1 SwigcptrRoutingDimension) SlackVar(arg2 int64) (_swig_ret IntVar) {
 	var swig_r IntVar
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_SlackVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1203(_swig_i_1))))
+	swig_r = (IntVar)(SwigcptrIntVar(C._wrap_RoutingDimension_SlackVar_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1205(_swig_i_1))))
 	return swig_r
 }
 
@@ -37757,39 +37416,39 @@ func (arg1 SwigcptrRoutingDimension) SetSpanUpperBoundForVehicle(arg2 int64, arg
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	C._wrap_RoutingDimension_SetSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1204(_swig_i_1), C.swig_intgo(_swig_i_2))
+	C._wrap_RoutingDimension_SetSpanUpperBoundForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1206(_swig_i_1), C.swig_intgo(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingDimension) SetSpanCostCoefficientForVehicle(arg2 int64, arg3 int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	C._wrap_RoutingDimension_SetSpanCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1205(_swig_i_1), C.swig_intgo(_swig_i_2))
+	C._wrap_RoutingDimension_SetSpanCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1207(_swig_i_1), C.swig_intgo(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingDimension) SetSpanCostCoefficientForAllVehicles(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_RoutingDimension_SetSpanCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1206(_swig_i_1))
+	C._wrap_RoutingDimension_SetSpanCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1208(_swig_i_1))
 }
 
 func (arg1 SwigcptrRoutingDimension) SetSlackCostCoefficientForVehicle(arg2 int64, arg3 int) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
-	C._wrap_RoutingDimension_SetSlackCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1207(_swig_i_1), C.swig_intgo(_swig_i_2))
+	C._wrap_RoutingDimension_SetSlackCostCoefficientForVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1209(_swig_i_1), C.swig_intgo(_swig_i_2))
 }
 
 func (arg1 SwigcptrRoutingDimension) SetSlackCostCoefficientForAllVehicles(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_RoutingDimension_SetSlackCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1208(_swig_i_1))
+	C._wrap_RoutingDimension_SetSlackCostCoefficientForAllVehicles_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1210(_swig_i_1))
 }
 
 func (arg1 SwigcptrRoutingDimension) SetGlobalSpanCostCoefficient(arg2 int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	C._wrap_RoutingDimension_SetGlobalSpanCostCoefficient_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1209(_swig_i_1))
+	C._wrap_RoutingDimension_SetGlobalSpanCostCoefficient_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1211(_swig_i_1))
 }
 
 func (arg1 SwigcptrRoutingDimension) SetCumulVarSoftUpperBound(arg2 int64, arg3 int64, arg4 int64) {
@@ -37797,14 +37456,14 @@ func (arg1 SwigcptrRoutingDimension) SetCumulVarSoftUpperBound(arg2 int64, arg3 
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingDimension_SetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1210(_swig_i_1), C.swig_type_1211(_swig_i_2), C.swig_type_1212(_swig_i_3))
+	C._wrap_RoutingDimension_SetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1212(_swig_i_1), C.swig_type_1213(_swig_i_2), C.swig_type_1214(_swig_i_3))
 }
 
 func (arg1 SwigcptrRoutingDimension) HasCumulVarSoftUpperBound(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_RoutingDimension_HasCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1213(_swig_i_1)))
+	swig_r = (bool)(C._wrap_RoutingDimension_HasCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1215(_swig_i_1)))
 	return swig_r
 }
 
@@ -37812,7 +37471,7 @@ func (arg1 SwigcptrRoutingDimension) GetCumulVarSoftUpperBound(arg2 int64) (_swi
 	var swig_r int64
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1215(_swig_i_1)))
+	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftUpperBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1217(_swig_i_1)))
 	return swig_r
 }
 
@@ -37820,7 +37479,7 @@ func (arg1 SwigcptrRoutingDimension) GetCumulVarSoftUpperBoundCoefficient(arg2 i
 	var swig_r int64
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftUpperBoundCoefficient_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1217(_swig_i_1)))
+	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftUpperBoundCoefficient_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1219(_swig_i_1)))
 	return swig_r
 }
 
@@ -37829,14 +37488,14 @@ func (arg1 SwigcptrRoutingDimension) SetCumulVarSoftLowerBound(arg2 int64, arg3 
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingDimension_SetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1218(_swig_i_1), C.swig_type_1219(_swig_i_2), C.swig_type_1220(_swig_i_3))
+	C._wrap_RoutingDimension_SetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1220(_swig_i_1), C.swig_type_1221(_swig_i_2), C.swig_type_1222(_swig_i_3))
 }
 
 func (arg1 SwigcptrRoutingDimension) HasCumulVarSoftLowerBound(arg2 int64) (_swig_ret bool) {
 	var swig_r bool
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (bool)(C._wrap_RoutingDimension_HasCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1221(_swig_i_1)))
+	swig_r = (bool)(C._wrap_RoutingDimension_HasCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1223(_swig_i_1)))
 	return swig_r
 }
 
@@ -37844,7 +37503,7 @@ func (arg1 SwigcptrRoutingDimension) GetCumulVarSoftLowerBound(arg2 int64) (_swi
 	var swig_r int64
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1223(_swig_i_1)))
+	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftLowerBound_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1225(_swig_i_1)))
 	return swig_r
 }
 
@@ -37852,7 +37511,7 @@ func (arg1 SwigcptrRoutingDimension) GetCumulVarSoftLowerBoundCoefficient(arg2 i
 	var swig_r int64
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftLowerBoundCoefficient_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1225(_swig_i_1)))
+	swig_r = (int64)(C._wrap_RoutingDimension_GetCumulVarSoftLowerBoundCoefficient_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1227(_swig_i_1)))
 	return swig_r
 }
 
@@ -37865,12 +37524,12 @@ func (arg1 SwigcptrRoutingDimension) SetBreakIntervalsOfVehicle__SWIG_0(arg2 Int
 	C._wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_0_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), C.swig_intgo(_swig_i_3), C.swig_intgo(_swig_i_4))
 }
 
-func (arg1 SwigcptrRoutingDimension) SetBreakIntervalsOfVehicle__SWIG_1(arg2 IntervalVarVector, arg3 int, arg4 [] int64) {
+func (arg1 SwigcptrRoutingDimension) SetBreakIntervalsOfVehicle__SWIG_1(arg2 IntervalVarVector, arg3 int, arg4 []int64) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_1226)(unsafe.Pointer(&_swig_i_3)))
+	C._wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_1_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_1228)(unsafe.Pointer(&_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -37881,7 +37540,7 @@ func (arg1 SwigcptrRoutingDimension) SetBreakDistanceDurationOfVehicle(arg2 int6
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingDimension_SetBreakDistanceDurationOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1227(_swig_i_1), C.swig_type_1228(_swig_i_2), C.swig_intgo(_swig_i_3))
+	C._wrap_RoutingDimension_SetBreakDistanceDurationOfVehicle_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1229(_swig_i_1), C.swig_type_1230(_swig_i_2), C.swig_intgo(_swig_i_3))
 }
 
 func (arg1 SwigcptrRoutingDimension) InitializeBreaks() {
@@ -37896,13 +37555,13 @@ func (arg1 SwigcptrRoutingDimension) HasBreakConstraints() (_swig_ret bool) {
 	return swig_r
 }
 
-func (arg1 SwigcptrRoutingDimension) SetBreakIntervalsOfVehicle__SWIG_2(arg2 IntervalVarVector, arg3 int, arg4 [] int64, arg5 RoutingTransitCallback2) {
+func (arg1 SwigcptrRoutingDimension) SetBreakIntervalsOfVehicle__SWIG_2(arg2 IntervalVarVector, arg3 int, arg4 []int64, arg5 RoutingTransitCallback2) {
 	_swig_i_0 := arg1
 	_swig_i_1 := getSwigcptr(arg2)
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
 	_swig_i_4 := getSwigcptr(arg5)
-	C._wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_1229)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4))
+	C._wrap_RoutingDimension_SetBreakIntervalsOfVehicle__SWIG_2_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.uintptr_t(_swig_i_1), C.swig_intgo(_swig_i_2), *(*C.swig_type_1231)(unsafe.Pointer(&_swig_i_3)), C.uintptr_t(_swig_i_4))
 	if Swig_escape_always_false {
 		Swig_escape_val = arg4
 	}
@@ -37911,17 +37570,17 @@ func (arg1 SwigcptrRoutingDimension) SetBreakIntervalsOfVehicle__SWIG_2(arg2 Int
 func (p SwigcptrRoutingDimension) SetBreakIntervalsOfVehicle(a ...interface{}) {
 	argc := len(a)
 	if argc == 3 {
-		p.SetBreakIntervalsOfVehicle__SWIG_1(a[0].(IntervalVarVector), a[1].(int), a[2].([] int64))
+		p.SetBreakIntervalsOfVehicle__SWIG_1(a[0].(IntervalVarVector), a[1].(int), a[2].([]int64))
 		return
 	}
 	if argc == 4 {
-		if _, ok := a[2].([] int64); !ok {
+		if _, ok := a[2].([]int64); !ok {
 			goto check_2
 		}
 		if _, ok := a[3].(RoutingTransitCallback2); !ok {
 			goto check_2
 		}
-		p.SetBreakIntervalsOfVehicle__SWIG_2(a[0].(IntervalVarVector), a[1].(int), a[2].([] int64), a[3].(RoutingTransitCallback2))
+		p.SetBreakIntervalsOfVehicle__SWIG_2(a[0].(IntervalVarVector), a[1].(int), a[2].([]int64), a[3].(RoutingTransitCallback2))
 		return
 	}
 check_2:
@@ -37967,7 +37626,7 @@ func (arg1 SwigcptrRoutingDimension) ShortestTransitionSlack(arg2 int64) (_swig_
 	var swig_r int64
 	_swig_i_0 := arg1
 	_swig_i_1 := arg2
-	swig_r = (int64)(C._wrap_RoutingDimension_ShortestTransitionSlack_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1231(_swig_i_1)))
+	swig_r = (int64)(C._wrap_RoutingDimension_ShortestTransitionSlack_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1233(_swig_i_1)))
 	return swig_r
 }
 
@@ -38000,7 +37659,7 @@ func (arg1 SwigcptrRoutingDimension) AddNodePrecedence(arg2 int64, arg3 int64, a
 	_swig_i_1 := arg2
 	_swig_i_2 := arg3
 	_swig_i_3 := arg4
-	C._wrap_RoutingDimension_AddNodePrecedence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1233(_swig_i_1), C.swig_type_1234(_swig_i_2), C.swig_type_1235(_swig_i_3))
+	C._wrap_RoutingDimension_AddNodePrecedence_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), C.swig_type_1235(_swig_i_1), C.swig_type_1236(_swig_i_2), C.swig_type_1237(_swig_i_3))
 }
 
 func (arg1 SwigcptrRoutingDimension) GetSpanUpperBoundForVehicle(arg2 int) (_swig_ret int64) {
@@ -38162,7 +37821,7 @@ func SolveModelWithSat(arg1 RoutingModel, arg2 RoutingSearchParameters, arg3 Ass
 }
 	_swig_i_2 := getSwigcptr(arg3)
 	_swig_i_3 := getSwigcptr(arg4)
-	swig_r = (bool)(C._wrap_SolveModelWithSat_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1242)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3)))
+	swig_r = (bool)(C._wrap_SolveModelWithSat_constraintsolver_e5a2167dd134d32d(C.uintptr_t(_swig_i_0), *(*C.swig_type_1244)(unsafe.Pointer(&_swig_i_1)), C.uintptr_t(_swig_i_2), C.uintptr_t(_swig_i_3)))
 	if Swig_escape_always_false {
 		Swig_escape_val = _swig_i_1
 	}

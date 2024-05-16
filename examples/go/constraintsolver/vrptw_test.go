@@ -100,17 +100,23 @@ func TestConstraintSolver_VRPTW(t *testing.T) {
 		"Time")
 	timeDimension := routing.GetDimensionOrDie("Time")
 
-	// Add time window constraints for each location except depot.
+	// Add time window constraints for each location except depot and 'copy' the
+	// slack var in the solution object (aka Assignment) to print it
 	for i := 1; i < len(data.timeWindows); i++ {
 		index := manager.NodeToIndex(i)
 		timeDimension.CumulVar(index).SetRange(data.timeWindows[i][0],
 			data.timeWindows[i][1])
+		routing.AddToAssignment(timeDimension.SlackVar(index))
 	}
-	// Add time window constraints for each vehicle start node.
+	// Add time window constraints for each vehicle start node and 'copy' the
+	// slack var in the solution object (aka Assignment) to print it.
+	// Warning: Slack var is not defined for vehicle end nodes and should not be
+	// added to the assignment
 	for i := 0; i < data.numVehicles; i++ {
 		index := routing.Start(i)
 		timeDimension.CumulVar(index).SetRange(data.timeWindows[0][0],
 			data.timeWindows[0][1])
+		routing.AddToAssignment(timeDimension.SlackVar(index))
 	}
 
 	// Instantiate route start and end times to produce feasible times.
@@ -149,7 +155,8 @@ func printSolutionVRPTW(t *testing.T, data DataModelVRPTW, manager RoutingIndexM
 		var route string
 		for !routing.IsEnd(index) {
 			timeVar := timeDimension.CumulVar(index)
-			route += fmt.Sprintf("%v Time(%v, %v) -> ", manager.IndexToNode(index), solution.Min(timeVar), solution.Max(timeVar))
+			slackVar := timeDimension.SlackVar(index)
+			route += fmt.Sprintf("%v Time(%v, %v) Slack(%v, %v) -> ", manager.IndexToNode(index), solution.Min(timeVar), solution.Max(timeVar), solution.Min(slackVar), solution.Max(slackVar))
 			index = solution.Value(routing.NextVar(index))
 		}
 		timeVar := timeDimension.CumulVar(index)
