@@ -1,4 +1,4 @@
-[home](README.md) | [boolean logic](boolean_logic.md) | [integer arithmetic](integer_arithmetic.md) | [channeling constraints](channeling.md) | [scheduling](scheduling.md) | [Using the CP-SAT solver](solver.md) | [Model manipulation](model.md) | [Troubleshooting](troubleshooting.md) | [Python API](https://google.github.io/or-tools/python/ortools/sat/python/cp_model.html)
+[home](README.md) | [boolean logic](boolean_logic.md) | [integer arithmetic](integer_arithmetic.md) | [channeling constraints](channeling.md) | [scheduling](scheduling.md) | [Using the CP-SAT solver](solver.md) | [Model manipulation](model.md) | [Troubleshooting](troubleshooting.md) | [Python API](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html)
 ----------------- | --------------------------------- | ------------------------------------------- | --------------------------------------- | --------------------------- | ------------------------------------ | ------------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------
 # Integer arithmetic recipes for the CP-SAT solver.
 
@@ -37,7 +37,7 @@ non-contiguous domains. Here, the variable can be any of 1, 3, 4, or 6:
     6}), "x");`
 -   **C#**: `model.NewIntVarFromDomain(Domain.FromValues(new long[] {1, 3, 4,
     6}), "x");`
--   **Go**: `model.NewIntVarFromDomain(cpmodel.FromValues([]int64_t{1, 3, 4, 6})`
+-   **Go**: `model.NewIntVarFromDomain(cpmodel.FromValues([]int64{1, 3, 4, 6})`
 
 Variables can also be created using a list of intervals. Below, the variable
 created is constrained to be 1, 2, 4, 5, or 6:
@@ -1157,13 +1157,13 @@ func stepFunctionSampleSat() error {
 
 	// expr == 0 on [5, 6] U [8, 10]
 	b0 := model.NewBoolVar()
-	d0 := cpmodel.FromValues([]int64_t{5, 6, 8, 9, 10})
+	d0 := cpmodel.FromValues([]int64{5, 6, 8, 9, 10})
 	model.AddLinearConstraintForDomain(x, d0).OnlyEnforceIf(b0)
 	model.AddEquality(expr, cpmodel.NewConstant(0)).OnlyEnforceIf(b0)
 
 	// expr == 2 on [0, 1] U [3, 4] U [11, 20]
 	b2 := model.NewBoolVar()
-	d2 := cpmodel.FromIntervals([]cpmodel.ClosedInterval{{0, 1}, {3, 4}, {11, 20}})
+	d2 := cpmodel.FromIntervals([]cpmodel.ClosedInterval{{Start: 0, End: 1}, {Start: 3, End: 4}, {Start: 11, End: 20}})
 	model.AddLinearConstraintForDomain(x, d2).OnlyEnforceIf(b2)
 	model.AddEquality(expr, cpmodel.NewConstant(2)).OnlyEnforceIf(b2)
 
@@ -1209,4 +1209,96 @@ func main() {
 		glog.Exitf("stepFunctionSampleSat returned with error: %v", err)
 	}
 }
+```
+
+## Product of a Boolean variable and an integer variable
+
+This sample implements an helper function that will take two variables (Boolean
+and integer), and will return a new integer variable that is constrained to be
+equal to the product of the two variables.
+
+The following samples output:
+
+```
+x=1 b=0 p=0
+x=2 b=0 p=0
+x=3 b=0 p=0
+x=5 b=0 p=0
+x=6 b=0 p=0
+x=7 b=0 p=0
+x=9 b=0 p=0
+x=10 b=0 p=0
+x=1 b=1 p=1
+x=2 b=1 p=2
+x=3 b=1 p=3
+x=5 b=1 p=5
+x=6 b=1 p=6
+x=7 b=1 p=7
+x=9 b=1 p=9
+x=10 b=1 p=10
+```
+
+### Python code
+
+```python
+#!/usr/bin/env python3
+"""Code sample that encodes the product of a Boolean and an integer variable."""
+
+from ortools.sat.python import cp_model
+
+
+class VarArraySolutionPrinter(cp_model.CpSolverSolutionCallback):
+    """Print intermediate solutions."""
+
+    def __init__(self, variables: list[cp_model.IntVar]):
+        cp_model.CpSolverSolutionCallback.__init__(self)
+        self.__variables = variables
+
+    def on_solution_callback(self) -> None:
+        for v in self.__variables:
+            print(f"{v}={self.value(v)}", end=" ")
+        print()
+
+
+def build_product_var(
+    model: cp_model.CpModel, b: cp_model.IntVar, x: cp_model.IntVar, name: str
+) -> cp_model.IntVar:
+    """Builds the product of a Boolean variable and an integer variable."""
+    p = model.new_int_var_from_domain(
+        cp_model.Domain.from_flat_intervals(x.proto.domain).union_with(
+            cp_model.Domain(0, 0)
+        ),
+        name,
+    )
+    model.add(p == x).only_enforce_if(b)
+    model.add(p == 0).only_enforce_if(~b)
+    return p
+
+
+def bool_and_int_var_product_sample_sat():
+    """Encoding of the product of two Boolean variables.
+
+    p == x * y, which is the same as p <=> x and y
+    """
+    model = cp_model.CpModel()
+    b = model.new_bool_var("b")
+    x = model.new_int_var_from_domain(
+        cp_model.Domain.from_values([1, 2, 3, 5, 6, 7, 9, 10]), "x"
+    )
+    p = build_product_var(model, b, x, "p")
+
+    # Search for x and b values in increasing order.
+    model.add_decision_strategy(
+        [b, x], cp_model.CHOOSE_FIRST, cp_model.SELECT_MIN_VALUE
+    )
+
+    # Create a solver and solve.
+    solver = cp_model.CpSolver()
+    solution_printer = VarArraySolutionPrinter([x, b, p])
+    solver.parameters.enumerate_all_solutions = True
+    solver.parameters.search_branching = cp_model.FIXED_SEARCH
+    solver.solve(model, solution_printer)
+
+
+bool_and_int_var_product_sample_sat()
 ```

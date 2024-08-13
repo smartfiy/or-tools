@@ -22,11 +22,11 @@ RUN dnf -y update \
 ENTRYPOINT ["/usr/bin/bash", "-c"]
 CMD ["/usr/bin/bash"]
 
-# Install CMake v3.26.4
-RUN wget -q --no-check-certificate "https://cmake.org/files/v3.26/cmake-3.26.4-linux-aarch64.sh" \
-&& chmod a+x cmake-3.26.4-linux-aarch64.sh \
-&& ./cmake-3.26.4-linux-aarch64.sh --prefix=/usr --skip-license \
-&& rm cmake-3.26.4-linux-aarch64.sh
+# Install CMake 3.28.3
+RUN wget -q --no-check-certificate "https://cmake.org/files/v3.28/cmake-3.28.3-linux-aarch64.sh" \
+&& chmod a+x cmake-3.28.3-linux-aarch64.sh \
+&& ./cmake-3.28.3-linux-aarch64.sh --prefix=/usr --skip-license \
+&& rm cmake-3.28.3-linux-aarch64.sh
 
 # Install Swig 4.1.1
 RUN curl --location-trusted \
@@ -42,7 +42,7 @@ RUN curl --location-trusted \
 && rm -rf swig-4.1.1
 
 # Install .Net
-# see https://docs.microsoft.com/en-us/dotnet/core/install/linux-centos#centos-7-
+# see: https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#scripted-install
 RUN wget -q "https://dot.net/v1/dotnet-install.sh" \
 && chmod a+x dotnet-install.sh \
 && ./dotnet-install.sh -c 3.1 -i /usr/local/bin \

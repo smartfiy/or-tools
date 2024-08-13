@@ -141,7 +141,7 @@ class DisjunctiveOverloadChecker : public PropagatorInterface {
   int RegisterWith(GenericLiteralWatcher* watcher);
 
  private:
-  bool PropagateSubwindow(int relevat_size, IntegerValue global_window_end);
+  bool PropagateSubwindow(int relevant_size, IntegerValue global_window_end);
 
   SchedulingConstraintHelper* helper_;
 
@@ -262,15 +262,14 @@ class DisjunctiveEdgeFinding : public PropagatorInterface {
 class DisjunctivePrecedences : public PropagatorInterface {
  public:
   DisjunctivePrecedences(bool time_direction,
-                         SchedulingConstraintHelper* helper,
-                         IntegerTrail* integer_trail,
-                         PrecedencesPropagator* precedences)
+                         SchedulingConstraintHelper* helper, Model* model)
       : time_direction_(time_direction),
         helper_(helper),
-        integer_trail_(integer_trail),
-        precedences_(precedences),
-        task_set_(helper->NumTasks()),
-        task_to_arc_index_(helper->NumTasks()) {}
+        integer_trail_(model->GetOrCreate<IntegerTrail>()),
+        precedence_relations_(model->GetOrCreate<PrecedenceRelations>()),
+        shared_stats_(model->GetOrCreate<SharedStatistics>()) {}
+  ~DisjunctivePrecedences() override;
+
   bool Propagate() final;
   int RegisterWith(GenericLiteralWatcher* watcher);
 
@@ -280,14 +279,17 @@ class DisjunctivePrecedences : public PropagatorInterface {
   const bool time_direction_;
   SchedulingConstraintHelper* helper_;
   IntegerTrail* integer_trail_;
-  PrecedencesPropagator* precedences_;
+  PrecedenceRelations* precedence_relations_;
+  SharedStatistics* shared_stats_;
+
+  int64_t num_propagations_ = 0;
 
   std::vector<TaskTime> window_;
   std::vector<IntegerVariable> index_to_end_vars_;
 
-  TaskSet task_set_;
-  std::vector<int> task_to_arc_index_;
-  std::vector<PrecedencesPropagator::IntegerPrecedences> before_;
+  std::vector<int> indices_before_;
+  std::vector<bool> skip_;
+  std::vector<PrecedenceRelations::PrecedenceData> before_;
 };
 
 // This is an optimization for the case when we have a big number of such

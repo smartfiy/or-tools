@@ -27,6 +27,8 @@ code_sample_cc_py(name = "binpacking_problem_sat")
 
 code_sample_py(name = "bin_packing_sat")
 
+code_sample_py(name = "bool_and_int_var_product_sample_sat")
+
 code_sample_cc_py(name = "bool_or_sample_sat")
 
 code_sample_py(name = "boolean_product_sample_sat")
@@ -42,6 +44,8 @@ code_sample_cc_py(name = "cp_sat_example")
 code_sample_py(name = "cumulative_variable_profile_sample_sat")
 
 code_sample_cc_py(name = "earliness_tardiness_cost_sample_sat")
+
+code_sample_py(name = "index_first_boolvar_true_sample_sat")
 
 code_sample_cc_py(name = "interval_sample_sat")
 

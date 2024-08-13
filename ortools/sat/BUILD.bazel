@@ -13,9 +13,9 @@
 
 # Home of CP/SAT solver (which includes SAT, max-SAT and PB problems).
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_java//java:defs.bzl", "java_proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library")
+load("@rules_java//java:defs.bzl", "java_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_python//python:proto.bzl", "py_proto_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -486,7 +486,6 @@ cc_library(
     hdrs = ["presolve_context.h"],
     deps = [
         ":cp_model_cc_proto",
-        ":cp_model_checker",
         ":cp_model_loader",
         ":cp_model_mapping",
         ":cp_model_utils",
@@ -510,6 +509,8 @@ cc_library(
         "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/meta:type_traits",
         "@com_google_absl//absl/numeric:int128",
@@ -570,6 +571,7 @@ cc_library(
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/hash",
+        "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/meta:type_traits",
         "@com_google_absl//absl/numeric:int128",
@@ -1008,6 +1010,7 @@ cc_library(
         ":integer_search",
         ":linear_programming_constraint",
         ":model",
+        ":pseudo_costs",
         ":sat_base",
         ":sat_decision",
         ":sat_parameters_cc_proto",
@@ -1030,7 +1033,10 @@ cc_library(
     srcs = ["pseudo_costs.cc"],
     hdrs = ["pseudo_costs.h"],
     deps = [
+        ":cp_model_mapping",
         ":integer",
+        ":linear_constraint_manager",
+        ":linear_programming_constraint",
         ":model",
         ":sat_base",
         ":sat_parameters_cc_proto",
@@ -1039,6 +1045,8 @@ cc_library(
         "//ortools/base:strong_vector",
         "//ortools/util:strong_integers",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -1090,6 +1098,7 @@ cc_library(
         "//ortools/graph",
         "//ortools/graph:topologicalsorter",
         "//ortools/util:bitset",
+        "//ortools/util:logging",
         "//ortools/util:strong_integers",
         "//ortools/util:time_limit",
         "@com_google_absl//absl/cleanup",
@@ -1138,9 +1147,11 @@ cc_library(
     deps = [
         ":integer",
         ":model",
+        ":precedences",
         ":sat_base",
         ":sat_solver",
         ":synchronization",
+        ":util",
         "//ortools/base:stl_util",
         "//ortools/base:strong_vector",
         "//ortools/util:bitset",
@@ -1148,7 +1159,10 @@ cc_library(
         "//ortools/util:strong_integers",
         "//ortools/util:time_limit",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/base:log_severity",
+        "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
@@ -1816,7 +1830,6 @@ cc_library(
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/random:bit_gen_ref",
-        "@com_google_absl//absl/random:distributions",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:span",
     ],
@@ -1827,6 +1840,7 @@ cc_library(
     srcs = ["2d_orthogonal_packing.cc"],
     hdrs = ["2d_orthogonal_packing.h"],
     deps = [
+        ":2d_packing_brute_force",
         ":integer",
         ":synchronization",
         ":util",
@@ -1836,6 +1850,22 @@ cc_library(
         "@com_google_absl//absl/numeric:bits",
         "@com_google_absl//absl/random:bit_gen_ref",
         "@com_google_absl//absl/random:distributions",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "2d_packing_brute_force",
+    srcs = ["2d_packing_brute_force.cc"],
+    hdrs = ["2d_packing_brute_force.h"],
+    deps = [
+        ":diffn_util",
+        ":integer",
+        "//ortools/util:bitset",
+        "@com_google_absl//absl/container:inlined_vector",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -2250,11 +2280,13 @@ cc_library(
         ":integer",
         ":integer_search",
         ":model",
+        ":restart",
         ":sat_base",
         ":sat_parameters_cc_proto",
         ":sat_solver",
         ":synchronization",
         ":util",
+        "//ortools/util:running_stat",
         "//ortools/util:strong_integers",
         "//ortools/util:time_limit",
         "@com_google_absl//absl/base:core_headers",
