@@ -49,9 +49,6 @@
 
 // Convert std::vector<ns IndexT> to/from int slices.
 VECTOR_AS_GO_SLICE_NAMESPACE(ns, IndexT, int, C.int)
-// TODO: 2d slice conversion?
-// Convert std::vector<std::vector<IndexT>> to/from two-dimensional int slices.
-// VECTOR_AS_GO_SLICE_NAMESPACE(ns, std::vector<IndexT>, int, C.int)
 
 %enddef  // DEFINE_INDEX_TYPE
 

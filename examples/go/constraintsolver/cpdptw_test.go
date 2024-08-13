@@ -19,7 +19,94 @@ type DataModelCPDPTW struct {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func TestConstraintSolver_CPDPTW(t *testing.T) {
+func TestConstraintSolver_CPDPTW_Solve(t *testing.T) {
+	routing, data, manager, cleanup := setup(t)
+	defer cleanup()
+
+	// Setting first solution heuristic.
+	searchParameters := DefaultRoutingSearchParameters()
+	searchParameters.TimeLimit = &duration.Duration{Seconds: 5}
+	searchParameters.SolutionLimit = 100
+	searchParameters.FirstSolutionStrategy = FirstSolutionStrategy_PATH_CHEAPEST_ARC
+	searchParameters.LocalSearchMetaheuristic = LocalSearchMetaheuristic_GUIDED_LOCAL_SEARCH
+
+	// Asynchronously cancel search.
+	// go func() {
+	// 	time.Sleep(2 * time.Millisecond)
+	// 	routing.CancelSearch()
+	// }()
+
+	// Solve the problem.
+	solution := routing.SolveWithParameters(searchParameters)
+
+	// Print solution on console.
+	printSolutionCPDPTW(t, data, manager, routing, &solution)
+}
+
+func TestConstraintSolver_CPDPTW_CheckValidSolution(t *testing.T) {
+	routing, data, manager, cleanup := setup(t)
+	defer cleanup()
+
+	// Setting first solution heuristic.
+	searchParameters := DefaultRoutingSearchParameters()
+	searchParameters.TimeLimit = &duration.Duration{Seconds: 5}
+	searchParameters.SolutionLimit = 100
+	searchParameters.FirstSolutionStrategy = FirstSolutionStrategy_PATH_CHEAPEST_ARC
+	searchParameters.LocalSearchMetaheuristic = LocalSearchMetaheuristic_GUIDED_LOCAL_SEARCH
+
+	// close the model
+	routing.CloseModelWithParameters(searchParameters)
+
+	// create valid assignment from routes
+	routes := [][]int64{
+		{12, 1, 4, 3},
+		{5, 6, 2, 10},
+		{7, 13, 11, 15},
+		{9, 8, 14, 16},
+	}
+
+	solution := routing.ReadAssignmentFromRoutes(routes, false)
+	if routing.GetStatus() != RoutingModelROUTING_SUCCESS {
+		t.Errorf("Expected success, got %v", routing.GetStatus())
+		return
+	}
+
+	// Print solution on console.
+	printSolutionCPDPTW(t, data, manager, routing, &solution)
+}
+
+func TestConstraintSolver_CPDPTW_CheckInvalidSolution(t *testing.T) {
+	routing, _, _, cleanup := setup(t)
+	defer cleanup()
+
+	// Setting first solution heuristic.
+	searchParameters := DefaultRoutingSearchParameters()
+	searchParameters.TimeLimit = &duration.Duration{Seconds: 5}
+	searchParameters.SolutionLimit = 100
+	searchParameters.FirstSolutionStrategy = FirstSolutionStrategy_PATH_CHEAPEST_ARC
+	searchParameters.LocalSearchMetaheuristic = LocalSearchMetaheuristic_GUIDED_LOCAL_SEARCH
+
+	// close the model
+	routing.CloseModelWithParameters(searchParameters)
+
+	// create invalid assignment from routes
+	routes := [][]int64{
+		{12, 16, 4, 3},
+		{5, 6, 2, 10},
+		{7, 13, 11, 15},
+		{9, 8, 14, 1},
+	}
+
+	_ = routing.ReadAssignmentFromRoutes(routes, false)
+	if routing.GetStatus() != RoutingModelROUTING_FAIL {
+		t.Errorf("Expected fail, got %v", routing.GetStatus())
+		return
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+func setup(t *testing.T) (RoutingModel, DataModelCPDPTW, RoutingIndexManager, func()) {
 
 	// Solvable pickup deliveries
 	solvablePickupDeliveries := [][]int{
@@ -83,7 +170,6 @@ func TestConstraintSolver_CPDPTW(t *testing.T) {
 		return data.timeMatrix[fromNode][toNode]
 	}
 	w := NewGoRoutingTransitCallback2Wrapper(f)
-	defer w.Delete()
 	transitCallbackIndex := routing.RegisterTransitCallback(w.Wrap())
 
 	// Define cost of each arc.
@@ -104,7 +190,6 @@ func TestConstraintSolver_CPDPTW(t *testing.T) {
 		return int64(data.demands[fromNode])
 	}
 	w2 := NewGoRoutingTransitCallback1Wrapper(f2)
-	defer w2.Delete()
 	capacityCallbackIndex := routing.RegisterUnaryTransitCallback(w2.Wrap())
 
 	// Add Capacity constraint.
@@ -167,13 +252,6 @@ func TestConstraintSolver_CPDPTW(t *testing.T) {
 		routing.SetAllowedVehiclesForIndex(data.allowedVehicles[i], nodeIndex)
 	}
 
-	// Setting first solution heuristic.
-	searchParameters := DefaultRoutingSearchParameters()
-	searchParameters.TimeLimit = &duration.Duration{Seconds: 5}
-	searchParameters.SolutionLimit = 100
-	searchParameters.FirstSolutionStrategy = FirstSolutionStrategy_PATH_CHEAPEST_ARC
-	searchParameters.LocalSearchMetaheuristic = LocalSearchMetaheuristic_GUIDED_LOCAL_SEARCH
-
 	i := 0                           // Current solution count
 	max := 15                        // Max # of solutions
 	objectives := make([]int64, max) // Keep track of solution objective costs
@@ -193,20 +271,16 @@ func TestConstraintSolver_CPDPTW(t *testing.T) {
 		}
 	}
 	wp := NewGoAtSolutionCallbackWrapper(p)
-	defer wp.Delete()
 	routing.AddAtSolutionCallback(wp.Wrap())
 
-	// Asynchronously cancel search.
-	// go func() {
-	// 	time.Sleep(2 * time.Millisecond)
-	// 	routing.CancelSearch()
-	// }()
+	// wrapper deletion for deferred cleanup
+	c := func() {
+		wp.Delete()
+		w2.Delete()
+		w.Delete()
+	}
 
-	// Solve the problem.
-	solution := routing.SolveWithParameters(searchParameters)
-
-	// Print solution on console.
-	printSolutionCPDPTW(t, data, manager, routing, &solution)
+	return routing, data, manager, c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
