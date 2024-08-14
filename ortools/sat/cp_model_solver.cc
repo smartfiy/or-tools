@@ -128,15 +128,15 @@ ABSL_FLAG(
 ABSL_FLAG(bool, cp_model_dump_text_proto, true,
           "DEBUG ONLY, dump models in text proto instead of binary proto.");
 
-ABSL_FLAG(bool, cp_model_dump_lns, false,
+ABSL_FLAG(bool, cp_model_dump_submodels, false,
           "DEBUG ONLY. When set to true, solve will dump all "
-          "lns models proto in text format to "
-          "'FLAGS_cp_model_dump_prefix'lns_xxx.pb.txt.");
+          "lns or objective_shaving submodels proto in text format to "
+          "'FLAGS_cp_model_dump_prefix'xxx.pb.txt.");
 
 ABSL_FLAG(
     bool, cp_model_dump_problematic_lns, false,
-    "DEBUG ONLY. Similar to --cp_model_dump_lns, but only dump fragment for "
-    "which we got an issue while validating the postsolved solution. This "
+    "DEBUG ONLY. Similar to --cp_model_dump_submodels, but only dump fragment "
+    "for which we got an issue while validating the postsolved solution. This "
     "allows to debug presolve issues without dumping all the models.");
 
 ABSL_FLAG(bool, cp_model_dump_response, false,
@@ -887,7 +887,7 @@ IntegerVariable GetOrCreateVariableWithTightBound(
 
 IntegerVariable GetOrCreateVariableLinkedToSumOf(
     const std::vector<std::pair<IntegerVariable, int64_t>>& terms,
-    bool use_equality, Model* model) {
+    bool lb_required, bool ub_required, Model* model) {
   if (terms.empty()) return model->Add(ConstantIntegerVariable(0));
   if (terms.size() == 1 && terms.front().second == 1) {
     return terms.front().first;
@@ -896,7 +896,6 @@ IntegerVariable GetOrCreateVariableLinkedToSumOf(
     return NegationOf(terms.front().first);
   }
 
-  // Add var == terms or var >= terms if use_equality = false.
   const IntegerVariable new_var =
       GetOrCreateVariableWithTightBound(terms, model);
 
@@ -910,17 +909,13 @@ IntegerVariable GetOrCreateVariableLinkedToSumOf(
   vars.push_back(new_var);
   coeffs.push_back(-1);
 
-  // We want == 0 or <= 0 if use_equality = false.
-  const bool lb_required = use_equality;
-  const bool ub_required = true;
-
   // Split if linear is large.
   if (vars.size() > model->GetOrCreate<SatParameters>()->linear_split_size()) {
     SplitAndLoadIntermediateConstraints(lb_required, ub_required, &vars,
                                         &coeffs, model);
   }
 
-  // Load the top-level constraint.
+  // Load the top-level constraint with the required sides.
   if (lb_required) {
     model->Add(WeightedSumGreaterOrEqual(vars, coeffs, 0));
   }
@@ -1058,7 +1053,7 @@ IntegerVariable AddLPConstraints(bool objective_need_to_be_tight,
     for (int c = 0; c < num_components; ++c) {
       if (component_to_cp_terms[c].empty()) continue;
       const IntegerVariable sub_obj_var = GetOrCreateVariableLinkedToSumOf(
-          component_to_cp_terms[c], objective_need_to_be_tight, m);
+          component_to_cp_terms[c], objective_need_to_be_tight, true, m);
       top_level_cp_terms.push_back(std::make_pair(sub_obj_var, 1));
       lp_constraints[c]->SetMainObjectiveVariable(sub_obj_var);
       num_components_containing_objective++;
@@ -1067,8 +1062,8 @@ IntegerVariable AddLPConstraints(bool objective_need_to_be_tight,
 
   const IntegerVariable main_objective_var =
       model_proto.has_objective()
-          ? GetOrCreateVariableLinkedToSumOf(top_level_cp_terms,
-                                             objective_need_to_be_tight, m)
+          ? GetOrCreateVariableLinkedToSumOf(
+                top_level_cp_terms, objective_need_to_be_tight, true, m)
           : kNoIntegerVariable;
 
   // Register LP constraints. Note that this needs to be done after all the
@@ -1093,6 +1088,7 @@ struct SolutionObservers {
   std::vector<std::function<void(const CpSolverResponse& response)>> observers;
   std::vector<std::function<std::string(const CpSolverResponse& response)>>
       log_callbacks;
+  std::vector<std::function<void(double)>> best_bound_callbacks;
 };
 
 std::function<void(Model*)> NewFeasibleSolutionObserver(
@@ -1107,6 +1103,14 @@ std::function<void(Model*)> NewFeasibleSolutionLogCallback(
         callback) {
   return [=](Model* model) {
     model->GetOrCreate<SolutionObservers>()->log_callbacks.push_back(callback);
+  };
+}
+
+std::function<void(Model*)> NewBestBoundCallback(
+    const std::function<void(double)>& callback) {
+  return [=](Model* model) {
+    model->GetOrCreate<SolutionObservers>()->best_bound_callbacks.push_back(
+        callback);
   };
 }
 
@@ -1637,9 +1641,8 @@ void LoadCpModel(const CpModelProto& model_proto, Model* model) {
   // Note that we do that before we finish loading the problem (objective and
   // LP relaxation), because propagation will be faster at this point and it
   // should be enough for the purpose of this auto-detection.
-  if (model->Mutable<PrecedencesPropagator>() != nullptr &&
-      parameters.auto_detect_greater_than_at_least_one_of()) {
-    model->Mutable<PrecedencesPropagator>()
+  if (parameters.auto_detect_greater_than_at_least_one_of()) {
+    model->GetOrCreate<GreaterThanAtLeastOneOfDetector>()
         ->AddGreaterThanAtLeastOneOfConstraints(model);
     if (!sat_solver->FinishPropagation()) return unsat();
   }
@@ -1711,11 +1714,24 @@ void LoadCpModel(const CpModelProto& model_proto, Model* model) {
       terms.push_back(
           std::make_pair(mapping->Integer(obj.vars(i)), obj.coeffs(i)));
     }
-    if (parameters.optimize_with_core() && !objective_need_to_be_tight) {
-      objective_var = GetOrCreateVariableWithTightBound(terms, model);
+    if (parameters.optimize_with_core()) {
+      if (objective_need_to_be_tight) {
+        // We do not care about the <= obj for core, we only need the other side
+        // to enforce a restriction of the objective lower bound.
+        //
+        // TODO(user): This might still create intermediate variables to
+        // decompose the objective for no reason. Just deal directly with the
+        // objective domain in the core algo by forbidding bad assumptions?
+        // Alternatively, just ignore the core solution if it is "too" good and
+        // rely on other solvers?
+        objective_var =
+            GetOrCreateVariableLinkedToSumOf(terms, true, false, model);
+      } else {
+        objective_var = GetOrCreateVariableWithTightBound(terms, model);
+      }
     } else {
       objective_var = GetOrCreateVariableLinkedToSumOf(
-          terms, objective_need_to_be_tight, model);
+          terms, objective_need_to_be_tight, true, model);
     }
   }
 
@@ -2575,6 +2591,13 @@ class ObjectiveShavingSolver : public SubSolver {
     *local_proto_.mutable_variables() =
         helper_->FullNeighborhood().delta.variables();
 
+    // Store the current lb in local variable.
+    IntegerValue objective_lb;
+    {
+      absl::MutexLock mutex_lock(&mutex_);
+      objective_lb = objective_lb_;
+    }
+
     // We replace the objective by a constraint, objective == lb.
     // TODO(user): We could use objective <= lb, it might be better or worse
     // depending on the model. It is also a bit tricker to make sure a feasible
@@ -2586,20 +2609,27 @@ class ObjectiveShavingSolver : public SubSolver {
       auto* obj_var =
           local_proto_.mutable_variables(local_proto_.objective().vars(0));
       obj_var->clear_domain();
-      absl::MutexLock mutex_lock(&mutex_);
-      obj_var->add_domain(objective_lb_.value());
-      obj_var->add_domain(objective_lb_.value());
+      obj_var->add_domain(objective_lb.value());
+      obj_var->add_domain(objective_lb.value());
     } else {
       auto* obj = local_proto_.add_constraints()->mutable_linear();
       *obj->mutable_vars() = local_proto_.objective().vars();
       *obj->mutable_coeffs() = local_proto_.objective().coeffs();
-      absl::MutexLock mutex_lock(&mutex_);
-      obj->add_domain(objective_lb_.value());
-      obj->add_domain(objective_lb_.value());
+      obj->add_domain(objective_lb.value());
+      obj->add_domain(objective_lb.value());
     }
 
     // Clear the objective.
     local_proto_.clear_objective();
+
+    // Dump?
+    if (absl::GetFlag(FLAGS_cp_model_dump_submodels)) {
+      const std::string name =
+          absl::StrCat(absl::GetFlag(FLAGS_cp_model_dump_prefix),
+                       "objective_shaving_", objective_lb.value(), ".pb.txt");
+      LOG(INFO) << "Dumping objective shaving model to '" << name << "'.";
+      CHECK(WriteModelProtoToFile(local_proto_, name));
+    }
 
     // Presolve if asked.
     if (local_params_.cp_model_presolve()) {
@@ -2939,7 +2969,7 @@ class LnsSolver : public SubSolver {
         debug_copy = lns_fragment;
       }
 
-      if (absl::GetFlag(FLAGS_cp_model_dump_lns)) {
+      if (absl::GetFlag(FLAGS_cp_model_dump_submodels)) {
         // TODO(user): export the delta too if needed.
         const std::string lns_name =
             absl::StrCat(absl::GetFlag(FLAGS_cp_model_dump_prefix),
@@ -2966,10 +2996,15 @@ class LnsSolver : public SubSolver {
 
       CpSolverResponse local_response;
       if (presolve_status == CpSolverStatus::UNKNOWN) {
+        // Sometimes when presolve is aborted in the middle, we don't want to
+        // load the model as it might fail some DCHECK.
+        if (shared_->SearchIsDone()) return;
+
         LoadCpModel(lns_fragment, &local_model);
         QuickSolveWithHint(lns_fragment, &local_model);
         SolveLoadedCpModel(lns_fragment, &local_model);
         local_response = local_response_manager->GetResponse();
+
         // In case the LNS model is empty after presolve, the solution
         // repository does not add the solution, and thus does not store the
         // solution info. In that case, we put it back.
@@ -3156,12 +3191,18 @@ void SolveCpModelParallel(const CpModelProto& model_proto,
 
   const bool testing = params.use_lns_only() || params.test_feasibility_jump();
 
-  // We currently only use the feasibility pump if it is enabled and some other
-  // parameters are not on.
-  const bool use_feasibility_pump = params.use_feasibility_pump() &&
+  // We currently only use the feasibility pump or rins/rens if it is enabled
+  // and some other parameters are not on.
+  //
+  // TODO(user): for now this is not deterministic so we disable it on
+  // interleave search. Fix.
+  const bool use_rins_rens = params.use_lns() && params.use_rins_lns() &&
+                             !testing && !params.interleave_search();
+  const bool use_feasibility_pump = params.use_lns() &&
+                                    params.use_feasibility_pump() &&
                                     params.linearization_level() > 0 &&
                                     !testing && !params.interleave_search();
-  if (use_feasibility_pump || params.use_rins_lns()) {
+  if (use_feasibility_pump || use_rins_rens) {
     shared.incomplete_solutions =
         std::make_unique<SharedIncompleteSolutionManager>();
     global_model->Register<SharedIncompleteSolutionManager>(
@@ -3254,10 +3295,7 @@ void SolveCpModelParallel(const CpModelProto& model_proto,
 
   const SatParameters lns_params = GetNamedParameters(params).at("lns");
 
-  // By default we use the user provided parameters.
-  // TODO(user): for now this is not deterministic so we disable it on
-  // interleave search. Fix.
-  if (!testing && params.use_rins_lns() && !params.interleave_search()) {
+  if (use_rins_rens) {
     // Note that we always create the SharedLPSolutionRepository. This meets
     // the requirement of having a SharedLPSolutionRepository to
     // create RINS/RENS lns generators.
@@ -3272,7 +3310,8 @@ void SolveCpModelParallel(const CpModelProto& model_proto,
   const int num_incomplete_solvers =
       params.num_workers() - num_full_problem_solvers;
   const LinearModel* linear_model = global_model->Get<LinearModel>();
-  if (!params.interleave_search() && model_proto.has_objective()) {
+  if (linear_model != nullptr && !params.interleave_search() &&
+      model_proto.has_objective()) {
     int num_violation_ls = params.has_num_violation_ls()
                                ? params.num_violation_ls()
                                : num_incomplete_solvers / 8 + 1;
@@ -3322,7 +3361,8 @@ void SolveCpModelParallel(const CpModelProto& model_proto,
     // schedule more than the available number of threads. They will just be
     // interleaved. We will get an higher diversity, but use more memory.
     const int num_feasibility_jump =
-        (params.interleave_search() || !params.use_feasibility_jump())
+        (params.interleave_search() || !params.use_feasibility_jump() ||
+         linear_model == nullptr)
             ? 0
             : (params.test_feasibility_jump() ? num_available
                                               : (num_available + 1) / 2);
@@ -3391,7 +3431,8 @@ void SolveCpModelParallel(const CpModelProto& model_proto,
   incomplete_subsolvers.clear();
 
   //  Add incomplete subsolvers that require an objective.
-  if (model_proto.has_objective() && !model_proto.objective().vars().empty() &&
+  if (params.use_lns() && model_proto.has_objective() &&
+      !model_proto.objective().vars().empty() &&
       !params.test_feasibility_jump()) {
     // Enqueue all the possible LNS neighborhood subsolvers.
     // Each will have their own metrics.
@@ -3469,7 +3510,7 @@ void SolveCpModelParallel(const CpModelProto& model_proto,
       subsolvers.push_back(std::make_unique<LnsSolver>(
           std::make_unique<RandomPrecedencesPackingNeighborhoodGenerator>(
               helper, "packing_precedences_lns"),
-          params, helper, &shared));
+          lns_params, helper, &shared));
       subsolvers.push_back(std::make_unique<LnsSolver>(
           std::make_unique<SlicePackingNeighborhoodGenerator>(
               helper, "packing_slice_lns"),
@@ -3886,9 +3927,13 @@ CpSolverResponse SolveCpModel(const CpModelProto& model_proto, Model* model) {
     *new_cp_model_proto = model_proto;
   } else if (!ImportModelWithBasicPresolveIntoContext(model_proto,
                                                       context.get())) {
-    VLOG(1) << "Model found infeasible during copy";
-    // TODO(user): At this point, the model is trivial, but we could exit
-    // early.
+    const std::string info = "Problem proven infeasible during initial copy.";
+    SOLVER_LOG(logger, info);
+    CpSolverResponse status_response;
+    status_response.set_status(CpSolverStatus::INFEASIBLE);
+    status_response.set_solution_info(info);
+    shared_response_manager->AppendResponseToBeMerged(status_response);
+    return shared_response_manager->GetResponse();
   }
 
   if (absl::GetFlag(FLAGS_cp_model_ignore_objective) &&
@@ -4147,6 +4192,12 @@ CpSolverResponse SolveCpModel(const CpModelProto& model_proto, Model* model) {
       model->GetOrCreate<SolutionObservers>()->log_callbacks;
   for (const auto& callback : log_callbacks) {
     shared_response_manager->AddLogCallback(callback);
+  }
+
+  const auto& best_bound_callbacks =
+      model->GetOrCreate<SolutionObservers>()->best_bound_callbacks;
+  for (const auto& callback : best_bound_callbacks) {
+    shared_response_manager->AddBestBoundCallback(callback);
   }
 
   // Make sure everything stops when we have a first solution if requested.

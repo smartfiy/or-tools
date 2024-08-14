@@ -27,6 +27,7 @@
 #include "absl/container/btree_map.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/flags/flag.h"
 #include "absl/log/check.h"
 #include "absl/meta/type_traits.h"
 #include "absl/numeric/int128.h"
@@ -36,7 +37,6 @@
 #include "ortools/base/mathutil.h"
 #include "ortools/port/proto_utils.h"
 #include "ortools/sat/cp_model.pb.h"
-#include "ortools/sat/cp_model_checker.h"
 #include "ortools/sat/cp_model_loader.h"
 #include "ortools/sat/cp_model_mapping.h"
 #include "ortools/sat/cp_model_utils.h"
@@ -52,6 +52,11 @@
 #include "ortools/util/saturated_arithmetic.h"
 #include "ortools/util/sorted_interval_list.h"
 #include "ortools/util/time_limit.h"
+
+ABSL_FLAG(bool, cp_model_debug_postsolve, false,
+          "DEBUG ONLY. When set to true, the mappin_model.proto will contains "
+          "file:line of the code that created that constraint. This is helpful "
+          "for debugging postsolve");
 
 namespace operations_research {
 namespace sat {
@@ -1079,7 +1084,7 @@ bool PresolveContext::StoreAffineRelation(int ref_x, int ref_y, int64_t coeff,
   //
   // We have a * rep_x + b * rep_y == o
   int64_t a = rx.coeff;
-  int64_t b = coeff * ry.coeff;
+  int64_t b = -coeff * ry.coeff;
   int64_t o = coeff * ry.offset + offset - rx.offset;
   CHECK_NE(a, 0);
   CHECK_NE(b, 0);
@@ -1107,20 +1112,20 @@ bool PresolveContext::StoreAffineRelation(int ref_x, int ref_y, int64_t coeff,
                                /*debug_no_recursion=*/true);
   }
 
-  // Canonicalize to x = c * y + o
+  // Canonicalize from (a * rep_x + b * rep_y = o) to (x = c * y + o).
   int x, y;
   int64_t c;
   bool negate = false;
   if (std::abs(a) == 1) {
     x = rx.representative;
     y = ry.representative;
-    c = b;
+    c = -b;
     negate = a < 0;
   } else {
     CHECK_EQ(std::abs(b), 1);
     x = ry.representative;
     y = rx.representative;
-    c = a;
+    c = -a;
     negate = b < 0;
   }
   if (negate) {
@@ -1479,13 +1484,23 @@ bool PresolveContext::CanonicalizeEncoding(int* ref, int64_t* value) {
   return true;
 }
 
-bool PresolveContext::InsertVarValueEncoding(int literal, int ref,
+bool PresolveContext::InsertVarValueEncoding(int literal, int var,
                                              int64_t value) {
-  if (!CanonicalizeEncoding(&ref, &value) || !DomainOf(ref).Contains(value)) {
+  if (!CanonicalizeEncoding(&var, &value) || !DomainOf(var).Contains(value)) {
     return SetLiteralToFalse(literal);
   }
   literal = GetLiteralRepresentative(literal);
-  InsertVarValueEncodingInternal(literal, ref, value, /*add_constraints=*/true);
+  InsertVarValueEncodingInternal(literal, var, value, /*add_constraints=*/true);
+
+  if (hint_is_loaded_) {
+    const int bool_var = PositiveRef(literal);
+    DCHECK(RefIsPositive(var));
+    if (!hint_has_value_[bool_var] && hint_has_value_[var]) {
+      const int64_t bool_value = hint_[var] == value ? 1 : 0;
+      hint_has_value_[bool_var] = true;
+      hint_[bool_var] = RefIsPositive(literal) ? bool_value : 1 - bool_value;
+    }
+  }
   return true;
 }
 
@@ -2149,6 +2164,8 @@ int PresolveContext::GetOrCreateReifiedPrecedenceLiteral(
       (IsFixed(time_j) ? FixedValue(time_j) : time_j.offset());
   lesseq->mutable_linear()->add_domain(offset);
   lesseq->mutable_linear()->add_domain(std::numeric_limits<int64_t>::max());
+  CanonicalizeLinearConstraint(lesseq);
+
   if (!LiteralIsTrue(active_i)) {
     AddImplication(result, active_i);
   }
@@ -2157,25 +2174,27 @@ int PresolveContext::GetOrCreateReifiedPrecedenceLiteral(
   }
 
   // Not(result) && active_i && active_j => (time_i > time_j)
-  ConstraintProto* const greater = working_model->add_constraints();
-  if (!IsFixed(time_i)) {
-    greater->mutable_linear()->add_vars(time_i.vars(0));
-    greater->mutable_linear()->add_coeffs(-time_i.coeffs(0));
-  }
-  if (!IsFixed(time_j)) {
-    greater->mutable_linear()->add_vars(time_j.vars(0));
-    greater->mutable_linear()->add_coeffs(time_j.coeffs(0));
-  }
-  greater->mutable_linear()->add_domain(std::numeric_limits<int64_t>::min());
-  greater->mutable_linear()->add_domain(offset - 1);
+  {
+    ConstraintProto* const greater = working_model->add_constraints();
+    if (!IsFixed(time_i)) {
+      greater->mutable_linear()->add_vars(time_i.vars(0));
+      greater->mutable_linear()->add_coeffs(-time_i.coeffs(0));
+    }
+    if (!IsFixed(time_j)) {
+      greater->mutable_linear()->add_vars(time_j.vars(0));
+      greater->mutable_linear()->add_coeffs(time_j.coeffs(0));
+    }
+    greater->mutable_linear()->add_domain(std::numeric_limits<int64_t>::min());
+    greater->mutable_linear()->add_domain(offset - 1);
 
-  // Manages enforcement literal.
-  greater->add_enforcement_literal(NegatedRef(result));
-  if (!LiteralIsTrue(active_i)) {
-    greater->add_enforcement_literal(active_i);
-  }
-  if (!LiteralIsTrue(active_j)) {
-    greater->add_enforcement_literal(active_j);
+    greater->add_enforcement_literal(NegatedRef(result));
+    if (!LiteralIsTrue(active_i)) {
+      greater->add_enforcement_literal(active_i);
+    }
+    if (!LiteralIsTrue(active_j)) {
+      greater->add_enforcement_literal(active_j);
+    }
+    CanonicalizeLinearConstraint(greater);
   }
 
   // This is redundant but should improves performance.
@@ -2312,6 +2331,146 @@ int PresolveContext::GetIntervalRepresentative(int index) {
     return it->second;
   }
   return index;
+}
+
+template <typename ProtoWithVarsAndCoeffs>
+bool CanonicalizeLinearExpressionInternal(
+    absl::Span<const int> enforcements, ProtoWithVarsAndCoeffs* proto,
+    int64_t* offset, std::vector<std::pair<int, int64_t>>* tmp_terms,
+    PresolveContext* context) {
+  // First regroup the terms on the same variables and sum the fixed ones.
+  //
+  // TODO(user): Add a quick pass to skip most of the work below if the
+  // constraint is already in canonical form?
+  tmp_terms->clear();
+  int64_t sum_of_fixed_terms = 0;
+  bool remapped = false;
+  const int old_size = proto->vars().size();
+  DCHECK_EQ(old_size, proto->coeffs().size());
+  for (int i = 0; i < old_size; ++i) {
+    // Remove fixed variable and take affine representative.
+    //
+    // Note that we need to do that before we test for equality with an
+    // enforcement (they should already have been mapped).
+    int new_var;
+    int64_t new_coeff;
+    {
+      const int ref = proto->vars(i);
+      const int var = PositiveRef(ref);
+      const int64_t coeff =
+          RefIsPositive(ref) ? proto->coeffs(i) : -proto->coeffs(i);
+      if (coeff == 0) continue;
+
+      if (context->IsFixed(var)) {
+        sum_of_fixed_terms += coeff * context->FixedValue(var);
+        continue;
+      }
+
+      const AffineRelation::Relation r = context->GetAffineRelation(var);
+      if (r.representative != var) {
+        remapped = true;
+        sum_of_fixed_terms += coeff * r.offset;
+      }
+
+      new_var = r.representative;
+      new_coeff = coeff * r.coeff;
+    }
+
+    // TODO(user): Avoid the quadratic loop for the corner case of many
+    // enforcement literal (this should be pretty rare though).
+    bool removed = false;
+    for (const int enf : enforcements) {
+      if (new_var == PositiveRef(enf)) {
+        if (RefIsPositive(enf)) {
+          // If the constraint is enforced, we can assume the variable is at 1.
+          sum_of_fixed_terms += new_coeff;
+        } else {
+          // We can assume the variable is at zero.
+        }
+        removed = true;
+        break;
+      }
+    }
+    if (removed) {
+      context->UpdateRuleStats("linear: enforcement literal in expression");
+      continue;
+    }
+
+    tmp_terms->push_back({new_var, new_coeff});
+  }
+  proto->clear_vars();
+  proto->clear_coeffs();
+  std::sort(tmp_terms->begin(), tmp_terms->end());
+  int current_var = 0;
+  int64_t current_coeff = 0;
+  for (const auto& entry : *tmp_terms) {
+    CHECK(RefIsPositive(entry.first));
+    if (entry.first == current_var) {
+      current_coeff += entry.second;
+    } else {
+      if (current_coeff != 0) {
+        proto->add_vars(current_var);
+        proto->add_coeffs(current_coeff);
+      }
+      current_var = entry.first;
+      current_coeff = entry.second;
+    }
+  }
+  if (current_coeff != 0) {
+    proto->add_vars(current_var);
+    proto->add_coeffs(current_coeff);
+  }
+  if (remapped) {
+    context->UpdateRuleStats("linear: remapped using affine relations");
+  }
+  if (proto->vars().size() < old_size) {
+    context->UpdateRuleStats("linear: fixed or dup variables");
+  }
+  *offset = sum_of_fixed_terms;
+  return remapped || proto->vars().size() < old_size;
+}
+
+bool PresolveContext::CanonicalizeLinearConstraint(ConstraintProto* ct) {
+  int64_t offset = 0;
+  const bool result = CanonicalizeLinearExpressionInternal(
+      ct->enforcement_literal(), ct->mutable_linear(), &offset, &tmp_terms_,
+      this);
+  if (offset != 0) {
+    FillDomainInProto(
+        ReadDomainFromProto(ct->linear()).AdditionWith(Domain(-offset)),
+        ct->mutable_linear());
+  }
+  return result;
+}
+
+bool PresolveContext::CanonicalizeLinearExpression(
+    absl::Span<const int> enforcements, LinearExpressionProto* expr) {
+  int64_t offset = 0;
+  const bool result = CanonicalizeLinearExpressionInternal(
+      enforcements, expr, &offset, &tmp_terms_, this);
+  expr->set_offset(expr->offset() + offset);
+  return result;
+}
+
+ConstraintProto* PresolveContext::NewMappingConstraint(absl::string_view file,
+                                                       int line) {
+  const int c = mapping_model->constraints().size();
+  ConstraintProto* new_ct = mapping_model->add_constraints();
+  if (absl::GetFlag(FLAGS_cp_model_debug_postsolve)) {
+    new_ct->set_name(absl::StrCat("#", c, " ", file, ":", line));
+  }
+  return new_ct;
+}
+
+ConstraintProto* PresolveContext::NewMappingConstraint(
+    const ConstraintProto& base_ct, absl::string_view file, int line) {
+  const int c = mapping_model->constraints().size();
+  ConstraintProto* new_ct = mapping_model->add_constraints();
+  *new_ct = base_ct;
+  if (absl::GetFlag(FLAGS_cp_model_debug_postsolve)) {
+    new_ct->set_name(absl::StrCat("#c", c, " ", file, ":", line));
+  }
+  return new_ct;
 }
 
 }  // namespace sat

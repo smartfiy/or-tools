@@ -61,10 +61,11 @@ set(CMAKE_Fortran_COMPILER OFF)
 if(BUILD_ZLIB)
   message(CHECK_START "Fetching ZLIB")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  set(ZLIB_BUILD_EXAMPLES OFF)
   FetchContent_Declare(
     zlib
     GIT_REPOSITORY "https://github.com/madler/ZLIB.git"
-    GIT_TAG "v1.2.13"
+    GIT_TAG "v1.3.1"
     PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/ZLIB.patch")
   FetchContent_MakeAvailable(zlib)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
@@ -85,8 +86,8 @@ if(BUILD_absl)
   FetchContent_Declare(
     abseil-cpp
     GIT_REPOSITORY "https://github.com/abseil/abseil-cpp.git"
-    GIT_TAG "20240116.1"
-    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/abseil-cpp-20240116.1.patch"
+    GIT_TAG "20240116.2"
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/abseil-cpp-20240116.2.patch"
   )
   FetchContent_MakeAvailable(abseil-cpp)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
@@ -106,9 +107,9 @@ if(BUILD_Protobuf)
   FetchContent_Declare(
     Protobuf
     GIT_REPOSITORY "https://github.com/protocolbuffers/protobuf.git"
-    GIT_TAG "v25.3"
+    GIT_TAG "v26.1"
     GIT_SUBMODULES ""
-    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/protobuf-v25.3.patch")
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/protobuf-v26.1.patch")
   FetchContent_MakeAvailable(Protobuf)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
   message(CHECK_PASS "fetched")
@@ -124,8 +125,8 @@ if(BUILD_re2)
   FetchContent_Declare(
     re2
     GIT_REPOSITORY "https://github.com/google/re2.git"
-    GIT_TAG "2024-02-01"
-    #PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/re2-2024-02-01.patch"
+    GIT_TAG "2024-04-01"
+    #PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/re2-2024-04-01.patch"
   )
   FetchContent_MakeAvailable(re2)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
@@ -164,12 +165,13 @@ endif()
 if(BUILD_PYTHON AND BUILD_pybind11)
   message(CHECK_START "Fetching pybind11")
   list(APPEND CMAKE_MESSAGE_INDENT "  ")
+  set(PYBIND11_FINDPYTHON ON)
   set(PYBIND11_INSTALL ON)
   set(PYBIND11_TEST OFF)
   FetchContent_Declare(
     pybind11
     GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
-    GIT_TAG "v2.11.1"
+    GIT_TAG "v2.12.0"
     PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/pybind11.patch"
   )
   FetchContent_MakeAvailable(pybind11)
@@ -237,7 +239,8 @@ if(BUILD_HIGHS)
   FetchContent_Declare(
     highs
     GIT_REPOSITORY "https://github.com/ERGO-Code/HiGHS.git"
-    GIT_TAG        "v1.6.0"
+    GIT_TAG        "v1.7.0"
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/highs.patch"
   )
   FetchContent_MakeAvailable(highs)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
@@ -265,8 +268,8 @@ if(BUILD_SCIP)
   FetchContent_Declare(
     scip
     GIT_REPOSITORY "https://github.com/scipopt/scip.git"
-    GIT_TAG        "v810"
-    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/scip-v810.patch"
+    GIT_TAG        "v900"
+    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/../../patches/scip-v900.patch"
   )
   FetchContent_MakeAvailable(scip)
   set(LPI_GLOP_SRC ${scip_SOURCE_DIR}/src/lpi/lpi_glop.cpp PARENT_SCOPE)

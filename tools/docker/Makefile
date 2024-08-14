@@ -93,15 +93,18 @@ help:
 	@echo -e "\t\t${BOLD}archlinux${RESET} (latest)"
 	@echo -e "\t\t${BOLD}centos-7${RESET} (Centos 7 LTS)"
 	@echo -e "\t\t${BOLD}debian-sid${RESET} (unstable)"
-	@echo -e "\t\t${BOLD}debian-11${RESET} (bullseye)"
+	@echo -e "\t\t${BOLD}debian-13${RESET} (Trixie)"
+	@echo -e "\t\t${BOLD}debian-12${RESET} (Bookworm)"
+	@echo -e "\t\t${BOLD}debian-11${RESET} (Bullseye)"
 #	@echo -e "\t\t${BOLD}debian-10${RESET} (buster)"
-#	@echo -e "\t\t${BOLD}fedora-39${RESET}"
+	@echo -e "\t\t${BOLD}fedora-39${RESET}"
 	@echo -e "\t\t${BOLD}fedora-38${RESET}"
 	@echo -e "\t\t${BOLD}fedora-37${RESET}"
 #	@echo -e "\t\t${BOLD}opensuse-leap${RESET} (latest)"
+	@echo -e "\t\t${BOLD}ubuntu-24.04${RESET} (Ubuntu 24.04 LTS, latest)"
 	@echo -e "\t\t${BOLD}ubuntu-23.10${RESET} (Ubuntu 23.10, rolling)"
 	@echo -e "\t\t${BOLD}ubuntu-23.04${RESET} (Ubuntu 23.04)"
-	@echo -e "\t\t${BOLD}ubuntu-22.04${RESET} (Ubuntu 22.04 LTS, latest)"
+	@echo -e "\t\t${BOLD}ubuntu-22.04${RESET} (Ubuntu 22.04 LTS)"
 	@echo -e "\t\t${BOLD}ubuntu-20.04${RESET} (Ubuntu 20.04 LTS)"
 	@echo
 	@echo -e "\t${BOLD}<stage>${RESET}:"
@@ -398,15 +401,14 @@ export/archives: | export
 PLATFORMS := amd64 arm64 # riscv64
 
 # Currently supported distro
-# opensuse-leap # repo broken
-# fedora-39 # Still waiting microsoft dotnet pkg
 DISTROS := \
  alpine-edge \
  archlinux \
  centos-7 \
- debian-11 debian-sid \
- fedora-37 fedora-38 \
- ubuntu-20.04 ubuntu-22.04 ubuntu-23.04 ubuntu-23.10
+ debian-11 debian-12 debian-sid \
+ fedora-37 fedora-38 fedora-39 \
+ ubuntu-20.04 ubuntu-22.04 ubuntu-23.04 ubuntu-23.10 ubuntu-24.04 \
+ opensuse-leap
 
 # List of stages
 STAGES := env devel

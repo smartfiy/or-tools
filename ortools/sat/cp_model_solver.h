@@ -103,6 +103,14 @@ std::function<void(Model*)> NewFeasibleSolutionLogCallback(
     const std::function<std::string(const CpSolverResponse& response)>&
         callback);
 
+/** Creates a callbacks that will be called on each new best objective bound
+ *  found.
+ *
+ * Note that this function is called before the update takes place.
+ */
+std::function<void(Model*)> NewBestBoundCallback(
+    const std::function<void(double)>& callback);
+
 /**
  * Creates parameters for the solver, which you can add to the model with
  * \code

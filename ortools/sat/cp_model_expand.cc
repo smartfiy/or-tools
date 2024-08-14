@@ -191,18 +191,20 @@ void ExpandReservoir(ConstraintProto* ct, PresolveContext* context) {
           CapAdd(CapSub(reservoir.min_level(), demand_i), offset));
       level->mutable_linear()->add_domain(
           CapAdd(CapSub(reservoir.max_level(), demand_i), offset));
+      context->CanonicalizeLinearConstraint(level);
     }
   } else {
     // If all level_changes have the same sign, we do not care about the order,
     // just the sum.
-    auto* const sum =
-        context->working_model->add_constraints()->mutable_linear();
+    ConstraintProto* new_ct = context->working_model->add_constraints();
+    auto* const sum = new_ct->mutable_linear();
     for (int i = 0; i < num_events; ++i) {
       sum->add_vars(is_active_literal(i));
       sum->add_coeffs(context->FixedValue(reservoir.level_changes(i)));
     }
     sum->add_domain(reservoir.min_level());
     sum->add_domain(reservoir.max_level());
+    context->CanonicalizeLinearConstraint(new_ct);
   }
 
   ct->Clear();
@@ -458,6 +460,60 @@ void ExpandInverse(ConstraintProto* ct, PresolveContext* context) {
 
   ct->Clear();
   context->UpdateRuleStats("inverse: expanded");
+}
+
+void ExpandLinMax(ConstraintProto* ct, PresolveContext* context) {
+  const int num_exprs = ct->lin_max().exprs().size();
+  if (num_exprs < 2) return;
+
+  // We have a special treatment for Abs, Earlyness, Tardiness, and all
+  // affine_max where there is only one variable present in all the expressions.
+  if (ExpressionsContainsOnlyOneVar(ct->lin_max().exprs())) return;
+
+  // We will create 2 * num_exprs constraints for target = max(a1, .., an).
+
+  // First.
+  // - target >= ai
+  for (const LinearExpressionProto& expr : ct->lin_max().exprs()) {
+    ConstraintProto* new_ct = context->working_model->add_constraints();
+    LinearConstraintProto* lin = ct->mutable_linear();
+    lin->add_domain(0);
+    lin->add_domain(std::numeric_limits<int64_t>::max());
+    AddLinearExpressionToLinearConstraint(ct->lin_max().target(), 1, lin);
+    AddLinearExpressionToLinearConstraint(expr, -1, lin);
+    context->CanonicalizeLinearConstraint(new_ct);
+  }
+
+  // Second, for each expr, create a new boolean bi, and add bi => target >= ai
+  // With exactly_one(bi)
+  std::vector<int> enforcement_literals;
+  enforcement_literals.reserve(num_exprs);
+  if (num_exprs == 2) {
+    const int new_bool = context->NewBoolVar();
+    enforcement_literals.push_back(new_bool);
+    enforcement_literals.push_back(NegatedRef(new_bool));
+  } else {
+    ConstraintProto* exactly_one = context->working_model->add_constraints();
+    for (int i = 0; i < num_exprs; ++i) {
+      const int new_bool = context->NewBoolVar();
+      exactly_one->mutable_exactly_one()->add_literals(new_bool);
+      enforcement_literals.push_back(new_bool);
+    }
+  }
+
+  for (int i = 0; i < num_exprs; ++i) {
+    ConstraintProto* new_ct = context->working_model->add_constraints();
+    new_ct->add_enforcement_literal(enforcement_literals[i]);
+    LinearConstraintProto* lin = new_ct->mutable_linear();
+    lin->add_domain(std::numeric_limits<int64_t>::min());
+    lin->add_domain(0);
+    AddLinearExpressionToLinearConstraint(ct->lin_max().target(), 1, lin);
+    AddLinearExpressionToLinearConstraint(ct->lin_max().exprs(i), -1, lin);
+    context->CanonicalizeLinearConstraint(new_ct);
+  }
+
+  context->UpdateRuleStats("lin_max: expanded lin_max");
+  ct->Clear();
 }
 
 // A[V] == V means for all i, V == i => A_i == i
@@ -1309,17 +1365,18 @@ bool ReduceTableInPresenceOfUniqueVariableWithCosts(
       // If this tuple is selected, then fix the removed variable value in the
       // mapping model.
       for (int j = 0; j < deleted_vars.size(); ++j) {
-        ConstraintProto* new_ct = context->mapping_model->add_constraints();
+        ConstraintProto* mapping_ct =
+            context->NewMappingConstraint(__FILE__, __LINE__);
         for (int var_index = 0; var_index < new_vars.size(); ++var_index) {
-          new_ct->add_enforcement_literal(context->GetOrCreateVarValueEncoding(
-              new_vars[var_index], (*tuples)[i][var_index]));
+          mapping_ct->add_enforcement_literal(
+              context->GetOrCreateVarValueEncoding(new_vars[var_index],
+                                                   (*tuples)[i][var_index]));
         }
-        new_ct->mutable_linear()->add_vars(deleted_vars[j]);
-        new_ct->mutable_linear()->add_coeffs(1);
-        new_ct->mutable_linear()->add_domain(
-            (*tuples)[i][new_vars.size() + 1 + j]);
-        new_ct->mutable_linear()->add_domain(
-            (*tuples)[i][new_vars.size() + 1 + j]);
+        LinearConstraintProto* new_lin = mapping_ct->mutable_linear();
+        new_lin->add_vars(deleted_vars[j]);
+        new_lin->add_coeffs(1);
+        new_lin->add_domain((*tuples)[i][new_vars.size() + 1 + j]);
+        new_lin->add_domain((*tuples)[i][new_vars.size() + 1 + j]);
       }
       (*tuples)[i].resize(new_vars.size() + 1);
       (*tuples)[new_size++] = (*tuples)[i];
@@ -2225,6 +2282,12 @@ void ExpandCpModel(PresolveContext* context) {
           ExpandNegativeTable(ct, context);
         } else {
           ExpandPositiveTable(ct, context);
+        }
+        break;
+      case ConstraintProto::kLinMax:
+        if (ct->lin_max().exprs().size() <=
+            context->params().max_lin_max_size_for_expansion()) {
+          ExpandLinMax(ct, context);
         }
         break;
       case ConstraintProto::kAllDiff:

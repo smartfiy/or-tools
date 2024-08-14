@@ -18,6 +18,8 @@
 #include "ortools/base/types.h"
 %}
 
+%go_import("runtime")
+
 %insert(go_header) %{
 type swig_goslice struct { arr uintptr; n int; c int }
 %}
@@ -28,6 +30,15 @@ std::vector< ns name ref > name##SliceToVector(_goslice_ slice) {
     std::vector< ns name ref > v;
     for (int i = 0; i < slice.len; i++) {
         ns name ref a = (( ns name * ref )slice.array)[i];
+        v.push_back(a);
+    }
+    return v;
+}
+
+std::vector<std::vector< ns name ref >> name##SliceToVector2d(_goslice_ slice) {
+    std::vector<std::vector< ns name ref >> v;
+    for (int i = 0; i < slice.len; i++) {
+        std::vector< ns name ref > a = name##SliceToVector(((_goslice_ *)slice.array)[i]);
         v.push_back(a);
     }
     return v;
@@ -46,21 +57,54 @@ _goslice_ vectorTo##name##Slice(const std::vector< ns name ref >& arr) {
     
     return slice;
 }
+
+_goslice_ vectorTo##name##Slice2d(const std::vector<std::vector< ns name ref >>& arr) {
+    _goslice_ slice;
+    size_t count = arr.size();
+    _goslice_ * go_arr = (_goslice_ *)malloc(sizeof(_goslice_) * count);
+    slice.array = go_arr;
+    slice.len = slice.cap = count;
+    
+    for (int i = 0; i < count; i++) {
+        go_arr[i] = vectorTo##name##Slice(arr[i]);
+    }
+    
+    return slice;
+}
 %}
 
 %insert(go_header) %{
 func swigCopy##name##SliceIn(s []goname) []gonameim {
-    newSlice := make([] gonameim, len(s))
+    newSlice := make([]gonameim, len(s))
     for i := range newSlice {
         newSlice[i] = gonameim(s[i])
     }
     return newSlice
 }
 
+func swigCopy##name##SliceIn2d(s [][]goname, p runtime.Pinner) [][]gonameim {
+    newSlice := make([][]gonameim, len(s))
+    for i := range newSlice {
+        newSlice[i] = swigCopy##name##SliceIn(s[i])
+        p.Pin(unsafe.SliceData(newSlice[i]))
+    }
+    return newSlice
+}
+
 func swigCopy##name##SliceOut(s *[]gonameim) []goname {
-    newSlice := make([] goname, len(*s))
+    newSlice := make([]goname, len(*s))
     for i := range newSlice {
         newSlice[i] = goname((*s)[i])
+    }
+    p := *(*swig_goslice)(unsafe.Pointer(s))
+    Swig_free(p.arr)
+    return newSlice
+}
+
+func swigCopy##name##SliceOut2d(s *[][]gonameim) [][]goname {
+    newSlice := make([][]goname, len(*s))
+    for i := range newSlice {
+        newSlice[i] = swigCopy##name##SliceOut(&(*s)[i])
     }
     p := *(*swig_goslice)(unsafe.Pointer(s))
     Swig_free(p.arr)
@@ -69,62 +113,85 @@ func swigCopy##name##SliceOut(s *[]gonameim) []goname {
 %}
 
 %typemap(gotype) std::vector< ns name ref > "[]goname"
+%typemap(gotype) std::vector<std::vector< ns name ref >> "[][]goname"
 #if "gonameim" != "goname"
 %typemap(imtype) std::vector< ns name ref > "[]gonameim"
 #endif
+%typemap(imtype) std::vector<std::vector< ns name ref >> "[][]gonameim"
 
 #if "gonameim" != "goname"
 %typemap(goin) std::vector< ns name ref > %{
     $result = swigCopy##name##SliceIn($input)
 %}
 #endif
+%typemap(goin) std::vector<std::vector< ns name ref >> %{
+    var p runtime.Pinner
+    defer p.Unpin()
+    $result = swigCopy##name##SliceIn2d($input, p)
+%}
 
 %typemap(in) std::vector< ns name ref > %{
     $1 = name##SliceToVector($input);
+%}
+%typemap(in) std::vector<std::vector< ns name ref >> %{
+    $1 = name##SliceToVector2d($input);
 %}
 
 %typemap(out) std::vector< ns name ref > %{
     $result = vectorTo##name##Slice($1);
 %}
+%typemap(out) std::vector<std::vector< ns name ref >> %{
+    $result = vectorTo##name##Slice2d($1);
+%}
 
-#if "gonameim" != "goname"
 %typemap(goout) std::vector< ns name ref > %{
     $result = swigCopy##name##SliceOut(&$1)
 %}
-#endif
+%typemap(goout) std::vector<std::vector< ns name ref >> %{
+    $result = swigCopy##name##SliceOut2d(&$1)
+%}
 
 %typemap(gotype) const std::vector< ns name ref >& "[]goname"
+%typemap(gotype) const std::vector<std::vector< ns name ref >>& "[][]goname"
 #if "gonameim" != "goname"
 %typemap(imtype) const std::vector< ns name ref >& "[]gonameim"
 #endif
+%typemap(imtype) const std::vector<std::vector< ns name ref >>& "[][]gonameim"
 
 #if "gonameim" != "goname"
 %typemap(goin) const std::vector< ns name ref > & %{
     $result = swigCopy##name##SliceIn($input)
 %}
 #endif
+%typemap(goin) const std::vector<std::vector< ns name ref >> & %{
+    var p runtime.Pinner
+    defer p.Unpin()
+    $result = swigCopy##name##SliceIn2d($input, p)
+%}
 
 %typemap(in) const std::vector< ns name ref > & %{
     $*1_ltype $1_arr;
     $1_arr = name##SliceToVector($input);
     $1 = &$1_arr;
 %}
+%typemap(in) const std::vector<std::vector< ns name ref >> & %{
+    $*1_ltype $1_arr;
+    $1_arr = name##SliceToVector2d($input);
+    $1 = &$1_arr;
+%}
 
 %typemap(out) const std::vector< ns name ref > & %{
     $result = vectorTo##name##Slice(*$1);
 %}
+%typemap(out) const std::vector<std::vector< ns name ref >> & %{
+    $result = vectorTo##name##Slice2d(*$1);
+%}
 
-#if "gonameim" != "goname"
 %typemap(goout) const std::vector< ns name ref > & %{
     $result = swigCopy##name##SliceOut(&$1)
 %}
-#endif
-
-%insert(go_header) %{
-type name##SliceWithPointer struct {
-    slice []gonameim
-    ptr uintptr
-}
+%typemap(goout) const std::vector<std::vector< ns name ref >> & %{
+    $result = swigCopy##name##SliceOut2d(&$1)
 %}
 
 %enddef

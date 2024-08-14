@@ -34,11 +34,11 @@ RUN curl --location-trusted \
 && cd .. \
 && rm -rf swig-4.1.1
 
-# Install Go 1.22.3
-RUN wget -q --no-check-certificate "https://go.dev/dl/go1.22.3.linux-amd64.tar.gz" \
+# Install Go 1.23.0
+RUN wget -q --no-check-certificate "https://go.dev/dl/go1.23.0.linux-amd64.tar.gz" \
 && rm -rf /usr/local/go \
-&& tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz \
-&& rm go1.22.3.linux-amd64.tar.gz
+&& tar -C /usr/local -xzf go1.23.0.linux-amd64.tar.gz \
+&& rm go1.23.0.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 RUN GOBIN=/usr/local/go/bin go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.33
 RUN go version

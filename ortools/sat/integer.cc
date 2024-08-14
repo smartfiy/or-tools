@@ -197,20 +197,29 @@ void IntegerEncoder::AddImplications(
   if (!add_implications_) return;
   DCHECK_EQ(it->second, associated_lit);
 
-  // Literal(after) => associated_lit
-  auto after_it = it;
-  ++after_it;
-  if (after_it != map.end()) {
-    sat_solver_->AddClauseDuringSearch(
-        {after_it->second.Negated(), associated_lit});
-  }
-
-  // associated_lit => Literal(before)
+  // Tricky: We compute the literal first because AddClauseDuringSearch() might
+  // propagate at level zero and mess up the map.
+  LiteralIndex before_index = kNoLiteralIndex;
   if (it != map.begin()) {
     auto before_it = it;
     --before_it;
+    before_index = before_it->second.Index();
+  }
+  LiteralIndex after_index = kNoLiteralIndex;
+  {
+    auto after_it = it;
+    ++after_it;
+    if (after_it != map.end()) after_index = after_it->second.Index();
+  }
+
+  // Then we add the two implications.
+  if (after_index != kNoLiteralIndex) {
     sat_solver_->AddClauseDuringSearch(
-        {associated_lit.Negated(), before_it->second});
+        {Literal(after_index).Negated(), associated_lit});
+  }
+  if (before_index != kNoLiteralIndex) {
+    sat_solver_->AddClauseDuringSearch(
+        {associated_lit.Negated(), Literal(before_index)});
   }
 }
 
@@ -771,15 +780,14 @@ void IntegerTrail::Untrail(const Trail& trail, int literal_trail_index) {
   if (level >= integer_search_levels_.size()) return;
   const int target = integer_search_levels_[level];
   integer_search_levels_.resize(level);
-  CHECK_GE(target, vars_.size());
+  CHECK_GE(target, var_lbs_.size());
   CHECK_LE(target, integer_trail_.size());
 
   for (int index = integer_trail_.size() - 1; index >= target; --index) {
     const TrailEntry& entry = integer_trail_[index];
     if (entry.var < 0) continue;  // entry used by EnqueueLiteral().
-    vars_[entry.var].current_trail_index = entry.prev_trail_index;
-    vars_[entry.var].current_bound =
-        integer_trail_[entry.prev_trail_index].bound;
+    var_trail_index_[entry.var] = entry.prev_trail_index;
+    var_lbs_[entry.var] = integer_trail_[entry.prev_trail_index].bound;
   }
   integer_trail_.resize(target);
 
@@ -811,7 +819,8 @@ void IntegerTrail::ReserveSpaceForNumVariables(int num_vars) {
 
   // Because we always create both a variable and its negation.
   const int size = 2 * num_vars;
-  vars_.reserve(size);
+  var_lbs_.reserve(size);
+  var_trail_index_.reserve(size);
   integer_trail_.reserve(size);
   var_trail_index_cache_.reserve(size);
   tmp_var_to_trail_index_in_queue_.reserve(size);
@@ -825,19 +834,21 @@ IntegerVariable IntegerTrail::AddIntegerVariable(IntegerValue lower_bound,
   DCHECK(lower_bound >= 0 ||
          lower_bound + std::numeric_limits<int64_t>::max() >= upper_bound);
   DCHECK(integer_search_levels_.empty());
-  DCHECK_EQ(vars_.size(), integer_trail_.size());
+  DCHECK_EQ(var_lbs_.size(), integer_trail_.size());
 
-  const IntegerVariable i(vars_.size());
-  vars_.push_back({lower_bound, static_cast<int>(integer_trail_.size())});
+  const IntegerVariable i(var_lbs_.size());
+  var_lbs_.push_back(lower_bound);
+  var_trail_index_.push_back(integer_trail_.size());
   integer_trail_.push_back({lower_bound, i});
   domains_->push_back(Domain(lower_bound.value(), upper_bound.value()));
 
-  CHECK_EQ(NegationOf(i).value(), vars_.size());
-  vars_.push_back({-upper_bound, static_cast<int>(integer_trail_.size())});
+  CHECK_EQ(NegationOf(i).value(), var_lbs_.size());
+  var_lbs_.push_back(-upper_bound);
+  var_trail_index_.push_back(integer_trail_.size());
   integer_trail_.push_back({-upper_bound, NegationOf(i)});
 
-  var_trail_index_cache_.resize(vars_.size(), integer_trail_.size());
-  tmp_var_to_trail_index_in_queue_.resize(vars_.size(), 0);
+  var_trail_index_cache_.resize(var_lbs_.size(), integer_trail_.size());
+  tmp_var_to_trail_index_in_queue_.resize(var_lbs_.size(), 0);
 
   for (SparseBitset<IntegerVariable>* w : watchers_) {
     w->Resize(NumIntegerVariables());
@@ -887,9 +898,9 @@ bool IntegerTrail::UpdateInitialDomain(IntegerVariable var, Domain domain) {
       ReasonIsValid(IntegerLiteral::GreaterOrEqual(var, domain.Min()), {}, {}));
   DCHECK_GE(domain.Min(), LowerBound(var));
   DCHECK_LE(domain.Max(), UpperBound(var));
-  vars_[var].current_bound = domain.Min();
+  var_lbs_[var] = domain.Min();
   integer_trail_[var.value()].bound = domain.Min();
-  vars_[NegationOf(var)].current_bound = -domain.Max();
+  var_lbs_[NegationOf(var)] = -domain.Max();
   integer_trail_[NegationOf(var).value()].bound = -domain.Max();
 
   // Do not forget to update the watchers.
@@ -935,8 +946,8 @@ int IntegerTrail::FindTrailIndexOfVarBefore(IntegerVariable var,
     return -1;
   }
 
-  DCHECK_GE(threshold, vars_.size());
-  int trail_index = vars_[var].current_trail_index;
+  DCHECK_GE(threshold, var_lbs_.size());
+  int trail_index = var_trail_index_[var];
 
   // Check the validity of the cached index and use it if possible.
   if (trail_index > threshold) {
@@ -954,15 +965,15 @@ int IntegerTrail::FindTrailIndexOfVarBefore(IntegerVariable var,
     }
   }
 
-  const int num_vars = vars_.size();
+  const int num_vars = var_lbs_.size();
   return trail_index < num_vars ? -1 : trail_index;
 }
 
 int IntegerTrail::FindLowestTrailIndexThatExplainBound(
     IntegerLiteral i_lit) const {
-  DCHECK_LE(i_lit.bound, vars_[i_lit.var].current_bound);
+  DCHECK_LE(i_lit.bound, var_lbs_[i_lit.var]);
   if (i_lit.bound <= LevelZeroLowerBound(i_lit.var)) return -1;
-  int trail_index = vars_[i_lit.var].current_trail_index;
+  int trail_index = var_trail_index_[i_lit.var];
 
   // Check the validity of the cached index and use it if possible. This caching
   // mechanism is important in case of long chain of propagation on the same
@@ -1003,7 +1014,7 @@ void IntegerTrail::RelaxLinearReason(
   for (int i = 0; i < size; ++i) {
     CHECK_EQ((*reason)[i].bound, LowerBound((*reason)[i].var));
     CHECK_GE(coeffs[i], 0);
-    tmp_indices_[i] = vars_[(*reason)[i].var].current_trail_index;
+    tmp_indices_[i] = var_trail_index_[(*reason)[i].var];
   }
 
   RelaxLinearReason(slack, coeffs, &tmp_indices_);
@@ -1021,7 +1032,7 @@ void IntegerTrail::AppendRelaxedLinearReason(
     std::vector<IntegerLiteral>* reason) const {
   tmp_indices_.clear();
   for (const IntegerVariable var : vars) {
-    tmp_indices_.push_back(vars_[var].current_trail_index);
+    tmp_indices_.push_back(var_trail_index_[var]);
   }
   if (slack > 0) RelaxLinearReason(slack, coeffs, &tmp_indices_);
   for (const int i : tmp_indices_) {
@@ -1042,7 +1053,7 @@ void IntegerTrail::RelaxLinearReason(IntegerValue slack,
   // - move the other one to the relax_heap_ (and creating the heap).
   int new_size = 0;
   const int size = coeffs.size();
-  const int num_vars = vars_.size();
+  const int num_vars = var_lbs_.size();
   for (int i = 0; i < size; ++i) {
     const int index = (*trail_indices)[i];
 
@@ -1145,7 +1156,7 @@ std::vector<Literal>* IntegerTrail::InitializeConflict(
   std::vector<Literal>* conflict = trail_->MutableConflict();
   if (lazy_reason == nullptr) {
     conflict->assign(literals_reason.begin(), literals_reason.end());
-    const int num_vars = vars_.size();
+    const int num_vars = var_lbs_.size();
     for (const IntegerLiteral& literal : bounds_reason) {
       const int trail_index = FindLowestTrailIndexThatExplainBound(literal);
       if (trail_index >= num_vars) tmp_queue_.push_back(trail_index);
@@ -1180,7 +1191,7 @@ std::string ReasonDebugString(absl::Span<const Literal> literal_reason,
 
 std::string IntegerTrail::DebugString() {
   std::string result = "trail:{";
-  const int num_vars = vars_.size();
+  const int num_vars = var_lbs_.size();
   const int limit =
       std::min(num_vars + 30, static_cast<int>(integer_trail_.size()));
   for (int i = num_vars; i < limit; ++i) {
@@ -1307,10 +1318,10 @@ bool IntegerTrail::ReasonIsValid(
       LOG(INFO) << "Reason has a constant false literal!";
       return false;
     }
-    if (i_lit.bound > vars_[i_lit.var].current_bound) {
+    if (i_lit.bound > var_lbs_[i_lit.var]) {
       LOG(INFO) << "Reason " << i_lit << " is not true!"
                 << " non-optional variable:" << i_lit.var
-                << " current_lb:" << vars_[i_lit.var].current_bound;
+                << " current_lb:" << var_lbs_[i_lit.var];
       return false;
     }
   }
@@ -1446,7 +1457,7 @@ bool IntegerTrail::InPropagationLoop() const {
       !integer_search_levels_.empty() &&
       integer_trail_.size() - integer_search_levels_.back() >
           std::max(10000.0, parameters_.propagation_loop_detection_factor() *
-                                static_cast<double>(vars_.size())) &&
+                                static_cast<double>(var_lbs_.size())) &&
       parameters_.search_branching() != SatParameters::FIXED_SEARCH);
 }
 
@@ -1492,7 +1503,7 @@ bool IntegerTrail::CurrentBranchHadAnIncompletePropagation() {
 }
 
 IntegerVariable IntegerTrail::FirstUnassignedVariable() const {
-  for (IntegerVariable var(0); var < vars_.size(); var += 2) {
+  for (IntegerVariable var(0); var < var_lbs_.size(); var += 2) {
     if (!IsFixed(var)) return var;
   }
   return kNoIntegerVariable;
@@ -1521,7 +1532,7 @@ bool IntegerTrail::EnqueueInternal(
   // Nothing to do if the bound is not better than the current one.
   // TODO(user): Change this to a CHECK? propagator shouldn't try to push such
   // bound and waste time explaining it.
-  if (i_lit.bound <= vars_[var].current_bound) return true;
+  if (i_lit.bound <= var_lbs_[var]) return true;
   ++num_enqueues_;
 
   // If the domain of var is not a single intervals and i_lit.bound fall into a
@@ -1543,7 +1554,7 @@ bool IntegerTrail::EnqueueInternal(
         InitializeConflict(i_lit, lazy_reason, literal_reason, integer_reason);
     {
       const int trail_index = FindLowestTrailIndexThatExplainBound(ub_reason);
-      const int num_vars = vars_.size();  // must be signed.
+      const int num_vars = var_lbs_.size();  // must be signed.
       if (trail_index >= num_vars) tmp_queue_.push_back(trail_index);
     }
     MergeReasonIntoInternal(conflict);
@@ -1636,7 +1647,7 @@ bool IntegerTrail::EnqueueInternal(
   // Special case for level zero.
   if (integer_search_levels_.empty()) {
     ++num_level_zero_enqueues_;
-    vars_[i_lit.var].current_bound = i_lit.bound;
+    var_lbs_[i_lit.var] = i_lit.bound;
     integer_trail_[i_lit.var.value()].bound = i_lit.bound;
 
     // We also update the initial domain. If this fail, since we are at level
@@ -1681,14 +1692,14 @@ bool IntegerTrail::EnqueueInternal(
     reason_index = integer_trail_[trail_index_with_same_reason].reason_index;
   }
 
-  const int prev_trail_index = vars_[i_lit.var].current_trail_index;
+  const int prev_trail_index = var_trail_index_[i_lit.var];
   integer_trail_.push_back({/*bound=*/i_lit.bound,
                             /*var=*/i_lit.var,
                             /*prev_trail_index=*/prev_trail_index,
                             /*reason_index=*/reason_index});
 
-  vars_[i_lit.var].current_bound = i_lit.bound;
-  vars_[i_lit.var].current_trail_index = integer_trail_.size() - 1;
+  var_lbs_[i_lit.var] = i_lit.bound;
+  var_trail_index_[i_lit.var] = integer_trail_.size() - 1;
   return true;
 }
 
@@ -1697,7 +1708,7 @@ bool IntegerTrail::EnqueueAssociatedIntegerLiteral(IntegerLiteral i_lit,
   DCHECK(ReasonIsValid(i_lit, {literal_reason.Negated()}, {}));
 
   // Nothing to do if the bound is not better than the current one.
-  if (i_lit.bound <= vars_[i_lit.var].current_bound) return true;
+  if (i_lit.bound <= var_lbs_[i_lit.var]) return true;
   ++num_enqueues_;
 
   // Make sure we do not fall into a hole.
@@ -1718,7 +1729,7 @@ bool IntegerTrail::EnqueueAssociatedIntegerLiteral(IntegerLiteral i_lit,
 
   // Special case for level zero.
   if (integer_search_levels_.empty()) {
-    vars_[i_lit.var].current_bound = i_lit.bound;
+    var_lbs_[i_lit.var] = i_lit.bound;
     integer_trail_[i_lit.var.value()].bound = i_lit.bound;
 
     // We also update the initial domain. If this fail, since we are at level
@@ -1736,14 +1747,14 @@ bool IntegerTrail::EnqueueAssociatedIntegerLiteral(IntegerLiteral i_lit,
   bounds_reason_starts_.push_back(bounds_reason_buffer_.size());
   literals_reason_buffer_.push_back(literal_reason.Negated());
 
-  const int prev_trail_index = vars_[i_lit.var].current_trail_index;
+  const int prev_trail_index = var_trail_index_[i_lit.var];
   integer_trail_.push_back({/*bound=*/i_lit.bound,
                             /*var=*/i_lit.var,
                             /*prev_trail_index=*/prev_trail_index,
                             /*reason_index=*/reason_index});
 
-  vars_[i_lit.var].current_bound = i_lit.bound;
-  vars_[i_lit.var].current_trail_index = integer_trail_.size() - 1;
+  var_lbs_[i_lit.var] = i_lit.bound;
+  var_trail_index_[i_lit.var] = integer_trail_.size() - 1;
   return true;
 }
 
@@ -1779,7 +1790,7 @@ absl::Span<const int> IntegerTrail::Dependencies(int trail_index) const {
   }
   if (trail_index_reason_buffer_[start] == -1) {
     int new_end = start;
-    const int num_vars = vars_.size();
+    const int num_vars = var_lbs_.size();
     for (int i = start; i < end; ++i) {
       const int dep =
           FindLowestTrailIndexThatExplainBound(bounds_reason_buffer_[i]);
@@ -1800,7 +1811,7 @@ absl::Span<const int> IntegerTrail::Dependencies(int trail_index) const {
 
 void IntegerTrail::AppendLiteralsReason(int trail_index,
                                         std::vector<Literal>* output) const {
-  CHECK_GE(trail_index, vars_.size());
+  CHECK_GE(trail_index, var_lbs_.size());
   const int reason_index = integer_trail_[trail_index].reason_index;
   if (reason_index == -1) {
     for (const Literal l : lazy_reason_literals_) {
@@ -1834,7 +1845,7 @@ std::vector<Literal> IntegerTrail::ReasonFor(IntegerLiteral literal) const {
 void IntegerTrail::MergeReasonInto(absl::Span<const IntegerLiteral> literals,
                                    std::vector<Literal>* output) const {
   DCHECK(tmp_queue_.empty());
-  const int num_vars = vars_.size();
+  const int num_vars = var_lbs_.size();
   for (const IntegerLiteral& literal : literals) {
     if (literal.IsAlwaysTrue()) continue;
     const int trail_index = FindLowestTrailIndexThatExplainBound(literal);
@@ -1849,7 +1860,7 @@ void IntegerTrail::MergeReasonInto(absl::Span<const IntegerLiteral> literals,
 // This will expand the reason of the IntegerLiteral already in tmp_queue_ until
 // everything is explained in term of Literal.
 void IntegerTrail::MergeReasonIntoInternal(std::vector<Literal>* output) const {
-  // All relevant trail indices will be >= vars_.size(), so we can safely use
+  // All relevant trail indices will be >= var_lbs_.size(), so we can safely use
   // zero to means that no literal referring to this variable is in the queue.
   DCHECK(std::all_of(tmp_var_to_trail_index_in_queue_.begin(),
                      tmp_var_to_trail_index_in_queue_.end(),
@@ -1863,7 +1874,7 @@ void IntegerTrail::MergeReasonIntoInternal(std::vector<Literal>* output) const {
   // During the algorithm execution, all the queue entries that do not match the
   // content of tmp_var_to_trail_index_in_queue_[] will be ignored.
   for (const int trail_index : tmp_queue_) {
-    DCHECK_GE(trail_index, vars_.size());
+    DCHECK_GE(trail_index, var_lbs_.size());
     DCHECK_LT(trail_index, integer_trail_.size());
     const TrailEntry& entry = integer_trail_[trail_index];
     tmp_var_to_trail_index_in_queue_[entry.var] =
@@ -1992,7 +2003,7 @@ absl::Span<const Literal> IntegerTrail::Reason(const Trail& trail,
   DCHECK(tmp_queue_.empty());
   for (const int prev_trail_index : Dependencies(index)) {
     if (prev_trail_index < 0) break;
-    DCHECK_GE(prev_trail_index, vars_.size());
+    DCHECK_GE(prev_trail_index, var_lbs_.size());
     tmp_queue_.push_back(prev_trail_index);
   }
   MergeReasonIntoInternal(reason);
@@ -2000,17 +2011,17 @@ absl::Span<const Literal> IntegerTrail::Reason(const Trail& trail,
 }
 
 void IntegerTrail::AppendNewBounds(std::vector<IntegerLiteral>* output) const {
-  return AppendNewBoundsFrom(vars_.size(), output);
+  return AppendNewBoundsFrom(var_lbs_.size(), output);
 }
 
 // TODO(user): Implement a dense version if there is more trail entries
 // than variables!
 void IntegerTrail::AppendNewBoundsFrom(
     int base_index, std::vector<IntegerLiteral>* output) const {
-  tmp_marked_.ClearAndResize(IntegerVariable(vars_.size()));
+  tmp_marked_.ClearAndResize(IntegerVariable(var_lbs_.size()));
 
   // In order to push the best bound for each variable, we loop backward.
-  CHECK_GE(base_index, vars_.size());
+  CHECK_GE(base_index, var_lbs_.size());
   for (int i = integer_trail_.size(); --i >= base_index;) {
     const TrailEntry& entry = integer_trail_[i];
     if (entry.var == kNoIntegerVariable) continue;
@@ -2123,7 +2134,8 @@ bool GenericLiteralWatcher::Propagate(Trail* trail) {
     //
     // TODO(user): The queue will not be emptied, but I am not sure the solver
     // will be left in an usable state. Fix if it become needed to resume
-    // the solve from the last time it was interrupted.
+    // the solve from the last time it was interrupted. In particular, we might
+    // want to call UpdateCallingNeeds()?
     if (test_limit > 100) {
       test_limit = 0;
       if (time_limit_->LimitReached()) break;
@@ -2165,13 +2177,12 @@ bool GenericLiteralWatcher::Propagate(Trail* trail) {
 
       // TODO(user): Maybe just provide one function Propagate(watch_indices) ?
       ++num_propagate_calls;
-      std::vector<int>& watch_indices_ref = id_to_watch_indices_[id];
       const bool result =
-          watch_indices_ref.empty()
+          id_to_watch_indices_[id].empty()
               ? watchers_[id]->Propagate()
-              : watchers_[id]->IncrementalPropagate(watch_indices_ref);
+              : watchers_[id]->IncrementalPropagate(id_to_watch_indices_[id]);
       if (!result) {
-        watch_indices_ref.clear();
+        id_to_watch_indices_[id].clear();
         in_queue_[id] = false;
         return false;
       }
@@ -2183,13 +2194,13 @@ bool GenericLiteralWatcher::Propagate(Trail* trail) {
         // in_queue_ to false after UpdateCallingNeeds() so this later
         // function will never add it back.
         UpdateCallingNeeds(trail);
-        watch_indices_ref.clear();
+        id_to_watch_indices_[id].clear();
         in_queue_[id] = false;
       } else {
         // Otherwise, we set in_queue_ to false first so that
         // UpdateCallingNeeds() may add it back if the propagator modified any
         // of its watched variables.
-        watch_indices_ref.clear();
+        id_to_watch_indices_[id].clear();
         in_queue_[id] = false;
         UpdateCallingNeeds(trail);
       }
@@ -2234,8 +2245,12 @@ bool GenericLiteralWatcher::Propagate(Trail* trail) {
 void GenericLiteralWatcher::Untrail(const Trail& trail, int trail_index) {
   if (propagation_trail_index_ <= trail_index) {
     // Nothing to do since we found a conflict before Propagate() was called.
-    CHECK_EQ(propagation_trail_index_, trail_index)
-        << " level " << trail.CurrentDecisionLevel();
+    if (DEBUG_MODE) {
+      // The assumption is not always true if we are currently aborting.
+      if (time_limit_->LimitReached()) return;
+      CHECK_EQ(propagation_trail_index_, trail_index)
+          << " level " << trail.CurrentDecisionLevel();
+    }
     return;
   }
 

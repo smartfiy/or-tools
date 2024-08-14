@@ -19,6 +19,7 @@
 #include <limits>
 #include <optional>
 #include <ostream>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -247,7 +248,7 @@ struct PairwiseRestriction {
 // Find pair of items that are either in conflict or could have their range
 // shrinked to avoid conflict.
 void AppendPairwiseRestrictions(
-    const std::vector<ItemForPairwiseRestriction>& items,
+    absl::Span<const ItemForPairwiseRestriction> items,
     std::vector<PairwiseRestriction>* result);
 
 // Same as above, but test `items` against `other_items` and append the
@@ -587,6 +588,11 @@ struct FindRectanglesResult {
 FindRectanglesResult FindRectanglesWithEnergyConflictMC(
     const std::vector<RectangleInRange>& intervals, absl::BitGenRef random,
     double temperature, double candidate_energy_usage_factor);
+
+// Render a packing solution as a Graphviz dot file. Only works in the "neato"
+// or "fdp" Graphviz backends.
+std::string RenderDot(std::pair<IntegerValue, IntegerValue> bb_sizes,
+                      absl::Span<const Rectangle> solution);
 
 }  // namespace sat
 }  // namespace operations_research
