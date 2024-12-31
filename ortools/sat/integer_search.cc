@@ -416,6 +416,8 @@ std::function<BooleanOrIntegerLiteral()> SatSolverHeuristic(Model* model) {
   };
 }
 
+// TODO(user): Do we need a mechanism to reduce the range of possible gaps
+// when nothing gets proven? This could be a parameter or some adaptative code.
 std::function<BooleanOrIntegerLiteral()> ShaveObjectiveLb(Model* model) {
   auto* objective_definition = model->GetOrCreate<ObjectiveDefinition>();
   const IntegerVariable obj_var = objective_definition->objective_var;
@@ -1303,7 +1305,7 @@ void ConfigureSearchHeuristics(Model* model) {
 }
 
 std::vector<std::function<BooleanOrIntegerLiteral()>> CompleteHeuristics(
-    const std::vector<std::function<BooleanOrIntegerLiteral()>>&
+    absl::Span<const std::function<BooleanOrIntegerLiteral()>>
         incomplete_heuristics,
     const std::function<BooleanOrIntegerLiteral()>& completion_heuristic) {
   std::vector<std::function<BooleanOrIntegerLiteral()>> complete_heuristics;

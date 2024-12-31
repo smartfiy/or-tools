@@ -1716,17 +1716,20 @@ class CpModel:
                 "add_allowed_assignments expects a non-empty variables array"
             )
 
-        ct = Constraint(self)
+        ct: Constraint = Constraint(self)
         model_ct = self.__model.constraints[ct.index]
         model_ct.table.vars.extend([self.get_or_make_index(x) for x in variables])
-        arity = len(variables)
+        arity: int = len(variables)
         for t in tuples_list:
             if len(t) != arity:
                 raise TypeError("Tuple " + str(t) + " has the wrong arity")
-            ar = []
-            for v in t:
-                ar.append(cmh.assert_is_int64(v))
-            model_ct.table.values.extend(ar)
+
+        # duck-typing (no explicit type checks here)
+        try:
+            model_ct.table.values.extend(a for b in tuples_list for a in b)
+        except ValueError as ex:
+            raise TypeError(f"add_xxx_assignment: Not an integer or does not fit in an int64_t: {ex.args}") from ex
+
         return ct
 
     def add_forbidden_assignments(
@@ -1760,7 +1763,7 @@ class CpModel:
             )
 
         index = len(self.__model.constraints)
-        ct = self.add_allowed_assignments(variables, tuples_list)
+        ct: Constraint = self.add_allowed_assignments(variables, tuples_list)
         self.__model.constraints[index].table.negated = True
         return ct
 
@@ -2205,7 +2208,25 @@ class CpModel:
     def add_modulo_equality(
         self, target: LinearExprT, expr: LinearExprT, mod: LinearExprT
     ) -> Constraint:
-        """Adds `target = expr % mod`."""
+        """Adds `target = expr % mod`.
+
+        It uses the C convention, that is the result is the remainder of the
+        integral division rounded towards 0.
+
+            For example:
+            * 10 % 3 = 1
+            * -10 % 3 = -1
+            * 10 % -3 = 1
+            * -10 % -3 = -1
+
+        Args:
+          target: the target expression.
+          expr: the expression to compute the modulo of.
+          mod: the modulus expression.
+
+        Returns:
+          A `Constraint` object.
+        """
         ct = Constraint(self)
         model_ct = self.__model.constraints[ct.index]
         model_ct.int_mod.exprs.append(self.parse_linear_expression(expr))
@@ -2733,7 +2754,7 @@ class CpModel:
 
     # Helpers.
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.__model)
 
     @property
@@ -2768,6 +2789,10 @@ class CpModel:
             self.assert_is_boolean_variable(arg.negated())
             return arg.index
         if isinstance(arg, IntegralTypes):
+            if arg == ~False:  # -1
+                return self.get_or_make_index_from_constant(1)
+            if arg == ~True:  # -2
+                return self.get_or_make_index_from_constant(0)
             arg = cmh.assert_is_zero_or_one(arg)
             return self.get_or_make_index_from_constant(arg)
         if cmh.is_boolean(arg):

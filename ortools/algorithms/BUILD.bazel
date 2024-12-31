@@ -14,6 +14,7 @@
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -66,10 +67,10 @@ cc_library(
     hdrs = ["binary_search.h"],
     deps = [
         "//ortools/base",
-        "//ortools/base:dump_vars",
         "@com_google_absl//absl/functional:function_ref",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -166,6 +167,7 @@ cc_test(
         "//ortools/base:types",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/random:distributions",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -182,6 +184,21 @@ cc_test(
     deps = [
         ":adjustable_k_ary_heap",
         "//ortools/base:gmock_main",
+    ],
+)
+
+cc_test(
+    name = "adjustable_k_ary_heap_stress_test",
+    size = "large",
+    timeout = "eternal",
+    srcs = ["adjustable_k_ary_heap_stress_test.cc"],
+    deps = [
+        ":adjustable_k_ary_heap",
+        "//ortools/base:gmock_main",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/random",
     ],
 )
 
@@ -243,14 +260,33 @@ cc_proto_library(
     deps = [":set_cover_proto"],
 )
 
+py_proto_library(
+    name = "set_cover_py_pb2",
+    deps = [":set_cover_proto"],
+)
+
+cc_library(
+    name = "set_cover_lagrangian",
+    srcs = ["set_cover_lagrangian.cc"],
+    hdrs = ["set_cover_lagrangian.h"],
+    deps = [
+        ":adjustable_k_ary_heap",
+        ":set_cover_invariant",
+        ":set_cover_model",
+        "//ortools/base:threadpool",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
 cc_library(
     name = "set_cover_model",
     srcs = ["set_cover_model.cc"],
     hdrs = ["set_cover_model.h"],
     deps = [
         ":set_cover_cc_proto",
-        "//ortools/lp_data:base",
-        "//ortools/util:strong_integers",
+        "//ortools/base:intops",
+        "//ortools/base:strong_vector",
+        "//ortools/util:aligned_memory",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
@@ -267,6 +303,7 @@ cc_library(
         "//ortools/base",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -297,6 +334,7 @@ cc_library(
         "//ortools/linear_solver",
         "//ortools/lp_data:base",
         "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -308,6 +346,7 @@ cc_library(
     deps = [
         ":set_cover_model",
         "//ortools/base:file",
+        "//ortools/base:strong_vector",
         "//ortools/util:filelineiter",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/log:check",
@@ -479,5 +518,38 @@ cc_test(
     deps = [
         ":binary_indexed_tree",
         "//ortools/base:gmock_main",
+    ],
+)
+
+cc_library(
+    name = "n_choose_k",
+    srcs = ["n_choose_k.cc"],
+    hdrs = ["n_choose_k.h"],
+    deps = [
+        ":binary_search",
+        "//ortools/base:mathutil",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/time",
+    ],
+)
+
+cc_test(
+    name = "n_choose_k_test",
+    srcs = ["n_choose_k_test.cc"],
+    deps = [
+        ":n_choose_k",
+        "//ortools/base:dump_vars",
+        "//ortools/base:gmock_main",
+        "//ortools/util:flat_matrix",
+        "@com_google_absl//absl/numeric:int128",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/random:distributions",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
     ],
 )

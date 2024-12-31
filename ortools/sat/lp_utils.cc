@@ -164,7 +164,7 @@ namespace {
 //
 // Precondition: var must be the only non-integer in the given constraint.
 double GetIntegralityMultiplier(const MPModelProto& mp_model,
-                                const std::vector<double>& var_scaling, int var,
+                                absl::Span<const double> var_scaling, int var,
                                 int ct_index, double tolerance) {
   DCHECK(!mp_model.variable(var).is_integer());
   const MPConstraintProto& ct = mp_model.constraint(ct_index);
@@ -856,7 +856,7 @@ ConstraintProto* ConstraintScaler::AddConstraint(
 }
 
 // TODO(user): unit test this.
-double FindFractionalScaling(const std::vector<double>& coefficients,
+double FindFractionalScaling(absl::Span<const double> coefficients,
                              double tolerance) {
   double multiplier = 1.0;
   for (const double coeff : coefficients) {
@@ -871,8 +871,8 @@ double FindFractionalScaling(const std::vector<double>& coefficients,
 
 double FindBestScalingAndComputeErrors(
     const std::vector<double>& coefficients,
-    const std::vector<double>& lower_bounds,
-    const std::vector<double>& upper_bounds, int64_t max_absolute_activity,
+    absl::Span<const double> lower_bounds,
+    absl::Span<const double> upper_bounds, int64_t max_absolute_activity,
     double wanted_absolute_activity_precision, double* relative_coeff_error,
     double* scaled_sum_error) {
   // Starts by computing the highest possible factor.

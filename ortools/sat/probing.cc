@@ -406,7 +406,7 @@ bool Prober::ProbeDnf(absl::string_view name,
       num_new_literals_fixed_ > previous_num_literals_fixed) {
     VLOG(1) << "ProbeDnf(" << name << ", num_fixed_literals="
             << num_new_literals_fixed_ - previous_num_literals_fixed
-            << ", num_fixed_integer_bounds="
+            << ", num_pushed_integer_bounds="
             << num_new_integer_bounds_ - previous_num_integer_bounds
             << ", num_valid_conjunctions=" << num_valid_conjunctions << "/"
             << dnf.size() << ")";
@@ -540,10 +540,10 @@ bool FailedLiteralProbingRound(ProbingOptions options, Model* model) {
     bool operator<(const SavedNextLiteral& o) const { return rank < o.rank; }
   };
   std::vector<SavedNextLiteral> queue;
-  absl::StrongVector<LiteralIndex, int> position_in_order;
+  util_intops::StrongVector<LiteralIndex, int> position_in_order;
 
   // This is only needed when options use_queue is false;
-  absl::StrongVector<LiteralIndex, int> starts;
+  util_intops::StrongVector<LiteralIndex, int> starts;
   if (!options.use_queue) starts.resize(2 * num_variables, 0);
 
   // We delay fixing of already assigned literal once we go back to level
